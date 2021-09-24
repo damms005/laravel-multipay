@@ -7,7 +7,6 @@ it('can test', function () {
     //user confirms same
     //user redirected to payment gateway
     //value given
-
 });
 
 

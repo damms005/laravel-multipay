@@ -12,54 +12,54 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Payment extends Model
 {
-	use HasFactory;
+    use HasFactory;
 
-	protected $guarded = ['id'];
+    protected $guarded = ['id'];
 
-	protected const TABLE_NAME = 'payments';
-	public const KOBO_TO_NAIRA = 100;
+    protected const TABLE_NAME = 'payments';
+    public const KOBO_TO_NAIRA = 100;
 
-	public function __construct()
-	{
-		$this->table = self::getTableName();
+    public function __construct()
+    {
+        $this->table = self::getTableName();
 
-		parent::__construct();
-	}
+        parent::__construct();
+    }
 
-	public static function getTableName(): string
-	{
-		$userDefinedTablePrefix = config('laravel-cashier.table_prefix');
+    public static function getTableName(): string
+    {
+        $userDefinedTablePrefix = config('laravel-cashier.table_prefix');
 
-		if ($userDefinedTablePrefix) {
-			return $userDefinedTablePrefix . self::TABLE_NAME;
-		}
+        if ($userDefinedTablePrefix) {
+            return $userDefinedTablePrefix . self::TABLE_NAME;
+        }
 
-		return self::TABLE_NAME;
-	}
+        return self::TABLE_NAME;
+    }
 
-	public function user()
-	{
-		return $this->belongsTo(\App\User::class);
-	}
+    public function user()
+    {
+        return $this->belongsTo(\App\User::class);
+    }
 
-	public function scopeSuccessful($query)
-	{
-		$query->where('is_success', 1);
-	}
+    public function scopeSuccessful($query)
+    {
+        $query->where('is_success', 1);
+    }
 
-	public function getPaymentProvider(): BasePaymentHandler | PaymentHandlerInterface
-	{
-		$handler = "App\\PaymentHandlers\\" . $this->payment_processor_name;
+    public function getPaymentProvider(): BasePaymentHandler | PaymentHandlerInterface
+    {
+        $handler = "App\\PaymentHandlers\\" . $this->payment_processor_name;
 
-		return new $handler;
-	}
+        return new $handler();
+    }
 
-	public function getAmountInNaira()
-	{
-		if ($this->processor_returned_amount > 0) {
-			return $this->processor_returned_amount / 100;
-		}
+    public function getAmountInNaira()
+    {
+        if ($this->processor_returned_amount > 0) {
+            return $this->processor_returned_amount / 100;
+        }
 
-		return $this->processor_returned_amount;
-	}
+        return $this->processor_returned_amount;
+    }
 }
