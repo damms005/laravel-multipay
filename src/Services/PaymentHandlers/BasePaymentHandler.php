@@ -42,9 +42,12 @@ class BasePaymentHandler
 		return Str::of(self::class)->afterLast("/");
 	}
 
+	/**
+	 * @return string[]
+	 */
 	public static function getAllPaymentHandlers()
 	{
-		return [
+		return collect([
 
 			//IMPORTANT: THESE CLASSES MUST NOT HAVE CONSTRUCTOR(S). IF THEY MUST, CONSTRUCTOR(S) MUST NOT ACCEPT ANY
 			// PARAMETER (this is because to handle payment provider response, we new-up instances of items in this array without constructors)
@@ -54,7 +57,10 @@ class BasePaymentHandler
 			Interswitch::class,
 			UnifiedPayments::class,
 
-		];
+		])
+			->map(function (PaymentHandlerInterface $paymentHandlerInterface) {
+				return $paymentHandlerInterface->getUniquePaymentHandlerName();
+			});
 	}
 
 	/**

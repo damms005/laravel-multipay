@@ -38,9 +38,16 @@ php artisan vendor:publish --provider="Damms005\LaravelCashier\LaravelCashierSer
 
 ## Usage
 
+### Step 1
+
+Send a `POST` request to `route(payment.show_transaction_details_for_user_confirmation)`.
+Check [InitiatePaymentRequest](src/Http/Requests/InitiatePaymentRequest.php) to know the values you are to post to this endpoint
+
+### Step 2
+
+Upon user confirmation of transaction, user is redirected to the appropriate payment gateway
+
 The `ASuccessfulPaymentWasMade` event will be fired whenever a successful payment occurs
-
-
 
 ```php
 $laravelCashier = new Damms005\LaravelCashier();

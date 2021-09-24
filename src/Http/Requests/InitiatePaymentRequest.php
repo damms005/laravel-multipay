@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\PaymentHandlers\BasePaymentHandler;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class InitiatePaymentRequest extends FormRequest
 {
@@ -24,11 +26,14 @@ class InitiatePaymentRequest extends FormRequest
 	public function rules()
 	{
 		return [
-			'amount'                  => 'required|numeric',
-			'currency'                => 'string',
-			'user_id'                 => 'required|numeric',
-			'payment_processor'       => 'required|string',
-			'transaction_description' => 'required|string',
+			'amount'                  => ['required', 'numeric'],
+			'currency'                => ['required', 'string'],
+			'user_id'                 => ['required', 'numeric'],
+			'transaction_description' => ['required', 'string'],
+			'payment_processor'       => [
+				'required',
+				Rule::in(BasePaymentHandler::getAllPaymentHandlers()),
+			],
 		];
 	}
 }
