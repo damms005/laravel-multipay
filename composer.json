@@ -1,17 +1,17 @@
 {
-    "name": ":vendor_slug/:package_slug",
-    "description": ":package_description",
+    "name": "damms005/laravel-cashier",
+    "description": "An opinionated Laravel package for handling payments in a Laravel package",
     "keywords": [
-        ":vendor_name",
+        "damms005",
         "laravel",
-        ":package_slug"
+        "laravel-cashier"
     ],
-    "homepage": "https://github.com/:vendor_slug/:package_slug",
+    "homepage": "https://github.com/damms005/laravel-cashier",
     "license": "MIT",
     "authors": [
         {
-            "name": ":author_name",
-            "email": "author@domain.com",
+            "name": "Damilola Olowookere",
+            "email": "damms005@gmail.com",
             "role": "Developer"
         }
     ],
@@ -30,13 +30,13 @@
     },
     "autoload": {
         "psr-4": {
-            "VendorName\\Skeleton\\": "src",
-            "VendorName\\Skeleton\\Database\\Factories\\": "database/factories"
+            "Damms005\\LaravelCashier\\": "src",
+            "Damms005\\LaravelCashier\\Database\\Factories\\": "database/factories"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "VendorName\\Skeleton\\Tests\\": "tests"
+            "Damms005\\LaravelCashier\\Tests\\": "tests"
         }
     },
     "scripts": {
@@ -49,10 +49,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "VendorName\\Skeleton\\SkeletonServiceProvider"
+                "Damms005\\LaravelCashier\\LaravelCashierServiceProvider"
             ],
             "aliases": {
-                "Skeleton": "VendorName\\Skeleton\\SkeletonFacade"
+                "LaravelCashier": "Damms005\\LaravelCashier\\LaravelCashierFacade"
             }
         }
     },

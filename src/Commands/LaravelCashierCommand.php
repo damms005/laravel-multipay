@@ -1,12 +1,12 @@
 <?php
 
-namespace VendorName\Skeleton\Commands;
+namespace Damms005\LaravelCashier\Commands;
 
 use Illuminate\Console\Command;
 
-class SkeletonCommand extends Command
+class LaravelCashierCommand extends Command
 {
-    public $signature = 'skeleton';
+    public $signature = 'laravel-cashier';
 
     public $description = 'My command';
 
