@@ -2,24 +2,23 @@
 
 namespace Damms005\LaravelCashier;
 
-use Spatie\LaravelPackageTools\Package;
-use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Damms005\LaravelCashier\Commands\LaravelCashierCommand;
+use Illuminate\Support\ServiceProvider;
 
-class LaravelCashierServiceProvider extends PackageServiceProvider
+class LaravelCashierServiceProvider extends ServiceProvider
 {
-    public function configurePackage(Package $package): void
-    {
-        /*
-         * This class is a Package Service Provider
-         *
-         * More info: https://github.com/spatie/laravel-package-tools
-         */
-        $package
-            ->name('laravel-cashier')
-            ->hasConfigFile('laravel-cashier')
-            ->hasViews()
-            ->hasMigration('create_laravel-cashier_table')
-            ->hasCommand(LaravelCashierCommand::class);
-    }
+	public function boot(): void
+	{
+		$this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+		$this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
+        $this->loadViewsFrom(__DIR__.'/../views', 'laravel-cashier');
+
+		$this->publishes([__DIR__ . '/../config/laravel-cashier.php' => config_path('laravel-cashier.php')], 'laravel-cashier-config');
+	}
+
+	public function register()
+	{
+		$this->mergeConfigFrom(
+			__DIR__ . '/../config/laravel-cashier.php', 'laravel-cashier'
+		);
+	}
 }

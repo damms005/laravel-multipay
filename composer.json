@@ -17,8 +17,9 @@
     ],
     "require": {
         "php": "^8.0",
-        "spatie/laravel-package-tools": "^1.4.3",
-        "illuminate/contracts": "^8.37"
+        "illuminate/support": "^8.61",
+        "kingflamez/laravelrave": "^4.2",
+        "yabacon/paystack-php": "^2.2"
     },
     "require-dev": {
         "nunomaduro/collision": "^5.3",

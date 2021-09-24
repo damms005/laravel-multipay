@@ -38,6 +38,10 @@ php artisan vendor:publish --provider="Damms005\LaravelCashier\LaravelCashierSer
 
 ## Usage
 
+The `ASuccessfulPaymentWasMade` event will be fired whenever a successful payment occurs
+
+
+
 ```php
 $laravelCashier = new Damms005\LaravelCashier();
 echo $laravelCashier->echoPhrase('Hello, Damms005!');
