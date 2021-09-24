@@ -19,7 +19,7 @@ class CreateLaravelCashierPaymentsTable extends Migration
 			$table->integer("user_id");
 			$table->string("product_id")->nullable();
 			$table->bigInteger("original_amount_displayed_to_user");
-			$table->string("transaction_currency");
+			$table->string("transaction_currency"); //in ISO-4217 format
 			$table->string("transaction_description");
 			$table->string("transaction_reference");
 			$table->string("payment_processor_name");

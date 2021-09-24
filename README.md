@@ -8,13 +8,6 @@
 Whether you want to quickly bootstrap payment processing for your Laravel applications, or you want a way to test supported payment processors, this package's got you covered.
 Being opinionated, it comes with [Tailwindcss-powered](http://tailwindcss.com/) blade views, so that you can simply Plug-and-play™️.
 
-Currently, this package supports the following online payment processors/handler
-
--   [Paystack](https://paystack.com)
--   [Flutterwave](https://flutterwave.com)
--   [Interswitch](https://www.interswitchgroup.com)
--   [UnifiedPayments](https://unifiedpayments.com)
-
 ## Installation
 
 You can install the package via composer:
@@ -41,7 +34,30 @@ php artisan vendor:publish --provider="Damms005\LaravelCashier\LaravelCashierSer
 ### Step 1
 
 Send a `POST` request to `/payment/details/confirm`.
-Check [InitiatePaymentRequest](src/Http/Requests/InitiatePaymentRequest.php) to know the values you are to post to this endpoint
+Check the [InitiatePaymentRequest](src/Http/Requests/InitiatePaymentRequest.php#L28) form request to know the values you are to post to this endpoint.
+
+```html
+<form
+    action="{{ route('payment.show_transaction_details_for_user_confirmation') }}"
+    method="post"
+>
+    <!-- Any of the handlers listed in the Supported payment handlers section of this README -->
+    <input name="payment_processor" value="Paystack" />
+
+    <input name="amount" value="12345" />
+
+    <!-- ISO-4217 format. Ensure to check with you -->
+    <input name="currency" value="NGN" />
+
+    <!-- id of the user making the payment -->
+    <input name="user_id" value="1" />
+
+    <input
+        name="transaction_description"
+        value="Payment for Tesla Model Y picture"
+    />
+</form>
+```
 
 ### Step 2
 
@@ -53,6 +69,15 @@ When user is done with the transaction on the payment handler's end (either succ
 back to `/api/payment/completed`.
 
 If there are additional steps you want to take upon successful payment, listen for the `ASuccessfulPaymentWasMade` event. It will be fired whenever a successful payment occurs.
+
+## Supported payment handlers
+
+Currently, this package supports the following online payment processors/handler
+
+-   [Paystack](https://paystack.com)
+-   [Flutterwave](https://flutterwave.com)
+-   [Interswitch](https://www.interswitchgroup.com)
+-   [UnifiedPayments](https://unifiedpayments.com)
 
 ## Testing
 
