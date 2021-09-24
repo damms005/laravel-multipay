@@ -2,9 +2,9 @@
 
 namespace Damms005\LaravelCashier\Tests;
 
+use Damms005\LaravelCashier\LaravelCashierServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Orchestra\Testbench\TestCase as Orchestra;
-use Damms005\LaravelCashier\LaravelCashierServiceProvider;
 
 class TestCase extends Orchestra
 {

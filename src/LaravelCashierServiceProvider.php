@@ -2,9 +2,9 @@
 
 namespace Damms005\LaravelCashier;
 
+use Damms005\LaravelCashier\Commands\LaravelCashierCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Damms005\LaravelCashier\Commands\LaravelCashierCommand;
 
 class LaravelCashierServiceProvider extends PackageServiceProvider
 {
