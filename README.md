@@ -1,4 +1,4 @@
-# An opinionated Laravel package for handling payments in a Laravel package 💸
+# An opinionated Laravel package for handling payments 💸
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/damms005/laravel-cashier.svg?style=flat-square)](https://packagist.org/packages/damms005/laravel-cashier)
 [![GitHub Tests Action Status](https://img.shields.io/github/workflow/status/damms005/laravel-cashier/run-tests?label=tests)](https://github.com/damms005/laravel-cashier/actions?query=workflow%3Arun-tests+branch%3Amain)
@@ -7,6 +7,15 @@
 
 Whether you want to quickly bootstrap payment processing for your Laravel applications, or you want a way to test supported payment processors, this package's got you covered.
 Being opinionated, it comes with [Tailwindcss-powered](http://tailwindcss.com/) blade views, so that you can simply Plug-and-play™️.
+
+## Currently supported payment handlers
+
+Currently, this package supports the following online payment processors/handlers
+
+-   [Paystack](https://paystack.com)
+-   [Flutterwave](https://flutterwave.com)
+-   [Interswitch](https://www.interswitchgroup.com)
+-   [UnifiedPayments](https://unifiedpayments.com)
 
 ## Installation
 
@@ -26,7 +35,7 @@ Run `php artisan migrate`
 
 ## Usage
 
-### Test drive 🏎️
+### Test drive 🚀
 
 Want to take things for a spin? simply visit `/payment/test-drive` .
 For [Paystack](https://paystack.com), ensure to set `paystack_secret_key` key in the `laravel-cashier.php` config file that you published previously at installation. You can get your key from your [settings page](https://dashboard.paystack.co/#/settings/developer).
@@ -67,15 +76,6 @@ back to `/api/payment/completed`.
 
 If there are additional steps you want to take upon successful payment, listen for `SuccessfulLaravelCahierPaymentEvent`. It will be fired whenever a successful payment occurs, with its corresponding `Payment` model.
 
-## Supported Payment Handlers
-
-Currently, this package supports the following online payment processors/handlers
-
--   [Paystack](https://paystack.com)
--   [Flutterwave](https://flutterwave.com)
--   [Interswitch](https://www.interswitchgroup.com)
--   [UnifiedPayments](https://unifiedpayments.com)
-
 ## Testing
 
 ```bash
@@ -95,4 +95,4 @@ The MIT License (MIT). Please see [License File](LICENSE.md) for more informatio
 
 ## Roadmap
 
--   Use Tailwindcss to apply minimal styling
+[ ] Use Tailwindcss to apply minimal styling
