@@ -5,7 +5,7 @@
 
 # Laravel Cashier 💸
 
-![Art image for laravel-model-export](https://banners.beyondco.de/Laravel%20Cashier.png?theme=light&packageManager=composer+require&packageName=damms005%2Flaravel-cashier&pattern=aztec&style=style_1&description=An+opinionated+Laravel+package+for+handling+payments%2C+with+batteries+included&md=1&showWatermark=1&fontSize=100px&images=cash&widths=350)
+![Art image for laravel-cashier](https://banners.beyondco.de/Laravel%20Cashier.png?theme=light&packageManager=composer+require&packageName=damms005%2Flaravel-cashier&pattern=aztec&style=style_1&description=An+opinionated+Laravel+package+for+handling+payments%2C+complete+with+balde+views&md=1&showWatermark=1&fontSize=100px&images=cash&widths=350)
 
 An opinionated Laravel package to handle payments, complete with blade views, routing, and everything in-between.
 
@@ -13,6 +13,19 @@ Whether you want to quickly bootstrap payment processing for your Laravel applic
 
 > Although opinionated, this package allows you to "theme" the views. It achieves this theming by
 > `@extend()`ing whatever view you specify in `config('laravel-cashier.extended_layout')` (defaults to `layout.app`). This provides a smooth Plug-and-play™️ experience.
+
+## Currently supported payment handlers
+
+Currently, this package supports the following online payment processors/handlers
+
+-   [Paystack](https://paystack.com)
+-   [Flutterwave](https://flutterwave.com)
+-   [UnifiedPayments](https://unifiedpayments.com)
+-   [Interswitch](https://www.interswitchgroup.com)
+
+> Your preferred payment handler is not yet supported? Please consider [opening the appropriate issue type](https://github.com/damms005/laravel-cashier/issues/new?assignees=&labels=&template=addition-of-new-payment-handler.md&title=Addition+of+new+payment+handler+-+%5Bpayment+handler+name+here%5D).
+
+> Adding a new payment handler is straight-forward. Simply add the new payment class to the `Damms005\LaravelCashier\Services\PaymentHandlers` namespace and implement `Damms005\LaravelCashier\Contracts\PaymentHandlerInterface`
 
 ## Installation
 
@@ -74,15 +87,6 @@ When user is done with the transaction on the payment handler's end (either succ
 back to `/api/payment/completed`.
 
 > If there are additional steps you want to take upon successful payment, listen for `SuccessfulLaravelCahierPaymentEvent`. It will be fired whenever a successful payment occurs, with its corresponding `Payment` model.
-
-## Currently supported payment handlers
-
-Currently, this package supports the following online payment processors/handlers
-
--   [Paystack](https://paystack.com)
--   [Flutterwave](https://flutterwave.com)
--   [UnifiedPayments](https://unifiedpayments.com)
--   [Interswitch](https://www.interswitchgroup.com)
 
 ## Testing
 
