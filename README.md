@@ -1,4 +1,4 @@
-# An opinionated Laravel package for handling payments 💸
+# An opinionated Laravel package to handle payments 💸
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/damms005/laravel-cashier.svg?style=flat-square)](https://packagist.org/packages/damms005/laravel-cashier)
 [![GitHub Tests Action Status](https://img.shields.io/github/workflow/status/damms005/laravel-cashier/run-tests?label=tests)](https://github.com/damms005/laravel-cashier/actions?query=workflow%3Arun-tests+branch%3Amain)
@@ -6,16 +6,9 @@
 [![Total Downloads](https://img.shields.io/packagist/dt/damms005/laravel-cashier.svg?style=flat-square)](https://packagist.org/packages/damms005/laravel-cashier)
 
 Whether you want to quickly bootstrap payment processing for your Laravel applications, or you want a way to test supported payment processors, this package's got you covered.
-Being opinionated, it comes with [Tailwindcss-powered](http://tailwindcss.com/) blade views, so that you can simply Plug-and-play™️.
 
-## Currently supported payment handlers
-
-Currently, this package supports the following online payment processors/handlers
-
--   [Paystack](https://paystack.com)
--   [Flutterwave](https://flutterwave.com)
--   [Interswitch](https://www.interswitchgroup.com)
--   [UnifiedPayments](https://unifiedpayments.com)
+Although opinionated, this package allows you to "theme" the views. It achieves this theming by
+`@extend()`ing whatever view you specify in `config('laravel-cashier.extended_layout')` (defaults to `layout.app`). This provides a smooth Plug-and-play™️ experience.
 
 ## Installation
 
@@ -42,8 +35,7 @@ For [Paystack](https://paystack.com), ensure to set `paystack_secret_key` key in
 
 #### Needed Third-party Integrations:
 
-Flutterwave: https://dashboard.flutterwave.com/dashboard/settings/apis
-Corresponding environmental variables:
+-   Flutterwave: If you want to use Flutterwave, ensure to get your API details [from the dashboard](https://dashboard.flutterwave.com/dashboard/settings/apis), and use it to set the following environmental variables:
 
 ```
 FLW_PUBLIC_KEY=FLWPUBK-xxxxxxxxxxxxxxxxxxxxx-X
@@ -51,14 +43,13 @@ FLW_SECRET_KEY=FLWSECK-xxxxxxxxxxxxxxxxxxxxx-X
 FLW_SECRET_HASH='My_lovelysite123'
 ```
 
-Paystack: https://dashboard.paystack.co/#/settings/developer
-Corresponding environmental variables:
+-   Paystack: Paystack requires a secret key to interact. Go to [the Paystack dashboard](https://dashboard.paystack.co/#/settings/developer) to obtain one, and use it to set the following environmental variable:
 
 ```
 PAYSTACK_SECRET_KEY=FLWPUBK-xxxxxxxxxxxxxxxxxxxxx-X
 ```
 
-### Usage in Laravel projects
+### Typical process-flow
 
 #### Step 1
 
@@ -75,6 +66,15 @@ When user is done with the transaction on the payment handler's end (either succ
 back to `/api/payment/completed`.
 
 If there are additional steps you want to take upon successful payment, listen for `SuccessfulLaravelCahierPaymentEvent`. It will be fired whenever a successful payment occurs, with its corresponding `Payment` model.
+
+## Currently supported payment handlers
+
+Currently, this package supports the following online payment processors/handlers
+
+-   [Paystack](https://paystack.com)
+-   [Flutterwave](https://flutterwave.com)
+-   [UnifiedPayments](https://unifiedpayments.com)
+-   [Interswitch](https://www.interswitchgroup.com)
 
 ## Testing
 
@@ -95,4 +95,4 @@ The MIT License (MIT). Please see [License File](LICENSE.md) for more informatio
 
 ## Roadmap
 
-[ ] Use Tailwindcss to apply minimal styling
+[] Use Tailwindcss to apply minimal styling
