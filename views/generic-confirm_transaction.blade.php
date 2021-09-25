@@ -1,4 +1,4 @@
-@extends('master')
+@extends(config('laravel-cashier.extended_layout'))
 @section('title', 'Payment Confirmation')
 
 @section('content')
@@ -19,10 +19,6 @@
 
 	<div class="mt-8">
 		<span class="block tw-font-bold tw-text-gray-600">Description:</span> {{ $payment->transaction_description }}
-	</div>
-
-	<div class="mt-8">
-		<span class="block tw-font-bold tw-text-gray-600">Payee:</span> {{ $payment->user->fullname }}
 	</div>
 
 	<div class="mt-8">

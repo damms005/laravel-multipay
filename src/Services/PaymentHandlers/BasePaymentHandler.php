@@ -75,13 +75,14 @@ class BasePaymentHandler
 	 * This method should also create a record for this transaction in the database payments table.
 	 *
 	 */
-	public function storePaymentAndShowUserBeforeProcessing(int $user_id, $original_amount_displayed_to_user, string $transaction_description, string $completion_url = null, Request $optionalRequestForEloquentModelLinkage = null, $preferredView = null, $transaction_reference = null)
+	public function storePaymentAndShowUserBeforeProcessing(int $user_id, $original_amount_displayed_to_user, string $transaction_description, $transaction_currency, string $completion_url = null, Request $optionalRequestForEloquentModelLinkage = null, $preferredView = null, $transaction_reference = null)
 	{
 		$payment = Payment::firstOrCreate([
 			"user_id"                           => $user_id,
 			"completion_url"                    => $completion_url,
 			"transaction_reference"             => $transaction_reference ?? strtoupper(Str::random(10)),
 			"payment_processor_name"            => $this->paymentHandlerInterface->getUniquePaymentHandlerName(),
+			'transaction_currency'              => $transaction_currency,
 			'transaction_description'           => $transaction_description,
 			"original_amount_displayed_to_user" => $original_amount_displayed_to_user,
 		]);
@@ -97,10 +98,10 @@ class BasePaymentHandler
 			$this->linkPaymentToEloquentModel($optionalRequestForEloquentModelLinkage, $payment);
 		}
 
-		$exports = compact('payment', 'post_payment_confirmation_submit', 'user');
+		$exports = compact('payment', 'post_payment_confirmation_submit', 'user_id');
 
 		if (empty($preferredView)) {
-			return view('laravel-cashier::payment.generic-confirm_transaction', $exports);
+			return view('laravel-cashier::generic-confirm_transaction', $exports);
 		} else {
 			return view($preferredView, $exports);
 		}
@@ -153,7 +154,7 @@ class BasePaymentHandler
 			}
 		}
 
-		return view('laravel-cashier::payment.transaction-completed', compact('payment', 'isJsonDescription', 'paymentDescription'));
+		return view('laravel-cashier::transaction-completed', compact('payment', 'isJsonDescription', 'paymentDescription'));
 	}
 
 	public function getPayment(string $transaction_reference): Payment

@@ -44,7 +44,7 @@ class Interswitch extends BasePaymentHandler implements PaymentHandlerInterface
         ]);
 
         return view(
-            'laravel-cashier::payment.interswitch-form',
+            'laravel-cashier::interswitch-form',
             [
                 "hash" => $this->generateHashToSendInPaymentRequest(),
                 "user" => $this->user,

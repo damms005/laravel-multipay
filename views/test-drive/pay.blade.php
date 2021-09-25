@@ -36,7 +36,11 @@
 			<!-- Any of the handlers listed in the Supported Payment Handlers section of this README -->
 			Payment handler (Good UX tip 👍: this should be a hidden field)
 			<div>
-				<input type="text" name="payment_processor" value="Paystack" />
+				<select name="payment_processor">
+					@foreach ($paymentProviders as $paymentProvider)
+					<option>{{$paymentProvider}}</option>
+					@endforeach
+				</select>
 			</div>
 		</div>
 		<br>
@@ -58,10 +62,7 @@
 		<br>
 
 		<div>
-			ID of the user making the payment. Typically, this is an Eloquent authenticated user model
-			<div>
-				<input type="number" name="user_id" value="1" />
-			</div>
+			<input type="hidden" name="user_id" value="{{$user_id}}" />
 		</div>
 		<br>
 

@@ -14,7 +14,7 @@ class CreateLaravelCashierPaymentsTable extends Migration
 	 */
 	public function up()
 	{
-		Schema::create(Payment::getTableName(), function (Blueprint $table) {
+		Schema::create((new Payment)->getTable(), function (Blueprint $table) {
 			$table->id();
 			$table->integer("user_id");
 			$table->string("product_id")->nullable();
@@ -27,7 +27,7 @@ class CreateLaravelCashierPaymentsTable extends Migration
 			$table->string("processor_transaction_reference")->nullable();
 			$table->string("processor_returned_response_code")->nullable();
 			$table->string("processor_returned_card_number")->nullable();
-			$table->text("processor_returned_response_description");
+			$table->text("processor_returned_response_description")->nullable();
 			$table->string("processor_returned_amount")->nullable();
 			$table->timestamp("processor_returned_transaction_date")->nullable();
 			$table->string("customer_checkout_ip_address")->nullable();
@@ -47,6 +47,6 @@ class CreateLaravelCashierPaymentsTable extends Migration
 	 */
 	public function down()
 	{
-		Schema::dropIfExists(Payment::getTableName());
+		Schema::dropIfExists((new Payment)->getTable());
 	}
 }

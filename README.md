@@ -26,20 +26,23 @@ Run `php artisan migrate`
 
 ## Usage
 
-Want to take things for a spin? simply visit `/payment/test-drive` 🏎️.
+### Test drive 🏎️
 
-To use this in your Laravel project, take these steps:
+Want to take things for a spin? simply visit `/payment/test-drive` .
+For [Paystack](https://paystack.com), ensure to set `paystack_secret_key` key in the `laravel-cashier.php` config file that you published previously at installation. You can get your key from your [settings page](https://dashboard.paystack.co/#/settings/developer).
 
-### Step 1
+### Usage in Laravel projects
+
+#### Step 1
 
 Send a `POST` request to `/payment/details/confirm`.
 Check the [InitiatePaymentRequest](src/Http/Requests/InitiatePaymentRequest.php#L28) form request to know the values you are to post to this endpoint. (tip: you can also check [views/test-drive/pay.blade.php](`views/test-drive/pay.blade.php`))
 
-### Step 2
+#### Step 2
 
 Upon user confirmation of transaction, user is redirected to the appropriate payment handler's gateway.
 
-### Step 3
+#### Step 3
 
 When user is done with the transaction on the payment handler's end (either successfully paid, or declined transaction), user is redirected
 back to `/api/payment/completed`.

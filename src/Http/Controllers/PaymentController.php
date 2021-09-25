@@ -24,10 +24,17 @@ class PaymentController extends Controller
 		$amount = $initiatePaymentRequest->amount;
 
 		$description = $initiatePaymentRequest->transaction_description;
+		$currency    = $initiatePaymentRequest->currency;
 
 		$view = $initiatePaymentRequest->filled('preferred_view') ? $initiatePaymentRequest->preferred_view : null;
 
-		return PaymentService::storePaymentAndShowUserBeforeProcessing($paymentHandler, $initiatePaymentRequest->user_id, $amount, $description, $view);
+		return PaymentService::storePaymentAndShowUserBeforeProcessing(
+			$paymentHandler,
+			$initiatePaymentRequest->user_id,
+			$amount,
+			$description,
+			$currency,
+			$view);
 	}
 
 	/**
@@ -42,7 +49,7 @@ class PaymentController extends Controller
 	 */
 	public static function makeAutoSubmittedFormRedirect(int $amountInLowestDenomination, $user, PaymentHandlerInterface $payment_processor, $transaction_description)
 	{
-		return view('laravel-cashier::payment.auto-submit-form', [
+		return view('laravel-cashier::auto-submit-form', [
 			"amount"                  => $amountInLowestDenomination,
 			"user_id"                 => $user->id,
 			"payment_processor"       => $payment_processor::getUniquePaymentHandlerName(),
@@ -72,12 +79,9 @@ class PaymentController extends Controller
 				->withInput();
 		}
 
-		try {
-			return (new BasePaymentHandler($payment->getPaymentProvider()))
-				->sendTransactionToPaymentGateway($payment, route('payment.finished.callback_url'));
-		} catch (\Throwable$th) {
-			throw new \Exception("Unknown payment interface: " . $payment->payment_processor_name);
-		}
+		$handler = new BasePaymentHandler($payment->getPaymentProvider());
+
+		return $handler->sendTransactionToPaymentGateway($payment, route('payment.finished.callback_url'));
 	}
 
 	public function handlePaymentGatewayResponse(Request $request)

@@ -2,6 +2,11 @@
 return [
 
 	/**
+	 * The layout to extend when displaying views
+	 */
+	"extended_layout"     => "layouts.app",
+
+	/**
 	 * String to pre-pend to database table names
 	 */
 	"table_prefix"        => "",

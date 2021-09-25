@@ -26,7 +26,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
 	}
 
 	/**
-	 * For Paystack, this is a get request. (https://developers.paystack.co/docs/paystack-standard#section-4-verify-transaction)
+	 * This is a get request. (https://developers.paystack.co/docs/paystack-standard#section-4-verify-transaction)
 	 *
 	 * @param Request $paymentGatewayServerResponse
 	 *
