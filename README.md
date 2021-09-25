@@ -1,4 +1,6 @@
-# An opinionated Laravel package to handle payments 💸
+# Laravel Cashier 💸
+
+An opinionated Laravel package to handle payments, complete with blade views, routing, and everything in-between.
 
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/damms005/laravel-cashier)](https://github.com/damms005/laravel-cashier/releases)
 [![GitHub Tests Action Status](https://img.shields.io/github/workflow/status/damms005/laravel-cashier/run-tests?label=tests)](https://github.com/damms005/laravel-cashier/actions?query=workflow%3Arun-tests+branch%3Amain)
