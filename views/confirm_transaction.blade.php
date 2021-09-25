@@ -30,7 +30,7 @@
 	</div>
 
 	<div class="mt-8">
-		<span class="block tw-font-bold tw-text-gray-600">Amount:</span> {{ setting('site.application_fee_currency_symbol') }}{{ number_format( $payment->original_amount_displayed_to_user ) }}
+		<span class="block tw-font-bold tw-text-gray-600">Amount:</span> {{ $currency }} {{ number_format( $payment->original_amount_displayed_to_user ) }}
 	</div>
 
 	<div class="flex tw-mt-8">

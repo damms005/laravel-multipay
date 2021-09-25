@@ -30,8 +30,6 @@ Run
 php artisan migrate
 ```
 
-...
-
 ## Usage
 
 ### Test drive 🚀

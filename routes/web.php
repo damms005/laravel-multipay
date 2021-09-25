@@ -2,6 +2,7 @@
 
 use Damms005\LaravelCashier\Http\Controllers\PaymentController;
 use Damms005\LaravelCashier\Services\PaymentHandlers\BasePaymentHandler;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => config('laravel-cashier.payment_route_path')], function () {
@@ -11,6 +12,9 @@ Route::group(['prefix' => config('laravel-cashier.payment_route_path')], functio
 
 		//take it for a spin
 		Route::get('/test-drive', function () {
+
+			throw_if(!Auth::check(), "Please setup authentication (e.g. with Laravel Breeze) and login before test-driving");
+
 			$paymentProviders = BasePaymentHandler::getNamesOfPaymentHandlers();
 			$user_id          = auth()->user()->id;
 
