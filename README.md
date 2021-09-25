@@ -1,4 +1,4 @@
-# An opinionated Laravel package for handling payments in a Laravel package
+# An opinionated Laravel package for handling payments in a Laravel package 💸
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/damms005/laravel-cashier.svg?style=flat-square)](https://packagist.org/packages/damms005/laravel-cashier)
 [![GitHub Tests Action Status](https://img.shields.io/github/workflow/status/damms005/laravel-cashier/run-tests?label=tests)](https://github.com/damms005/laravel-cashier/actions?query=workflow%3Arun-tests+branch%3Amain)
@@ -30,6 +30,10 @@ php artisan vendor:publish --provider="Damms005\LaravelCashier\LaravelCashierSer
 ```
 
 ## Usage
+
+Want to take things for a spin? simply visit `/payment/test-drive` 🏎️.
+
+To use this in your Laravel project, take these steps:
 
 ### Step 1
 
