@@ -30,6 +30,8 @@ Run
 php artisan migrate
 ```
 
+...
+
 ## Usage
 
 ### Test drive 🚀
@@ -58,7 +60,7 @@ PAYSTACK_SECRET_KEY=FLWPUBK-xxxxxxxxxxxxxxxxxxxxx-X
 #### Step 1
 
 Send a `POST` request to `/payment/details/confirm`.
-Check the [InitiatePaymentRequest](src/Http/Requests/InitiatePaymentRequest.php#L28) form request to know the values you are to post to this endpoint. (tip: you can also check [pay.blade.php](views/test-drive/pay.blade.php))
+Check the [InitiatePaymentRequest](src/Http/Requests/InitiatePaymentRequest.php#L28) form request to know the values you are to post to this endpoint. (tip: you can also check [test-drive/pay.blade.php](views/test-drive/pay.blade.php))
 
 #### Step 2
 
@@ -69,7 +71,7 @@ Upon user confirmation of transaction, user is redirected to the appropriate pay
 When user is done with the transaction on the payment handler's end (either successfully paid, or declined transaction), user is redirected
 back to `/api/payment/completed`.
 
-If there are additional steps you want to take upon successful payment, listen for `SuccessfulLaravelCahierPaymentEvent`. It will be fired whenever a successful payment occurs, with its corresponding `Payment` model.
+> If there are additional steps you want to take upon successful payment, listen for `SuccessfulLaravelCahierPaymentEvent`. It will be fired whenever a successful payment occurs, with its corresponding `Payment` model.
 
 ## Currently supported payment handlers
 
