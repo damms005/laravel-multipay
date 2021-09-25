@@ -24,7 +24,11 @@ Publish the config file with:
 php artisan vendor:publish --tag=laravel-cashier-config
 ```
 
-Run `php artisan migrate`
+Run
+
+```
+php artisan migrate
+```
 
 ## Usage
 
@@ -54,7 +58,7 @@ PAYSTACK_SECRET_KEY=FLWPUBK-xxxxxxxxxxxxxxxxxxxxx-X
 #### Step 1
 
 Send a `POST` request to `/payment/details/confirm`.
-Check the [InitiatePaymentRequest](src/Http/Requests/InitiatePaymentRequest.php#L28) form request to know the values you are to post to this endpoint. (tip: you can also check [views/test-drive/pay.blade.php](`views/test-drive/pay.blade.php`))
+Check the [InitiatePaymentRequest](src/Http/Requests/InitiatePaymentRequest.php#L28) form request to know the values you are to post to this endpoint. (tip: you can also check [pay.blade.php](views/test-drive/pay.blade.php))
 
 #### Step 2
 
@@ -95,4 +99,4 @@ The MIT License (MIT). Please see [License File](LICENSE.md) for more informatio
 
 ## Roadmap
 
-- [ ] Use Tailwindcss to apply minimal styling
+-   [ ] Use Tailwindcss to apply minimal styling
