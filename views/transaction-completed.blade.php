@@ -1,10 +1,11 @@
-@extends( env('USE_TIMS_TOOLZ_THEME') ? 'themes.edubin.master' : 'master')
-@section('title', env('SCHOOL_NAME') . " - Transaction Summary")
+@extends('master')
+@section('title', 'Transaction Summary')
 
 @section('content')
 
 <style>
 	@media print {
+
 		.header,
 		.footer,
 		.page-titles,

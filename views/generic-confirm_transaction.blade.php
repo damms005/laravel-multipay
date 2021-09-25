@@ -1,5 +1,5 @@
-@extends( env('USE_TIMS_TOOLZ_THEME') ? 'themes.edubin.master' : 'master')
-@section('title', env('SCHOOL_NAME') . " - Payment Confirmation")
+@extends('master')
+@section('title', 'Payment Confirmation')
 
 @section('content')
 
