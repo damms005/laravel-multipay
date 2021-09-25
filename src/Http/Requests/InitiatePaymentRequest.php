@@ -8,38 +8,38 @@ use Illuminate\Validation\Rule;
 
 class InitiatePaymentRequest extends FormRequest
 {
-	/**
-	 * Determine if the user is authorized to make this request.
-	 *
-	 * @return bool
-	 */
-	public function authorize()
-	{
-		return true;
-	}
+    /**
+     * Determine if the user is authorized to make this request.
+     *
+     * @return bool
+     */
+    public function authorize()
+    {
+        return true;
+    }
 
-	/**
-	 * Get the validation rules that apply to the request.
-	 *
-	 * @return array
-	 */
-	public function rules()
-	{
-		return [
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array
+     */
+    public function rules()
+    {
+        return [
 
-			//in ISO-4217 format
-			'currency'                => ['required', 'string'],
+            //in ISO-4217 format
+            'currency' => ['required', 'string'],
 
-			'amount'                  => ['required', 'numeric'],
+            'amount' => ['required', 'numeric'],
 
-			'user_id'                 => ['required', 'numeric'],
+            'user_id' => ['required', 'numeric'],
 
-			'transaction_description' => ['required', 'string'],
+            'transaction_description' => ['required', 'string'],
 
-			'payment_processor'       => [
-				'required',
-				Rule::in(BasePaymentHandler::getNamesOfPaymentHandlers()),
-			],
-		];
-	}
+            'payment_processor' => [
+                'required',
+                Rule::in(BasePaymentHandler::getNamesOfPaymentHandlers()),
+            ],
+        ];
+    }
 }
