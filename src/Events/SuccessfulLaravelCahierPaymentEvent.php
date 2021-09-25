@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Events;
+namespace Damms005\LaravelCashier\Events;
 
-use App\Models\Payment;
+use Damms005\LaravelCashier\Models\Payment;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class ASuccessfulPaymentWasMade
+class SuccessfulLaravelCahierPaymentEvent
 {
     use Dispatchable;
     use InteractsWithSockets;

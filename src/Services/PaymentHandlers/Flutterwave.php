@@ -1,9 +1,9 @@
 <?php
 
-namespace App\PaymentHandlers;
+namespace Damms005\LaravelCashier\Services\PaymentHandlers;
 
-use App\Contracts\PaymentHandlerInterface;
-use App\Models\Payment;
+use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
+use Damms005\LaravelCashier\Models\Payment;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use KingFlamez\Rave\Facades\Rave as FlutterwaveRave;

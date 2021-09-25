@@ -1,11 +1,11 @@
 <?php
 
-namespace App\PaymentHandlers;
+namespace Damms005\LaravelCashier\Services\PaymentHandlers;
 
-use App\Contracts\PaymentHandlerInterface;
-use App\Events\ASuccessfulPaymentWasMade;
-use App\Models\Payment;
-use App\Notifications\TransactionCompleted;
+use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
+use Damms005\LaravelCashier\Events\SuccessfulLaravelCahierPaymentEvent;
+use Damms005\LaravelCashier\Models\Payment;
+use Damms005\LaravelCashier\Notifications\TransactionCompleted;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -29,8 +29,7 @@ class BasePaymentHandler
 	{
 		//ensure the class is registered, so we are sure we will
 		//have a handler when payment gateway server returns response
-		if (!collect(self::getAllPaymentHandlers())->contains(get_class($paymentHandlerInterface))) {
-
+		if (!collect(self::getNamesOfPaymentHandlers())->contains($paymentHandlerInterface->getUniquePaymentHandlerName())) {
 			throw new \Exception("Unregistered payment handler: {$paymentHandlerInterface->getUniquePaymentHandlerName()}", 1);
 		}
 
@@ -39,18 +38,20 @@ class BasePaymentHandler
 
 	public static function getUniquePaymentHandlerName(): string
 	{
-		return Str::of(self::class)->afterLast("/");
+		return Str::of(static::class)->afterLast("\\");
 	}
 
 	/**
 	 * @return string[]
 	 */
-	public static function getAllPaymentHandlers()
+	public static function getNamesOfPaymentHandlers()
 	{
 		return collect([
 
-			//IMPORTANT: THESE CLASSES MUST NOT HAVE CONSTRUCTOR(S). IF THEY MUST, CONSTRUCTOR(S) MUST NOT ACCEPT ANY
-			// PARAMETER (this is because to handle payment provider response, we new-up instances of items in this array without constructors)
+			//IMPORTANT: IF YOU NEED CONSTRUCTORS IN ANY OF CLASSES, ENSURE
+			//THAT THE CONSTRUCTOR(S) DO NOT ACCEPT ANY PARAMETER
+			//this is because to handle payment provider response, we
+			//currently new-up instances of these classes without constructors.
 
 			Flutterwave::class,
 			Paystack::class,
@@ -58,8 +59,11 @@ class BasePaymentHandler
 			UnifiedPayments::class,
 
 		])
-			->map(function (PaymentHandlerInterface $paymentHandlerInterface) {
-				return $paymentHandlerInterface->getUniquePaymentHandlerName();
+			->map(function (string $paymentHandlerFqcn) {
+				/** @var PaymentHandlerInterface */
+				$paymentHandler = new $paymentHandlerFqcn;
+
+				return $paymentHandler->getUniquePaymentHandlerName();
 			});
 	}
 
@@ -70,13 +74,11 @@ class BasePaymentHandler
 	 * transaction reference/summary before proceed to payment.
 	 * This method should also create a record for this transaction in the database payments table.
 	 *
-	 *
-	 * @return void
 	 */
-	public function storePaymentAndShowUserBeforeProcessing($user, $original_amount_displayed_to_user, string $transaction_description, string $completion_url = null, Request $optionalRequestForEloquentModelLinkage = null, $preferredView = null, $transaction_reference = null)
+	public function storePaymentAndShowUserBeforeProcessing(int $user_id, $original_amount_displayed_to_user, string $transaction_description, string $completion_url = null, Request $optionalRequestForEloquentModelLinkage = null, $preferredView = null, $transaction_reference = null)
 	{
 		$payment = Payment::firstOrCreate([
-			"user_id"                           => $user->id,
+			"user_id"                           => $user_id,
 			"completion_url"                    => $completion_url,
 			"transaction_reference"             => $transaction_reference ?? strtoupper(Str::random(10)),
 			"payment_processor_name"            => $this->paymentHandlerInterface->getUniquePaymentHandlerName(),
@@ -97,7 +99,7 @@ class BasePaymentHandler
 
 		$exports = compact('payment', 'post_payment_confirmation_submit', 'user');
 
-		if (is_null($preferredView)) {
+		if (empty($preferredView)) {
 			return view('laravel-cashier::payment.generic-confirm_transaction', $exports);
 		} else {
 			return view($preferredView, $exports);
@@ -124,7 +126,7 @@ class BasePaymentHandler
 		 */
 		$payment = null;
 
-		collect(self::getAllPaymentHandlers())
+		collect(self::getNamesOfPaymentHandlers())
 			->each(function (string $paymentHandlerClassName) use ($paymentGatewayServerResponse, &$payment) {
 
 				$paymentHandler = new $paymentHandlerClassName();
@@ -132,7 +134,7 @@ class BasePaymentHandler
 
 				if ($payment) {
 					if ($payment->is_success == 1) {
-						event(new ASuccessfulPaymentWasMade($payment));
+						event(new SuccessfulLaravelCahierPaymentEvent($payment));
 					}
 
 					return false;

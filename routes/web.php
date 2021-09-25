@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\PaymentController;
+use Damms005\LaravelCashier\Http\Controllers\PaymentController;
 
 Route::group([
 	'middleware' => 'web',

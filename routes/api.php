@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\PaymentController;
+use Damms005\LaravelCashier\Http\Controllers\PaymentController;
 
 //we are using 'api' route for payment completion callback because some payment providers
 //post to the URL

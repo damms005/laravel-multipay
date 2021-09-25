@@ -41,12 +41,12 @@ Check the [InitiatePaymentRequest](src/Http/Requests/InitiatePaymentRequest.php#
     action="{{ route('payment.show_transaction_details_for_user_confirmation') }}"
     method="post"
 >
-    <!-- Any of the handlers listed in the Supported payment handlers section of this README -->
+    <!-- Any of the handlers listed in the Supported Payment Handlers section of this README -->
     <input name="payment_processor" value="Paystack" />
 
     <input name="amount" value="12345" />
 
-    <!-- ISO-4217 format. Ensure to check with you -->
+    <!-- ISO-4217 format. Ensure to check that the payment handler you specified above supports this currency -->
     <input name="currency" value="NGN" />
 
     <!-- id of the user making the payment -->
@@ -68,11 +68,11 @@ Upon user confirmation of transaction, user is redirected to the appropriate pay
 When user is done with the transaction on the payment handler's end (either successfully paid, or declined transaction), user is redirected
 back to `/api/payment/completed`.
 
-If there are additional steps you want to take upon successful payment, listen for the `ASuccessfulPaymentWasMade` event. It will be fired whenever a successful payment occurs.
+If there are additional steps you want to take upon successful payment, listen for `SuccessfulLaravelCahierPaymentEvent`. It will be fired whenever a successful payment occurs, with its corresponding `Payment` model.
 
-## Supported payment handlers
+## Supported Payment Handlers
 
-Currently, this package supports the following online payment processors/handler
+Currently, this package supports the following online payment processors/handlers
 
 -   [Paystack](https://paystack.com)
 -   [Flutterwave](https://flutterwave.com)

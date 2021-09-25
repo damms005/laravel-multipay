@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Http\Requests;
+namespace Damms005\LaravelCashier\Http\Requests;
 
-use App\PaymentHandlers\BasePaymentHandler;
+use Damms005\LaravelCashier\Services\PaymentHandlers\BasePaymentHandler;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -38,7 +38,7 @@ class InitiatePaymentRequest extends FormRequest
 
 			'payment_processor'       => [
 				'required',
-				Rule::in(BasePaymentHandler::getAllPaymentHandlers()),
+				Rule::in(BasePaymentHandler::getNamesOfPaymentHandlers()),
 			],
 		];
 	}

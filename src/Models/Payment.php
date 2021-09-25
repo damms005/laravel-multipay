@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace Damms005\LaravelCashier\Models;
 
-use App\Contracts\PaymentHandlerInterface;
-use App\PaymentHandlers\BasePaymentHandler;
+use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
+use Damms005\LaravelCashier\Services\PaymentHandlers\BasePaymentHandler;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 

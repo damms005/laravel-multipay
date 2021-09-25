@@ -1,13 +1,21 @@
 <?php
 
-it('can test', function () {
-    expect(true)->toBeTrue();
+use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
+use Damms005\LaravelCashier\Services\PaymentHandlers\BasePaymentHandler;
+use Damms005\LaravelCashier\Services\PaymentService;
+use function PHPUnit\Framework\assertTrue;
 
-    //you pass payment details to payment details page
-    //user confirms same
-    //user redirected to payment gateway
-    //value given
+it('ensures that all payment handlers can be initiate for payment processing', function () {
+
+	config(["laravel-cashier.paystack_secret_key" => "sk_test_91017d4bc25b969584699baa67c751fc2d060639"]);
+
+	collect(BasePaymentHandler::getNamesOfPaymentHandlers())
+		->each(function ($handlerName) {
+			$paymentHandler = PaymentService::getPaymentHandlerByName($handlerName);
+
+			assertTrue(is_subclass_of($paymentHandler, BasePaymentHandler::class));
+			assertTrue($paymentHandler instanceof PaymentHandlerInterface);
+		});
 });
 
-
-//it dispatches the event for successful payments
+// it("fires successful payment event", function () {});

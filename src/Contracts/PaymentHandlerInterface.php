@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Contracts;
+namespace Damms005\LaravelCashier\Contracts;
 
-use App\Models\Payment;
+use Damms005\LaravelCashier\Models\Payment;
 use Illuminate\Http\Request;
 
 interface PaymentHandlerInterface
