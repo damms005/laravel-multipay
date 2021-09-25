@@ -51,7 +51,7 @@ php artisan migrate
 
 ### Test drive 🚀
 
-Want to take things for a spin? simply visit `/payment/test-drive` .
+Want to take things for a spin? simply visit `/payment/test-drive` (`route('payment.test-drive')`) .
 For [Paystack](https://paystack.com), ensure to set `paystack_secret_key` key in the `laravel-cashier.php` config file that you published previously at installation. You can get your key from your [settings page](https://dashboard.paystack.co/#/settings/developer).
 
 #### Needed Third-party Integrations:
@@ -74,7 +74,7 @@ PAYSTACK_SECRET_KEY=FLWPUBK-xxxxxxxxxxxxxxxxxxxxx-X
 
 #### Step 1
 
-Send a `POST` request to `/payment/details/confirm`.
+Send a `POST` request to `/payment/details/confirm` (`route('payment.show_transaction_details_for_user_confirmation')`).
 Check the [InitiatePaymentRequest](src/Http/Requests/InitiatePaymentRequest.php#L28) form request to know the values you are to post to this endpoint. (tip: you can also check [test-drive/pay.blade.php](views/test-drive/pay.blade.php))
 
 #### Step 2
@@ -84,7 +84,7 @@ Upon user confirmation of transaction, user is redirected to the appropriate pay
 #### Step 3
 
 When user is done with the transaction on the payment handler's end (either successfully paid, or declined transaction), user is redirected
-back to `/api/payment/completed`.
+back to `/api/payment/completed` (`route('payment.finished.callback_url')`) .
 
 > If there are additional steps you want to take upon successful payment, listen for `SuccessfulLaravelCahierPaymentEvent`. It will be fired whenever a successful payment occurs, with its corresponding `Payment` model.
 
