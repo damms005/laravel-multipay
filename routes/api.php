@@ -7,7 +7,7 @@ use Damms005\LaravelCashier\Http\Controllers\PaymentController;
 //post to the URL
 Route::group([
 	'middleware' => 'api',
-	'prefix'     => config('laravel-casher.payment_route_path'),
+	'prefix'     => config('laravel-cashier.payment_route_path'),
 ], function () {
 	Route::match(['get', 'post'], '/completed', [PaymentController::class, 'handlePaymentGatewayResponse'])->name('payment.finished.callback_url');
 });

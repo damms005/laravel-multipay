@@ -16,18 +16,13 @@ You can install the package via composer:
 composer require damms005/laravel-cashier
 ```
 
-You can publish and run the migrations with:
+Publish the config file with:
 
 ```bash
-php artisan vendor:publish --provider="Damms005\LaravelCashier\LaravelCashierServiceProvider" --tag="laravel-cashier-migrations"
-php artisan migrate
+php artisan vendor:publish --tag=laravel-cashier-config
 ```
 
-You can publish the config file with:
-
-```bash
-php artisan vendor:publish --provider="Damms005\LaravelCashier\LaravelCashierServiceProvider" --tag="laravel-cashier-config"
-```
+Run `php artisan migrate`
 
 ## Usage
 
