@@ -14,6 +14,6 @@ Route::group([
 
 	//take it for a spin
 	Route::get('/test-drive', function () {
-		return view('laravel-cashier:test-drive.pay');
+		return view('laravel-cashier::test-drive.pay');
 	})->name('payment.test-drive');
 });
