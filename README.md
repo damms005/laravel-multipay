@@ -5,6 +5,8 @@
 
 # Laravel Cashier 💸
 
+![Art image for laravel-model-export](https://banners.beyondco.de/Laravel%20Cashier.png?theme=light&packageManager=composer+require&packageName=damms005%2Flaravel-cashier&pattern=aztec&style=style_1&description=An+opinionated+Laravel+package+for+handling+payments%2C+with+batteries+included&md=1&showWatermark=1&fontSize=100px&images=cash&widths=350)
+
 An opinionated Laravel package to handle payments, complete with blade views, routing, and everything in-between.
 
 Whether you want to quickly bootstrap payment processing for your Laravel applications, or you want a way to test supported payment processors, this package's got you covered.
