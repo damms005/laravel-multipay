@@ -1,16 +1,16 @@
-# Laravel Cashier 💸
-
-An opinionated Laravel package to handle payments, complete with blade views, routing, and everything in-between.
-
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/damms005/laravel-cashier)](https://github.com/damms005/laravel-cashier/releases)
 [![GitHub Tests Action Status](https://img.shields.io/github/workflow/status/damms005/laravel-cashier/run-tests?label=tests)](https://github.com/damms005/laravel-cashier/actions?query=workflow%3Arun-tests+branch%3Amain)
 [![GitHub Code Style Action Status](https://img.shields.io/github/workflow/status/damms005/laravel-cashier/Check%20&%20fix%20styling?label=code%20style)](https://github.com/damms005/laravel-cashier/actions?query=workflow%3A"Check+%26+fix+styling"+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/damms005/laravel-cashier.svg?style=flat-square)](https://packagist.org/packages/damms005/laravel-cashier)
 
+# Laravel Cashier 💸
+
+An opinionated Laravel package to handle payments, complete with blade views, routing, and everything in-between.
+
 Whether you want to quickly bootstrap payment processing for your Laravel applications, or you want a way to test supported payment processors, this package's got you covered.
 
-Although opinionated, this package allows you to "theme" the views. It achieves this theming by
-`@extend()`ing whatever view you specify in `config('laravel-cashier.extended_layout')` (defaults to `layout.app`). This provides a smooth Plug-and-play™️ experience.
+> Although opinionated, this package allows you to "theme" the views. It achieves this theming by
+> `@extend()`ing whatever view you specify in `config('laravel-cashier.extended_layout')` (defaults to `layout.app`). This provides a smooth Plug-and-play™️ experience.
 
 ## Installation
 
