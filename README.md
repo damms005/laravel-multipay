@@ -31,6 +31,24 @@ Run `php artisan migrate`
 Want to take things for a spin? simply visit `/payment/test-drive` .
 For [Paystack](https://paystack.com), ensure to set `paystack_secret_key` key in the `laravel-cashier.php` config file that you published previously at installation. You can get your key from your [settings page](https://dashboard.paystack.co/#/settings/developer).
 
+#### Needed Third-party Integrations:
+
+Flutterwave: https://dashboard.flutterwave.com/dashboard/settings/apis
+Corresponding environmental variables:
+
+```
+FLW_PUBLIC_KEY=FLWPUBK-xxxxxxxxxxxxxxxxxxxxx-X
+FLW_SECRET_KEY=FLWSECK-xxxxxxxxxxxxxxxxxxxxx-X
+FLW_SECRET_HASH='My_lovelysite123'
+```
+
+Paystack: https://dashboard.paystack.co/#/settings/developer
+Corresponding environmental variables:
+
+```
+PAYSTACK_SECRET_KEY=FLWPUBK-xxxxxxxxxxxxxxxxxxxxx-X
+```
+
 ### Usage in Laravel projects
 
 #### Step 1
@@ -70,8 +88,11 @@ This package is made possible by the nice works done by the following awesome pr
 
 -   [yabacon/paystack-php](https://github.com/yabacon/paystack-php)
 -   [kingflamez/laravelrave](https://github.com/kingflamez/laravelrave)
--   [Tailwindcss](https://tailwindcss.com)
 
 ## License
 
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+
+## Roadmap
+
+-   Use Tailwindcss to apply minimal styling

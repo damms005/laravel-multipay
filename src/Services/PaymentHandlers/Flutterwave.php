@@ -2,127 +2,132 @@
 
 namespace Damms005\LaravelCashier\Services\PaymentHandlers;
 
+use Carbon\Carbon;
 use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelCashier\Models\Payment;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use KingFlamez\Rave\Facades\Rave as FlutterwaveRave;
 
 class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
 {
-    public function __construct()
-    {
-    }
+	public function __construct()
+	{
+	}
 
-    public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true)
-    {
-        $transaction_reference = $payment->transaction_reference;
-        $this->sendUserToPaymentGateway($redirect_or_callback_url, $this->getPayment($transaction_reference));
-    }
+	public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true)
+	{
+		$transaction_reference = $payment->transaction_reference;
+		$this->sendUserToPaymentGateway($redirect_or_callback_url, $this->getPayment($transaction_reference));
+	}
 
-    public function getHumanReadableTransactionResponse(Payment $payment): string
-    {
-        return '';
-    }
+	public function getHumanReadableTransactionResponse(Payment $payment): string
+	{
+		return '';
+	}
 
-    public function convertResponseCodeToHumanReadable($responseCode): string
-    {
-        return "";
-    }
+	public function convertResponseCodeToHumanReadable($responseCode): string
+	{
+		return "";
+	}
 
-    protected function sendUserToPaymentGateway(string $redirect_or_callback_url, Payment $payment)
-    {
-        $flutterwaveReference = FlutterwaveRave::generateReference();
+	protected function sendUserToPaymentGateway(string $redirect_or_callback_url, Payment $payment)
+	{
+		$flutterwaveReference = FlutterwaveRave::generateReference();
 
-        // Enter the details of the payment
-        $data = [
-            'payment_options' => 'card',
-            'amount' => $payment->original_amount_displayed_to_user,
-            'email' => $payment->user->email,
-            'tx_ref' => $flutterwaveReference,
-            'currency' => "USD",
-            'redirect_url' => $redirect_or_callback_url,
-            'customer' => [
-                'email' => $payment->user->email,
-                "phone_number" => null,
-                "name" => $payment->user->fullname,
-            ],
+		// Enter the details of the payment
+		$data = [
+			'payment_options' => 'card',
+			'amount'          => $payment->original_amount_displayed_to_user,
+			'email'           => $payment->user->email,
+			'tx_ref'          => $flutterwaveReference,
+			'currency'        => "USD",
+			'redirect_url'    => $redirect_or_callback_url,
+			'customer'        => [
+				'email'        => $payment->user->email,
+				"phone_number" => null,
+				"name"         => $payment->user->fullname,
+			],
 
-            "customizations" => [
-                "title" => 'Application fee payment',
-                "description" => "Application fee payment",
-            ],
-        ];
+			"customizations"  => [
+				"title"       => 'Application fee payment',
+				"description" => "Application fee payment",
+			],
+		];
 
-        $paymentInitialization = FlutterwaveRave::initializePayment($data);
+		$paymentInitialization = FlutterwaveRave::initializePayment($data);
 
-        throw_if($paymentInitialization['status'] !== 'success', "Cannot initialize Flutterwave payment");
+		throw_if($paymentInitialization['status'] !== 'success', "Cannot initialize Flutterwave payment");
 
-        $url = $paymentInitialization['data']['link'];
+		$url = $paymentInitialization['data']['link'];
 
-        $payment->processor_transaction_reference = $flutterwaveReference;
-        $payment->save();
+		$payment->processor_transaction_reference = $flutterwaveReference;
+		$payment->save();
 
-        header('Location: ' . $url);
+		header('Location: ' . $url);
 
-        exit;
-    }
+		exit;
+	}
 
-    public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $paymentGatewayServerResponse): ?Payment
-    {
-        $flutterwaveReference = $paymentGatewayServerResponse->get('tx_ref');
-        $payment = Payment::where('processor_transaction_reference', $flutterwaveReference)->firstOrFail();
-        $status = $paymentGatewayServerResponse->get('status');
+	public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $paymentGatewayServerResponse): ?Payment
+	{
+		if (!$paymentGatewayServerResponse->has('tx_ref')) {
+			return null;
+		}
 
-        if ($status != 'successful') {
-            $payment->processor_returned_response_description = $status;
-            $payment->save();
+		$flutterwaveReference = $paymentGatewayServerResponse->get('tx_ref');
+		$payment              = Payment::where('processor_transaction_reference', $flutterwaveReference)->firstOrFail();
 
-            return	$payment;
-        }
+		$status = $paymentGatewayServerResponse->get('status');
 
-        $transactionId = $paymentGatewayServerResponse->get('transaction_id');
-        $flutterwavePaymentDetails = FlutterwaveRave::verifyTransaction($transactionId);
+		if ($status != 'successful') {
+			$payment->processor_returned_response_description = $status;
+			$payment->save();
 
-        if (! $this->isValidTransaction($flutterwavePaymentDetails, $payment)) {
-            $payment->processor_returned_response_description = "Invalid transaction";
-            $payment->save();
+			return $payment;
+		}
 
-            return	$payment;
-        }
+		$transactionId             = $paymentGatewayServerResponse->get('transaction_id');
+		$flutterwavePaymentDetails = FlutterwaveRave::verifyTransaction($transactionId);
 
-        $payment = $this->giveValue($flutterwaveReference, $flutterwavePaymentDetails);
+		if (!$this->isValidTransaction($flutterwavePaymentDetails, $payment)) {
+			$payment->processor_returned_response_description = "Invalid transaction";
+			$payment->save();
 
-        return $payment;
-    }
+			return $payment;
+		}
 
-    public function isValidTransaction(array $flutterwavePaymentDetails, Payment $payment)
-    {
-        return
-            // $flutterwavePaymentDetails->currency &&  $payment->currency;
-            $flutterwavePaymentDetails['data']['amount'] == $payment->original_amount_displayed_to_user;
-    }
+		$payment = $this->giveValue($flutterwaveReference, $flutterwavePaymentDetails);
 
-    protected function giveValue($flutterwaveReference, array $flutterwavePaymentDetails): Payment
-    {
-        /**
-         * @var Payment
-         */
-        $payment = Payment::where('processor_transaction_reference', $flutterwaveReference)
-            ->firstOrFail();
+		return $payment;
+	}
 
-        $payment->update([
-            "is_success" => 1,
-            "processor_returned_amount" => $flutterwavePaymentDetails['data']['amount'],
-            "processor_returned_transaction_date" => new Carbon($flutterwavePaymentDetails['data']['created_at']),
-            'processor_returned_response_description' => $flutterwavePaymentDetails['data']['processor_response'],
-        ]);
+	public function isValidTransaction(array $flutterwavePaymentDetails, Payment $payment)
+	{
+		return
+		// $flutterwavePaymentDetails->currency &&  $payment->currency;
+		$flutterwavePaymentDetails['data']['amount'] == $payment->original_amount_displayed_to_user;
+	}
 
-        return $payment->fresh();
-    }
+	protected function giveValue($flutterwaveReference, array $flutterwavePaymentDetails): Payment
+	{
+		/**
+		 * @var Payment
+		 */
+		$payment = Payment::where('processor_transaction_reference', $flutterwaveReference)
+			->firstOrFail();
 
-    protected function performSuccess($flutterwaveReference)
-    {
-        return true;
-    }
+		$payment->update([
+			"is_success"                              => 1,
+			"processor_returned_amount"               => $flutterwavePaymentDetails['data']['amount'],
+			"processor_returned_transaction_date"     => new Carbon($flutterwavePaymentDetails['data']['created_at']),
+			'processor_returned_response_description' => $flutterwavePaymentDetails['data']['processor_response'],
+		]);
+
+		return $payment->fresh();
+	}
+
+	protected function performSuccess($flutterwaveReference)
+	{
+		return true;
+	}
 }

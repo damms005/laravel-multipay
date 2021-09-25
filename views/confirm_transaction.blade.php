@@ -1,4 +1,4 @@
-@extends('master')
+@extends(config('laravel-cashier.extended_layout'))
 @section('title', 'Payment Summary')
 
 @section('content')

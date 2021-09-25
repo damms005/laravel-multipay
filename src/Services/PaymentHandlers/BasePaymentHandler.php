@@ -6,6 +6,7 @@ use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelCashier\Events\SuccessfulLaravelCahierPaymentEvent;
 use Damms005\LaravelCashier\Models\Payment;
 use Damms005\LaravelCashier\Notifications\TransactionCompleted;
+use Damms005\LaravelCashier\Services\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -128,9 +129,9 @@ class BasePaymentHandler
 		$payment = null;
 
 		collect(self::getNamesOfPaymentHandlers())
-			->each(function (string $paymentHandlerClassName) use ($paymentGatewayServerResponse, &$payment) {
+			->each(function (string $paymentHandlerName) use ($paymentGatewayServerResponse, &$payment) {
 
-				$paymentHandler = new $paymentHandlerClassName();
+				$paymentHandler = PaymentService::getPaymentHandlerByName($paymentHandlerName);
 				$payment        = $paymentHandler->confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome($paymentGatewayServerResponse);
 
 				if ($payment) {

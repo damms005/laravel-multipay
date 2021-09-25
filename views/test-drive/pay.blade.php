@@ -5,7 +5,7 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="X-UA-Compatible" content="ie=edge">
-	<title>Laravel Cahier Test-drive Page</title>
+	<title>Laravel Cahier Test-drive Page 🏎️</title>
 
 	<style>
 		form {
@@ -48,7 +48,7 @@
 		<div>
 			Amount
 			<div>
-				<input type="text" name="amount" value="12345" />
+				<input type="text" name="amount" value="123" />
 			</div>
 		</div>
 		<br>

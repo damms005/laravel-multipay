@@ -1,4 +1,4 @@
-@extends('master')
+@extends(config('laravel-cashier.extended_layout'))
 @section('title', 'Transaction Summary')
 
 @section('content')
@@ -24,9 +24,9 @@
 	was successful.
 
 	@if ($isJsonDescription)
-	@include('payment.partials.payment-summary-json')
+	@include('laravel-cashier::partials.payment-summary-json')
 	@else
-	@include('payment.partials.payment-summary-generic')
+	@include('laravel-cashier::partials.payment-summary-generic')
 	@endif
 
 
