@@ -12,6 +12,6 @@ Route::group([
 		Route::post('/gateway/process', [PaymentController::class, 'sendToPaymentGateway'])->name('payment.confirmation.submit');
 
 		//take for a spin
-		Route::post('/test-drive', [PaymentController::class, 'confirm'])->name('payment.test-drive');
+		Route::get('/test-drive', [PaymentController::class, 'confirm'])->name('payment.test-drive');
 	});
 });
