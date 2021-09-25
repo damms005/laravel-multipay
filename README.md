@@ -33,30 +33,7 @@ To use this in your Laravel project, take these steps:
 ### Step 1
 
 Send a `POST` request to `/payment/details/confirm`.
-Check the [InitiatePaymentRequest](src/Http/Requests/InitiatePaymentRequest.php#L28) form request to know the values you are to post to this endpoint.
-
-```html
-<form
-    action="{{ route('payment.show_transaction_details_for_user_confirmation') }}"
-    method="post"
->
-    <!-- Any of the handlers listed in the Supported Payment Handlers section of this README -->
-    <input name="payment_processor" value="Paystack" />
-
-    <input name="amount" value="12345" />
-
-    <!-- ISO-4217 format. Ensure to check that the payment handler you specified above supports this currency -->
-    <input name="currency" value="NGN" />
-
-    <!-- id of the user making the payment -->
-    <input name="user_id" value="1" />
-
-    <input
-        name="transaction_description"
-        value="Payment for Tesla Model Y picture"
-    />
-</form>
-```
+Check the [InitiatePaymentRequest](src/Http/Requests/InitiatePaymentRequest.php#L28) form request to know the values you are to post to this endpoint. (tip: you can also check [views/test-drive/pay.blade.php](`views/test-drive/pay.blade.php`))
 
 ### Step 2
 
