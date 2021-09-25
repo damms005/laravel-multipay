@@ -29,19 +29,19 @@ Currently, this package supports the following online payment processors/handler
 
 ## Installation
 
-You can install the package via composer:
+Install via composer.
 
 ```bash
 composer require damms005/laravel-cashier
 ```
 
-Publish the config file with:
+Publish the config file.
 
 ```bash
 php artisan vendor:publish --tag=laravel-cashier-config
 ```
 
-Run
+Run migrations.
 
 ```
 php artisan migrate
