@@ -76,12 +76,12 @@ class BasePaymentHandler
      * This method should also create a record for this transaction in the database payments table.
      *
      */
-    public function storePaymentAndShowUserBeforeProcessing(int $user_id, $original_amount_displayed_to_user, string $transaction_description, $currency, string $completion_url = null, Request $optionalRequestForEloquentModelLinkage = null, $preferredView = null, $transaction_reference = null)
+    public function storePaymentAndShowUserBeforeProcessing(int $user_id, $original_amount_displayed_to_user, string $transaction_description, $currency, string $completion_url = null, Request $optionalRequestForEloquentModelLinkage = null, $preferredView = null, string $transaction_reference )
     {
         $payment = Payment::firstOrCreate([
             "user_id" => $user_id,
             "completion_url" => $completion_url,
-            "transaction_reference" => $transaction_reference ?? strtoupper(Str::random(10)),
+            "transaction_reference" => $transaction_reference,
             "payment_processor_name" => $this->paymentHandlerInterface->getUniquePaymentHandlerName(),
             'transaction_currency' => $currency,
             'transaction_description' => $transaction_description,
