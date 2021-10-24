@@ -7,11 +7,11 @@ use Damms005\LaravelCashier\Services\PaymentHandlers\BasePaymentHandler;
 
 class PaymentService
 {
-    public static function storePaymentAndShowUserBeforeProcessing(PaymentHandlerInterface $paymentHandler, int $user_id, float $amount, string $description, string $currency, string | null $view, string $transaction_reference)
+    public static function storePaymentAndShowUserBeforeProcessing(PaymentHandlerInterface $paymentHandler, int $user_id, float $amount, string $description, string $currency, string $transaction_reference, string | null $view)
     {
         $basePaymentHandler = new BasePaymentHandler($paymentHandler);
 
-        return $basePaymentHandler->storePaymentAndShowUserBeforeProcessing($user_id, $amount, $description, $currency, null, null, $view, $transaction_reference);
+        return $basePaymentHandler->storePaymentAndShowUserBeforeProcessing($user_id, $amount, $description, $currency, $transaction_reference, null, null, $view);
     }
 
     public static function getPaymentHandlerByName(string $paymentHandlerName): PaymentHandlerInterface

@@ -36,8 +36,8 @@ class PaymentController extends Controller
             $amount,
             $description,
             $currency,
+            $transaction_reference,
             $view,
-            $transaction_reference
         );
     }
 
