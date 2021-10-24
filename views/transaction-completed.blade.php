@@ -14,7 +14,7 @@
 		}
 	}
 </style>
-<div class="p-10 tw-rounded">
+<div class="p-10 rounded">
 	@if ( !is_null( $payment ) )
 
 	Dear <b>{{ $payment->user->name }}</b>, your transaction with reference number <code>{{ $payment->transaction_reference }}</code>
@@ -31,7 +31,7 @@
 
 
 	<div class="mt-8">
-		<button class="px-8 tw-py-2 tw-text-white tw-bg-green-500 tw-rounded" type="button" onclick="print()">Print</button>
+		<button class="px-8 py-2 text-white bg-green-500 rounded" type="button" onclick="print()">Print</button>
 	</div>
 
 	@else
@@ -50,7 +50,7 @@
 
 	@if ($payment->completion_url)
 
-	<a class="px-8 tw-py-2 tw-text-white tw-bg-blue-800 main-btn" href="{{route('home')}}">
+	<a class="px-8 py-2 text-white bg-blue-800 main-btn" href="{{route('home')}}">
 		Click here to continue
 	</a>
 
@@ -66,5 +66,5 @@
 	</div>
 
 	@endif
-
-	@endsection
+</div>
+@endsection
