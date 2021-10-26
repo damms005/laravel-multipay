@@ -26,7 +26,6 @@ class InitiatePaymentRequest extends FormRequest
     public function rules()
     {
         return [
-
             //in ISO-4217 format
             'currency' => ['required', 'string'],
 
@@ -35,6 +34,8 @@ class InitiatePaymentRequest extends FormRequest
             'user_id' => ['required', 'numeric'],
 
             'transaction_description' => ['required', 'string'],
+
+            'metadata' => ['json'],
 
             'payment_processor' => [
                 'required',
