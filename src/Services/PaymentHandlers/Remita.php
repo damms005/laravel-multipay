@@ -125,22 +125,25 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
 	protected function sendUserToPaymentGateway(string $rrr)
 	{
-		$url         = "{$this->BASE_REQUEST_URL}/ecomm/finalize.reg";
+		$url         = self::BASE_REQUEST_URL . "/ecomm/finalize.reg";
 		$merchantId  = config('laravel-cashier.remita_merchant_id');
 		$hash        = hash("sha512", $merchantId);
 		$responseUrl = route('payment.finished.callback_url');
 
-		return view('laravel-cashier:payment-handler-specific.remita-auto_submitted_form',
+		return view('laravel-cashier::payment-handler-specific.remita-auto_submitted_form',
 			compact(
 				'url',
-				'merchantId',
+                'rrr',
 				'hash',
+				'merchantId',
 				'responseUrl',
 			));
 	}
 
 	public function getServiceTypeId(Payment $payment)
 	{
-		return $payment->id;
+        $serviceTypeId = "4430731";
+
+		return $serviceTypeId?: $payment->id;
 	}
 }
