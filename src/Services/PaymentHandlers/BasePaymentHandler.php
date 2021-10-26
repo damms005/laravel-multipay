@@ -141,8 +141,22 @@ class BasePaymentHandler
 		$paymentDescription = null;
 
 		if (!is_null($payment)) {
-			$paymentDescription = json_decode($payment->processor_returned_response_description);
+			$paymentDescription = json_decode($payment->processor_returned_response_description, true);
 			$isJsonDescription  = !is_null($paymentDescription);
+
+			if (is_array($paymentDescription)) {
+				$paymentDescription = collect($paymentDescription)
+					->mapWithKeys(function ($item, $key) {
+						$humanReadableKey = Str::of($key)
+							->snake()
+							->title()
+							->replace("_", " ")
+							->__toString();
+
+						return [$humanReadableKey => $item];
+					})
+					->toArray();
+			}
 
 			if ($payment->getPaymentProvider() == UnifiedPayments::getUniquePaymentHandlerName()) {
 				$payment->user->notify(TransactionCompleted::class);
