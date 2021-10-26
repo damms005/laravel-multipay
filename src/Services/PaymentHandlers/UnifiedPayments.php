@@ -23,7 +23,7 @@ class UnifiedPayments extends BasePaymentHandler implements PaymentHandlerInterf
         $response = Http::withHeaders([
             'accept' => 'application/json',
         ])
-            ->post(self::UP_SERVER_URL . "/KOBLIN", [
+            ->post(self::UP_SERVER_URL . "/KOLBINS", [
                 "amount" => $payment->original_amount_displayed_to_user,
                 "currency" => "566",
                 "description" => "{$payment->transaction_description}. (IP: " . request()->ip() . ")",

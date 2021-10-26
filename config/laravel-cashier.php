@@ -17,4 +17,7 @@ return [
 	"payment_route_path"  => "/payment",
 
 	"paystack_secret_key" => env('PAYSTACK_SECRET_KEY'),
+
+	"remita_merchant_id"  => env('REMITA_MERCHANT_ID'),
+	"remita_api_key"      => env('REMITA_API_KEY'),
 ];
