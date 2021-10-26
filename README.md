@@ -22,6 +22,7 @@ Currently, this package supports the following online payment processors/handler
 -   [Flutterwave](https://flutterwave.com)
 -   [UnifiedPayments](https://unifiedpayments.com)
 -   [Interswitch](https://www.interswitchgroup.com)
+-   [Remita](http://remita.net)
 
 > Your preferred payment handler is not yet supported? Please consider [opening the appropriate issue type](https://github.com/damms005/laravel-cashier/issues/new?assignees=&labels=&template=addition-of-new-payment-handler.md&title=Addition+of+new+payment+handler+-+%5Bpayment+handler+name+here%5D).
 
