@@ -71,6 +71,17 @@ FLW_SECRET_HASH='My_lovelysite123'
 PAYSTACK_SECRET_KEY=FLWPUBK-xxxxxxxxxxxxxxxxxxxxx-X
 ```
 
+
+-   Remita: Ensure to set the following environmental variables:
+
+```
+REMITA_MERCHANT_ID=xxxxxxxxxxxxxxxxxxxxx-X
+REMITA_API_KEY=xxxxxxxxxxxxxxxxxxxxx-X
+```
+
+> For most of the above environmental variables, you should rather use the (pubished) config file to set the corresponding values.
+
+
 ### Typical process-flow
 
 #### Step 1
