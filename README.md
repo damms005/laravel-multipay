@@ -5,7 +5,7 @@
 
 # Laravel Cashier 💸
 
-![Art image for laravel-cashier](https://banners.beyondco.de/Laravel%20Cashier.png?theme=light&packageManager=composer+require&packageName=damms005%2Flaravel-cashier&pattern=aztec&style=style_1&description=An+opinionated+Laravel+package+for+handling+payments%2C+complete+with+blade+views&md=1&showWatermark=1&fontSize=100px&images=cash&widths=350)
+![Art image for laravel-cashier](https://banners.beyondco.de/Laravel%20Cashier.png?theme=light&packageManager=composer+require&packageName=damms005%2Flaravel-cashier&pattern=glamorous&style=style_1&description=An+opinionated+Laravel+package+for+handling+payments%2C+complete+with+blade+views&md=1&showWatermark=1&fontSize=100px&images=cash&widths=350)
 
 An opinionated Laravel package to handle payments, complete with blade views, routing, and everything in-between.
 
