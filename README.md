@@ -12,7 +12,7 @@ An opinionated Laravel package to handle payments, complete with blade views, ro
 Whether you want to quickly bootstrap payment processing for your Laravel applications, or you want a way to test supported payment processors, this package's got you covered.
 
 > Although opinionated, this package allows you to "theme" the views. It achieves this theming by
-> `@extend()`ing whatever view you specify in `config('laravel-cashier.extended_layout')` (defaults to `layout.app`). This provides a smooth Plug-and-play™️ experience.
+> `@extend()`ing whatever view you specify in `config('laravel-cashier.extended_layout')` (defaults to `layout.app`). This provides a smooth Plug-and-play&trade; experience.
 
 ## Currently supported payment handlers
 
