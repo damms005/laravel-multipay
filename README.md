@@ -5,14 +5,14 @@
 
 # Laravel Cashier 💸
 
-![Art image for laravel-cashier](https://banners.beyondco.de/Laravel%20Cashier.png?theme=light&packageManager=composer+require&packageName=damms005%2Flaravel-cashier&pattern=aztec&style=style_1&description=An+opinionated+Laravel+package+for+handling+payments%2C+complete+with+balde+views&md=1&showWatermark=1&fontSize=100px&images=cash&widths=350)
+![Art image for laravel-cashier](https://banners.beyondco.de/Laravel%20Cashier.png?theme=light&packageManager=composer+require&packageName=damms005%2Flaravel-cashier&pattern=glamorous&style=style_1&description=An+opinionated+Laravel+package+for+handling+payments%2C+complete+with+blade+views&md=1&showWatermark=1&fontSize=100px&images=cash&widths=350)
 
 An opinionated Laravel package to handle payments, complete with blade views, routing, and everything in-between.
 
 Whether you want to quickly bootstrap payment processing for your Laravel applications, or you want a way to test supported payment processors, this package's got you covered.
 
 > Although opinionated, this package allows you to "theme" the views. It achieves this theming by
-> `@extend()`ing whatever view you specify in `config('laravel-cashier.extended_layout')` (defaults to `layout.app`). This provides a smooth Plug-and-play™️ experience.
+> `@extend()`ing whatever view you specify in `config('laravel-cashier.extended_layout')` (defaults to `layout.app`). This provides a smooth Plug-and-play&trade; experience.
 
 ## Currently supported payment handlers
 
@@ -70,6 +70,17 @@ FLW_SECRET_HASH='My_lovelysite123'
 ```
 PAYSTACK_SECRET_KEY=FLWPUBK-xxxxxxxxxxxxxxxxxxxxx-X
 ```
+
+
+-   Remita: Ensure to set the following environmental variables:
+
+```
+REMITA_MERCHANT_ID=xxxxxxxxxxxxxxxxxxxxx-X
+REMITA_API_KEY=xxxxxxxxxxxxxxxxxxxxx-X
+```
+
+> For most of the above environmental variables, you should rather use the (pubished) config file to set the corresponding values.
+
 
 ### Typical process-flow
 
