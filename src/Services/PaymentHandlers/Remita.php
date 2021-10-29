@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 
 class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 {
-	protected const BASE_REQUEST_URL = "https://remitademo.net/remita";
+	protected const BASE_REQUEST_URL = "https://login.remita.net/remita";
 
 	public function __construct()
 	{
