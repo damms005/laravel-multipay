@@ -3,7 +3,7 @@
 namespace Damms005\LaravelCashier\Services\PaymentHandlers;
 
 use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
-use Damms005\LaravelCashier\Events\SuccessfulLaravelCahierPaymentEvent;
+use Damms005\LaravelCashier\Events\SuccessfulLaravelCashierPaymentEvent;
 use Damms005\LaravelCashier\Models\Payment;
 use Damms005\LaravelCashier\Notifications\TransactionCompleted;
 use Damms005\LaravelCashier\Services\PaymentService;
@@ -131,7 +131,7 @@ class BasePaymentHandler
 
 				if ($payment) {
 					if ($payment->is_success == 1) {
-						event(new SuccessfulLaravelCahierPaymentEvent($payment));
+						event(new SuccessfulLaravelCashierPaymentEvent($payment));
 					}
 
 					return false;
