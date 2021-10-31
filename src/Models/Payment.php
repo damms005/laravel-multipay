@@ -2,11 +2,12 @@
 
 namespace Damms005\LaravelCashier\Models;
 
+use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\AsArrayObject;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelCashier\Services\PaymentHandlers\BasePaymentHandler;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 
 /**
  * @mixin IdeHelperPayment
@@ -14,6 +15,10 @@ use Illuminate\Support\Str;
 class Payment extends Model
 {
     use HasFactory;
+
+	protected $casts = [
+		'metadata' => AsArrayObject::class,
+	];
 
     protected $guarded = ['id'];
 
