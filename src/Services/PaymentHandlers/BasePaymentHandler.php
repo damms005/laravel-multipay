@@ -73,6 +73,8 @@ class BasePaymentHandler
 	 */
 	public function storePaymentAndShowUserBeforeProcessing(int $user_id, $original_amount_displayed_to_user, string $transaction_description, $currency, string $transaction_reference, string $completion_url = null, Request $optionalRequestForEloquentModelLinkage = null, $preferredView = null, $metadata = null)
 	{
+		$metadataContent = $metadata ? json_decode($metadata, true) : null;
+
 		$payment = Payment::firstOrCreate([
 			"user_id"                           => $user_id,
 			"completion_url"                    => $completion_url,
@@ -81,7 +83,7 @@ class BasePaymentHandler
 			"transaction_currency"              => $currency,
 			"transaction_description"           => $transaction_description,
 			"original_amount_displayed_to_user" => $original_amount_displayed_to_user,
-			"metadata"                          => $metadata,
+			"metadata"                          => $metadataContent,
 		]);
 
 		if ($this->paymentHandlerInterface->getUniquePaymentHandlerName() == UnifiedPayments::getUniquePaymentHandlerName()) {
