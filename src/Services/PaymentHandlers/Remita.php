@@ -24,6 +24,8 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         $totalAmount = $payment->original_amount_displayed_to_user;
         $apiKey = config('laravel-cashier.remita_api_key');
         $hash = hash("sha512", "{$merchantId}{$serviceTypeId}{$orderId}{$totalAmount}{$apiKey}");
+        $auth =  "remitaConsumerKey={$merchantId},remitaConsumerToken={$hash}";
+        $endpoint = $this->getBaseUrl() . "/exapp/api/v1/send/api/echannelsvc/merchant/api/paymentinit";
 
         $postData = [
             "serviceTypeId" => $serviceTypeId,
@@ -37,9 +39,9 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
         $response = Http::withHeaders([
             'accept' => 'application/json',
-            "Authorization" => "remitaConsumerKey={$merchantId},remitaConsumerToken={$hash}",
+            "Authorization" => $auth,
         ])
-            ->post($this->getBaseUrl() . "/exapp/api/v1/send/api/echannelsvc/merchant/api/paymentinit", $postData);
+            ->post($endpoint, $postData);
 
         if (! $response->successful()) {
             return response("Remita could not process your transaction at the moment. Please try again later. " . $response->body());

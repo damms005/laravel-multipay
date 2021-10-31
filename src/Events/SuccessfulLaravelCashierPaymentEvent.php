@@ -8,7 +8,7 @@ use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class SuccessfulLaravelCahierPaymentEvent
+class SuccessfulLaravelCashierPaymentEvent
 {
     use Dispatchable;
     use InteractsWithSockets;
