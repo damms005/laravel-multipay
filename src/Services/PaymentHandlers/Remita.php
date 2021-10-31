@@ -27,6 +27,8 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         $auth =  "remitaConsumerKey={$merchantId},remitaConsumerToken={$hash}";
         $endpoint = $this->getBaseUrl() . "/exapp/api/v1/send/api/echannelsvc/merchant/api/paymentinit";
 
+        dd($merchantId,$serviceTypeId,$apiKey);
+
         $postData = [
             "serviceTypeId" => $serviceTypeId,
             "amount" => $totalAmount,
