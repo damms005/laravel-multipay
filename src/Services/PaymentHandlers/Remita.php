@@ -24,7 +24,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         $totalAmount = $payment->original_amount_displayed_to_user;
         $apiKey = config('laravel-cashier.remita_api_key');
         $hash = hash("sha512", "{$merchantId}{$serviceTypeId}{$orderId}{$totalAmount}{$apiKey}");
-        $auth =  "remitaConsumerKey={$merchantId},remitaConsumerToken={$hash}";
+        $auth = "remitaConsumerKey={$merchantId},remitaConsumerToken={$hash}";
         $endpoint = $this->getBaseUrl() . "/exapp/api/v1/send/api/echannelsvc/merchant/api/paymentinit";
 
         $postData = [
