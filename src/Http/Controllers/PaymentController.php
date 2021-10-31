@@ -38,6 +38,7 @@ class PaymentController extends Controller
             $currency,
             $transaction_reference,
             $view,
+            $initiatePaymentRequest->metadata
         );
     }
 
