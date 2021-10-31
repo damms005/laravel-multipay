@@ -39,7 +39,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
             'accept' => 'application/json',
             "Authorization" => "remitaConsumerKey={$merchantId},remitaConsumerToken={$hash}",
         ])
-            ->post(self::BASE_REQUEST_URL . "/exapp/api/v1/send/api/echannelsvc/merchant/api/paymentinit", $postData);
+            ->post($this->getBaseUrl() . "/exapp/api/v1/send/api/echannelsvc/merchant/api/paymentinit", $postData);
 
         if (! $response->successful()) {
             return response("Remita could not process your transaction at the moment. Please try again later. " . $response->body());
@@ -82,7 +82,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         $apiKey = config('laravel-cashier.remita_api_key');
         $hash = hash("sha512", "{$rrr}{$apiKey}{$merchantId}");
 
-        $statusUrl = self::BASE_REQUEST_URL . "/exapp/api/v1/send/api/echannelsvc/{$merchantId}/{$rrr}/{$hash}/status.reg";
+        $statusUrl = $this->getBaseUrl() . "/exapp/api/v1/send/api/echannelsvc/{$merchantId}/{$rrr}/{$hash}/status.reg";
 
         $response = Http::withHeaders([
             'accept' => 'application/json',
@@ -129,7 +129,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
     protected function sendUserToPaymentGateway(string $rrr)
     {
-        $url = self::BASE_REQUEST_URL . "/ecomm/finalize.reg";
+        $url = $this->getBaseUrl() . "/ecomm/finalize.reg";
         $merchantId = config('laravel-cashier.remita_merchant_id');
         $apiKey = config('laravel-cashier.remita_api_key');
         $hash = hash("sha512", "{$merchantId}{$rrr}{$apiKey}");
@@ -165,5 +165,10 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
     public function getRemitaServiceTypeConfigKey(string $paymentDescription)
     {
         return Str::snake($paymentDescription);
+    }
+
+    public function getBaseUrl()
+    {
+        return config('laravel-cashier.remita_base_request_url');
     }
 }
