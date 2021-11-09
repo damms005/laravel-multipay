@@ -98,6 +98,8 @@ Upon user confirmation of transaction, user is redirected to the appropriate pay
 When user is done with the transaction on the payment handler's end (either successfully paid, or declined transaction), user is redirected
 back to `/api/payment/completed` (`route('payment.finished.callback_url')`) .
 
+> Ensure that your `User` model has a `name` property (Laravel's default). If you have removed the column for any reason, you may use [Model Accessor](https://laravel.com/docs/8.x/eloquent-mutators#accessors-and-mutators) to provide same
+
 > If there are additional steps you want to take upon successful payment, listen for `SuccessfulLaravelCahierPaymentEvent`. It will be fired whenever a successful payment occurs, with its corresponding `Payment` model.
 
 ## Testing
