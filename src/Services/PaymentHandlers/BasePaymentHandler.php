@@ -167,6 +167,15 @@ class BasePaymentHandler
         return view('laravel-cashier::transaction-completed', compact('payment', 'isJsonDescription', 'paymentDescription'));
     }
 
+    /**
+     * For some reason (e.g. no response from server after successful payment, payment was fulfilled by some other
+     * non-automated means, etc.) an initiated transaction was completed but not marked as successful. This method can be used to
+     * re-query such transaction
+     */
+    public function reQueryUnsuccessfulPayment(Payment $unsuccessfulPayment): Payment
+    {
+    }
+
     public function getPayment(string $transaction_reference): Payment
     {
         return Payment::where('transaction_reference', $transaction_reference)->firstOrFail();

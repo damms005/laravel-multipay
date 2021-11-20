@@ -101,6 +101,12 @@ class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
         return $payment;
     }
 
+    public function reQuery(Payment $existingPayment): ?Payment
+    {
+        throw new \Exception("Method not yet implemented");
+    }
+
+
     public function isValidTransaction(array $flutterwavePaymentDetails, Payment $payment)
     {
         return

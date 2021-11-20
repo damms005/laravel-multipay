@@ -89,6 +89,11 @@ class UnifiedPayments extends BasePaymentHandler implements PaymentHandlerInterf
         return $payment;
     }
 
+    public function reQuery(Payment $existingPayment): ?Payment
+    {
+        throw new \Exception("Method not yet implemented");
+    }
+
     public function getHumanReadableTransactionResponse(Payment $payment): string
     {
         return '';

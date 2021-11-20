@@ -162,6 +162,11 @@ class Interswitch extends BasePaymentHandler implements PaymentHandlerInterface
         return $human_readable;
     }
 
+    public function reQuery(Payment $existingPayment): ?Payment
+    {
+        throw new \Exception("Method not yet implemented");
+    }
+
     protected function getResponseCodesArray()
     {
         return [
