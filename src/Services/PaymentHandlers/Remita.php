@@ -16,6 +16,16 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         //empty constructor, so we not forced to use parent's constructor
     }
 
+    protected function getHttpRequestHeaders(string $merchantId, string $hash):array
+    {
+        $auth = "remitaConsumerKey={$merchantId},remitaConsumerToken={$hash}";
+
+        return [
+            'accept' => 'application/json',
+            "Authorization" => $auth,
+        ];
+    }
+
     public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true)
     {
         $merchantId = config('laravel-cashier.remita_merchant_id');
@@ -24,8 +34,8 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         $totalAmount = $payment->original_amount_displayed_to_user;
         $apiKey = config('laravel-cashier.remita_api_key');
         $hash = hash("sha512", "{$merchantId}{$serviceTypeId}{$orderId}{$totalAmount}{$apiKey}");
-        $auth = "remitaConsumerKey={$merchantId},remitaConsumerToken={$hash}";
         $endpoint = $this->getBaseUrl() . "/exapp/api/v1/send/api/echannelsvc/merchant/api/paymentinit";
+        $requestHeaders = $this->getHttpRequestHeaders($merchantId, $hash);
 
         $postData = [
             "serviceTypeId" => $serviceTypeId,
@@ -37,11 +47,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
             "description" => $payment->transaction_description,
         ];
 
-        $response = Http::withHeaders([
-            'accept' => 'application/json',
-            "Authorization" => $auth,
-        ])
-            ->post($endpoint, $postData);
+        $response = Http::withHeaders($requestHeaders)->post($endpoint, $postData);
 
         if (! $response->successful()) {
             return response("Remita could not process your transaction at the moment. Please try again later. " . $response->body());
@@ -83,13 +89,11 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         $merchantId = config('laravel-cashier.remita_merchant_id');
         $apiKey = config('laravel-cashier.remita_api_key');
         $hash = hash("sha512", "{$rrr}{$apiKey}{$merchantId}");
+        $requestHeaders = $this->getHttpRequestHeaders($merchantId, $hash);
 
         $statusUrl = $this->getBaseUrl() . "/exapp/api/v1/send/api/echannelsvc/{$merchantId}/{$rrr}/{$hash}/status.reg";
 
-        $response = Http::withHeaders([
-            'accept' => 'application/json',
-            "Authorization" => "remitaConsumerKey={$merchantId},remitaConsumerToken={$hash}",
-        ])
+        $response = Http::withHeaders($requestHeaders)
             ->get($statusUrl);
 
         throw_if(
@@ -116,7 +120,53 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
     public function reQuery(Payment $existingPayment): ?Payment
     {
-        throw new \Exception("Method not yet implemented");
+        if ($existingPayment->payment_processor_name != $this->getUniquePaymentHandlerName()) {
+            return null;
+        }
+
+        if (empty($existingPayment->processor_transaction_reference)) {
+            return null;
+        }
+
+        $rrr = $existingPayment->processor_transaction_reference;
+
+        $payment = Payment::where('processor_transaction_reference', $rrr)
+            ->first();
+
+        if (is_null($payment)) {
+            return null;
+        }
+
+        $merchantId = config('laravel-cashier.remita_merchant_id');
+        $apiKey = config('laravel-cashier.remita_api_key');
+        $hash = hash("sha512", "{$rrr}{$apiKey}{$merchantId}");
+        $requestHeaders = $this->getHttpRequestHeaders($merchantId, $hash);
+
+        $statusUrl = $this->getBaseUrl() . "/exapp/api/v1/send/api/echannelsvc/{$merchantId}/{$rrr}/{$hash}/status.reg";
+
+        $response = Http::withHeaders($requestHeaders)
+            ->get($statusUrl);
+
+        throw_if(
+            ! $response->successful(),
+            "Remita could not process your transaction at the moment. Please try again later. " . $response->body()
+        );
+
+        $responseBody = json_decode($response->body());
+
+        $payment->processor_returned_response_description = $response->body();
+
+        if (isset($responseBody->paymentDate)) {
+            $payment->processor_returned_transaction_date = Carbon::parse($responseBody->paymentDate);
+        }
+
+        $payment->processor_returned_amount = $responseBody->amount;
+        $payment->is_success = $responseBody->status == "00";
+
+        $payment->save();
+        $payment->refresh();
+
+        return $payment;
     }
 
     public function getHumanReadableTransactionResponse(Payment $payment): string
