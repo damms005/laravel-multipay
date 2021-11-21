@@ -184,11 +184,7 @@ class BasePaymentHandler
     }
 
     /**
-     * For some reason (e.g. no response from server after successful payment, payment was fulfilled by some other
-     * non-automated means, etc.) an initiated transaction was completed but not marked as successful. This method can be used to
-     * re-query such transaction
-     *
-     * @return bool indicating if the transaction was successful
+     * @see Damms005\LaravelCashier\Contracts\PaymentHandlerInterface::reQuery()
      */
     public function reQueryUnsuccessfulPayment(Payment $unsuccessfulPayment): bool
     {
