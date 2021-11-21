@@ -31,7 +31,8 @@ interface PaymentHandlerInterface
     /**
      * For some reason (e.g. no response from server after successful payment, payment was fulfilled by some other
      * non-automated means, etc.) an initiated transaction was completed but not marked as successful. Payment handlers should implement
-     * this method so as to support re-querying such transaction
+     * this method so as to support re-querying such transaction. In such implementation, payment handler should ensure to set the
+     * payment as successful and ensure that all relevant/handler-specific properties of the transaction is set and saved to db
      */
     public function reQuery(Payment $existingPayment): ?Payment;
 

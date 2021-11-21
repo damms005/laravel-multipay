@@ -1,13 +1,10 @@
 <?php
 
-namespace Damms005\LaravelCashier;
+namespace Damms005\LaravelCashier\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
-/**
- * @see \Damms005\LaravelCashier\LaravelCashier
- */
-class LaravelCashierFacade extends Facade
+class LaravelCashier extends Facade
 {
     protected static function getFacadeAccessor()
     {

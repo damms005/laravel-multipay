@@ -187,12 +187,20 @@ class BasePaymentHandler
      * For some reason (e.g. no response from server after successful payment, payment was fulfilled by some other
      * non-automated means, etc.) an initiated transaction was completed but not marked as successful. This method can be used to
      * re-query such transaction
+     *
+     * @return bool indicating if the transaction was successful
      */
-    public function reQueryUnsuccessfulPayment(Payment $unsuccessfulPayment): ?Payment
+    public function reQueryUnsuccessfulPayment(Payment $unsuccessfulPayment): bool
     {
         $handler = $unsuccessfulPayment->getPaymentProvider();
 
-        return $handler->reQuery($unsuccessfulPayment);
+        $payment = $handler->reQuery($unsuccessfulPayment);
+
+        if ($payment == null) {
+            return false;
+        }
+
+        return $payment->is_success == 1;
     }
 
     public function getPayment(string $transaction_reference): Payment

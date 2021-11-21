@@ -71,7 +71,6 @@ FLW_SECRET_HASH='My_lovelysite123'
 PAYSTACK_SECRET_KEY=FLWPUBK-xxxxxxxxxxxxxxxxxxxxx-X
 ```
 
-
 -   Remita: Ensure to set the following environmental variables:
 
 ```
@@ -80,7 +79,6 @@ REMITA_API_KEY=xxxxxxxxxxxxxxxxxxxxx-X
 ```
 
 > For most of the above environmental variables, you should rather use the (pubished) config file to set the corresponding values.
-
 
 ### Typical process-flow
 
@@ -101,6 +99,19 @@ back to `/api/payment/completed` (`route('payment.finished.callback_url')`) .
 > Ensure that your `User` model has a `name` property (Laravel's default). If you have removed the column for any reason, you may use [Model Accessor](https://laravel.com/docs/8.x/eloquent-mutators#accessors-and-mutators) to provide same. For Remita, ensure that `phone` property also exists on the User model.
 
 > If there are additional steps you want to take upon successful payment, listen for `SuccessfulLaravelCahierPaymentEvent`. It will be fired whenever a successful payment occurs, with its corresponding `Payment` model.
+
+## Payment Conflict Resolution (PCR)
+
+If for any reason, your user/customer claims that the payment they made was successful but they your platform did not reflect such successful payment, this PCR feature enables you to resolve such claims by simply calling:
+
+```
+/**
+* @var bool //true if payment was successful, false otherwise
+**/
+$outcome = LaravelCashier::reQueryUnsuccessfulPayment( $payment )
+```
+
+The payment will be re-resolved and the payment will be updated in the database. You can them run any domain/application-specific procedures based on `$outcome` above
 
 ## Testing
 

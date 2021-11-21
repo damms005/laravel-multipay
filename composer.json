@@ -54,7 +54,7 @@
                 "Damms005\\LaravelCashier\\LaravelCashierServiceProvider"
             ],
             "aliases": {
-                "LaravelCashier": "Damms005\\LaravelCashier\\LaravelCashierFacade"
+                "LaravelCashier": "Damms005\\LaravelCashier\\Facades\\LaravelCashier"
             }
         }
     },
