@@ -16,7 +16,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         //empty constructor, so we not forced to use parent's constructor
     }
 
-    protected function getHttpRequestHeaders(string $merchantId, string $hash):array
+    protected function getHttpRequestHeaders(string $merchantId, string $hash): array
     {
         $auth = "remitaConsumerKey={$merchantId},remitaConsumerToken={$hash}";
 

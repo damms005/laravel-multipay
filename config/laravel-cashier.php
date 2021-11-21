@@ -19,11 +19,6 @@ return [
      */
     "payment_route_path"      => "/payment",
 
-        /**
-         * The policy to use when authorizing actions against the Payment model
-         */
-    "policy_class_fqcn"			  => "",
-
     "paystack_secret_key"     => env('PAYSTACK_SECRET_KEY'),
 
     "default_payment_handler_fqcn" => Paystack::class,

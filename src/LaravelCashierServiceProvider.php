@@ -2,16 +2,13 @@
 
 namespace Damms005\LaravelCashier;
 
-use Damms005\LaravelCashier\Models\Payment;
 use Damms005\LaravelCashier\Services\PaymentHandlers\BasePaymentHandler;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class LaravelCashierServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
-        $this->loadPaymentPolicy();
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
         $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
         $this->loadViewsFrom(__DIR__ . '/../views', 'laravel-cashier');
@@ -31,19 +28,6 @@ class LaravelCashierServiceProvider extends ServiceProvider
             __DIR__ . '/../config/laravel-cashier.php',
             'laravel-cashier'
         );
-    }
-
-    public function loadPaymentPolicy()
-    {
-        if (empty(config('laravel-cashier.policy_class_fqcn'))) {
-            return;
-        }
-
-        Gate::guessPolicyNamesUsing(function ($modelClass) {
-            if ($modelClass == Payment::class) {
-                return config('laravel-cashier.policy_class_fqcn');
-            }
-        });
     }
 
     public function bootFlutterwave()

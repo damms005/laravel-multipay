@@ -34,7 +34,7 @@ class BasePaymentHandler
             throw new \Exception("Payment handler not specified");
         }
 
-        $paymentHandlerInterface = new $defaultPaymentHandler;
+        $paymentHandlerInterface = new $defaultPaymentHandler();
 
         //ensure the class is registered, so we are sure we will
         //have a handler when payment gateway server returns response

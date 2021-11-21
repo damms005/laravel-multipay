@@ -28,7 +28,7 @@ interface PaymentHandlerInterface
      */
     public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $paymentGatewayServerResponse): ?Payment;
 
-      /**
+    /**
      * For some reason (e.g. no response from server after successful payment, payment was fulfilled by some other
      * non-automated means, etc.) an initiated transaction was completed but not marked as successful. Payment handlers should implement
      * this method so as to support re-querying such transaction
