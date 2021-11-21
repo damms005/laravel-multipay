@@ -26,8 +26,16 @@ class BasePaymentHandler
      */
     protected $payment;
 
-    public function __construct(PaymentHandlerInterface $paymentHandlerInterface)
+    public function __construct()
     {
+        $defaultPaymentHandler = config('laravel-cashier.default_payment_handler_fqcn');
+
+        if (empty($defaultPaymentHandler)) {
+            throw new \Exception("Payment handler not specified");
+        }
+
+        $paymentHandlerInterface = new $defaultPaymentHandler;
+
         //ensure the class is registered, so we are sure we will
         //have a handler when payment gateway server returns response
         if (! collect(self::getNamesOfPaymentHandlers())->contains($paymentHandlerInterface->getUniquePaymentHandlerName())) {
@@ -168,12 +176,23 @@ class BasePaymentHandler
     }
 
     /**
+     * Gets the payment provider/handler for the specified payment
+     */
+    public function getHandlerForPayment(Payment $payment): BasePaymentHandler | PaymentHandlerInterface
+    {
+        return $payment->getPaymentProvider();
+    }
+
+    /**
      * For some reason (e.g. no response from server after successful payment, payment was fulfilled by some other
      * non-automated means, etc.) an initiated transaction was completed but not marked as successful. This method can be used to
      * re-query such transaction
      */
-    public function reQueryUnsuccessfulPayment(Payment $unsuccessfulPayment): Payment
+    public function reQueryUnsuccessfulPayment(Payment $unsuccessfulPayment): ?Payment
     {
+        $handler = $unsuccessfulPayment->getPaymentProvider();
+
+        return $handler->reQuery($unsuccessfulPayment);
     }
 
     public function getPayment(string $transaction_reference): Payment

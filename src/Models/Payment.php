@@ -46,6 +46,9 @@ class Payment extends Model
         $query->where('is_success', 1);
     }
 
+    /**
+     * Gets the payment provider/handler for this payment
+     */
     public function getPaymentProvider(): BasePaymentHandler | PaymentHandlerInterface
     {
         $handler = Str::of(BasePaymentHandler::class)
