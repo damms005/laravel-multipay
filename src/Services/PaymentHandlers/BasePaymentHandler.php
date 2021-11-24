@@ -89,7 +89,7 @@ class BasePaymentHandler
             "transaction_currency" => $currency,
             "transaction_description" => $transaction_description,
             "original_amount_displayed_to_user" => $original_amount_displayed_to_user,
-            "metadata" => $metadata,
+            "metadata" => $this->formatMetadata($metadata),
         ]);
 
         if ($this->paymentHandlerInterface->getUniquePaymentHandlerName() == UnifiedPayments::getUniquePaymentHandlerName()) {
@@ -110,6 +110,28 @@ class BasePaymentHandler
         } else {
             return view($preferredView, $exports);
         }
+    }
+
+    /**
+     * The metadata column is cast as AsArrayObject. Hence, we need to ensure that any
+     * value saved is not a string, else we risk getting a doubly-encoded string in db
+     * as an effect of the AsArrayObject db casting
+     *
+     * @param mixed $metadata
+     *
+     * @return void
+     */
+    public function formatMetadata(mixed $metadata)
+    {
+        if (empty($metadata)) {
+            return null;
+        }
+
+        if (!is_string($metadata)) {
+            return null;
+        }
+
+        return json_decode($metadata, true);
     }
 
     public function sendTransactionToPaymentGateway(Payment $payment, $callback_url)
