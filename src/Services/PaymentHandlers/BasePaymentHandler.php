@@ -119,9 +119,8 @@ class BasePaymentHandler
      *
      * @param mixed $metadata
      *
-     * @return void
      */
-    public function formatMetadata(mixed $metadata)
+    public function formatMetadata(mixed $metadata): array|null
     {
         if (empty($metadata)) {
             return null;
