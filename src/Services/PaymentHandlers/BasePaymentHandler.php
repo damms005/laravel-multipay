@@ -128,7 +128,7 @@ class BasePaymentHandler
             return null;
         }
 
-        if (!is_string($metadata)) {
+        if (! is_string($metadata)) {
             return null;
         }
 
