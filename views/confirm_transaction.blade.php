@@ -16,7 +16,7 @@
 </style>
 <div class="">
 	<p class="font-bold">
-		The details of your transaction is given below. Kindly print this page first before proceeding to click on Pay Now (this ensures that you have your transaction reference in case you need to refer to this transaction in the future).
+		{{$instructions}}
 	</p>
 
 	<div class="mt-8">

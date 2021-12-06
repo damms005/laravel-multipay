@@ -103,7 +103,9 @@ class BasePaymentHandler
             $this->linkPaymentToEloquentModel($optionalRequestForEloquentModelLinkage, $payment);
         }
 
-        $exports = compact('currency', 'payment', 'post_payment_confirmation_submit', 'user_id');
+        $instructions = "The details of your transaction is given below. Kindly print this page first before proceeding to click on Pay Now (this ensures that you have your transaction reference in case you need to refer to this transaction in the future).";
+
+        $exports = compact('instructions', 'currency', 'payment', 'post_payment_confirmation_submit', 'user_id');
 
         if (empty($preferredView)) {
             return view('laravel-cashier::generic-confirm_transaction', $exports);
