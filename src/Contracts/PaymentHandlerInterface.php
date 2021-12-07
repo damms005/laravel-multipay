@@ -28,6 +28,10 @@ interface PaymentHandlerInterface
      */
     public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $paymentGatewayServerResponse): ?Payment;
 
+    public function getHumanReadableTransactionResponse(Payment $payment): string;
+
+    public static function getUniquePaymentHandlerName(): string;
+
     /**
      * For some reason (e.g. no response from server after successful payment, payment was fulfilled by some other
      * non-automated means, etc.) an initiated transaction was completed but not marked as successful. Payment handlers should implement
@@ -36,7 +40,15 @@ interface PaymentHandlerInterface
      */
     public function reQuery(Payment $existingPayment): ?Payment;
 
-    public function getHumanReadableTransactionResponse(Payment $payment): string;
-
-    public static function getUniquePaymentHandlerName(): string;
+    /**
+     * Handle payment notification and return response based on the outcome, as described below
+     *
+     * Return null when payment handler cannot handle the payment notification.
+     * Return false when payment handler can handle payment but the payment
+     * could not be created (for various reasons like transaction failure, etc.).
+     * Otherwise, create and return the Payment.
+     *
+     * @return \Damms005\LaravelCashier\Models\Payment|boolean|null
+     */
+    public function handlePaymentNotification(Request $paymentNotificationRequest): Payment|bool|null;
 }

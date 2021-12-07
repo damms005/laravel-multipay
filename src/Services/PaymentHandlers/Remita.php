@@ -3,11 +3,14 @@
 namespace Damms005\LaravelCashier\Services\PaymentHandlers;
 
 use Carbon\Carbon;
+use Damms005\LaravelCashier\Actions\CreateNewPayment;
 use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelCashier\Models\Payment;
+use Illuminate\Foundation\Auth\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use stdClass;
 
 class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 {
@@ -118,6 +121,26 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         return $payment;
     }
 
+    protected function queryRrr($rrr): stdClass
+    {
+        $merchantId = config('laravel-cashier.remita_merchant_id');
+        $apiKey = config('laravel-cashier.remita_api_key');
+        $hash = hash("sha512", "{$rrr}{$apiKey}{$merchantId}");
+        $requestHeaders = $this->getHttpRequestHeaders($merchantId, $hash);
+
+        $statusUrl = $this->getBaseUrl() . "/exapp/api/v1/send/api/echannelsvc/{$merchantId}/{$rrr}/{$hash}/status.reg";
+
+        $response = Http::withHeaders($requestHeaders)
+            ->get($statusUrl);
+
+        throw_if(
+            ! $response->successful(),
+            "Remita could not get transaction details at the moment. Please try again later. " . $response->body()
+        );
+
+        return json_decode($response->body());
+    }
+
     public function reQuery(Payment $existingPayment): ?Payment
     {
         if ($existingPayment->payment_processor_name != $this->getUniquePaymentHandlerName()) {
@@ -137,24 +160,82 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
             return null;
         }
 
-        $merchantId = config('laravel-cashier.remita_merchant_id');
-        $apiKey = config('laravel-cashier.remita_api_key');
-        $hash = hash("sha512", "{$rrr}{$apiKey}{$merchantId}");
-        $requestHeaders = $this->getHttpRequestHeaders($merchantId, $hash);
+        $responseBody = $this->queryRrr($rrr);
 
-        $statusUrl = $this->getBaseUrl() . "/exapp/api/v1/send/api/echannelsvc/{$merchantId}/{$rrr}/{$hash}/status.reg";
+        $payment = $this->updateSuccessfulPayment($payment, $responseBody);
 
-        $response = Http::withHeaders($requestHeaders)
-            ->get($statusUrl);
+        return $payment;
+    }
 
-        throw_if(
-            ! $response->successful(),
-            "Remita could not process your transaction at the moment. Please try again later. " . $response->body()
+    /**
+     * @see \Damms005\LaravelCashier\Contracts\PaymentHandlerInterface::handlePaymentNotification
+     */
+    public function handlePaymentNotification(Request $request): Payment|bool|null
+    {
+        if (!$request->filled('rrr')) {
+            return null;
+        }
+
+        $rrr = $request->rrr;
+
+        $responseBody = $this->queryRrr($rrr);
+
+        if (! property_exists($responseBody, "status")) {
+            return false;
+        }
+
+        if ($responseBody->status != "00") {
+            return false;
+        }
+
+        $payment = $this->getPaymentByRrr($rrr);
+
+        if (!is_null($payment)) {
+            //it has been previously handled
+            return false;
+        }
+
+        $user = $this->getUserByEmail($responseBody->email);
+
+        if (is_null($user)) {
+            return false;
+        }
+
+        $payment = $this->createNewPayment($user, $responseBody);
+
+        $payment = $this->updateSuccessfulPayment($payment, $responseBody);
+
+        return $payment;
+    }
+
+    protected function createNewPayment(User $user, stdClass $responseBody):Payment
+    {
+        return (new CreateNewPayment)->execute(
+            $this->getUniquePaymentHandlerName(),
+            $user->id,
+            null,
+            Str::random(10),
+            'NGN',
+            $responseBody->description,
+            $responseBody->amount,
+            ""
         );
+    }
 
-        $responseBody = json_decode($response->body());
+    protected function getUserByEmail($email)
+    {
+        return User::whereEmail($email)->first();
+    }
 
-        $payment->processor_returned_response_description = $response->body();
+    protected function getPaymentByRrr($rrr)
+    {
+        return Payment::where('processor_transaction_reference', $rrr)
+        ->first();
+    }
+
+    protected function updateSuccessfulPayment(Payment $payment, stdClass $responseBody): Payment
+    {
+        $payment->processor_returned_response_description = json_encode($responseBody);
 
         if (isset($responseBody->paymentDate)) {
             $payment->processor_returned_transaction_date = Carbon::parse($responseBody->paymentDate);

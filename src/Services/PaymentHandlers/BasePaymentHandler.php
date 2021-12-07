@@ -2,6 +2,7 @@
 
 namespace Damms005\LaravelCashier\Services\PaymentHandlers;
 
+use Damms005\LaravelCashier\Actions\CreateNewPayment;
 use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelCashier\Events\SuccessfulLaravelCashierPaymentEvent;
 use Damms005\LaravelCashier\Models\Payment;
@@ -12,6 +13,8 @@ use Illuminate\Support\Str;
 
 class BasePaymentHandler
 {
+    public const NOTIFICATION_OKAY = 'OK';
+
     /**
      * The Payment Handler processing this transaction
      *
@@ -81,16 +84,16 @@ class BasePaymentHandler
      */
     public function storePaymentAndShowUserBeforeProcessing(int $user_id, $original_amount_displayed_to_user, string $transaction_description, $currency, string $transaction_reference, string $completion_url = null, Request $optionalRequestForEloquentModelLinkage = null, $preferredView = null, $metadata = null)
     {
-        $payment = Payment::firstOrCreate([
-            "user_id" => $user_id,
-            "completion_url" => $completion_url,
-            "transaction_reference" => $transaction_reference,
-            "payment_processor_name" => $this->paymentHandlerInterface->getUniquePaymentHandlerName(),
-            "transaction_currency" => $currency,
-            "transaction_description" => $transaction_description,
-            "original_amount_displayed_to_user" => $original_amount_displayed_to_user,
-            "metadata" => $this->formatMetadata($metadata),
-        ]);
+        $payment = (new CreateNewPayment)->execute(
+            $this->paymentHandlerInterface->getUniquePaymentHandlerName(),
+            $user_id,
+            $completion_url,
+            $transaction_reference,
+            $currency,
+            $transaction_description,
+            $original_amount_displayed_to_user,
+            $metadata
+        );
 
         if ($this->paymentHandlerInterface->getUniquePaymentHandlerName() == UnifiedPayments::getUniquePaymentHandlerName()) {
             $payment->customer_checkout_ip_address = request()->ip();
@@ -112,27 +115,6 @@ class BasePaymentHandler
         } else {
             return view($preferredView, $exports);
         }
-    }
-
-    /**
-     * The metadata column is cast as AsArrayObject. Hence, we need to ensure that any
-     * value saved is not a string, else we risk getting a doubly-encoded string in db
-     * as an effect of the AsArrayObject db casting
-     *
-     * @param mixed $metadata
-     *
-     */
-    public function formatMetadata(mixed $metadata): array|null
-    {
-        if (empty($metadata)) {
-            return null;
-        }
-
-        if (!is_string($metadata)) {
-            return null;
-        }
-
-        return json_decode($metadata, true);
     }
 
     public function sendTransactionToPaymentGateway(Payment $payment, $callback_url)
@@ -219,7 +201,48 @@ class BasePaymentHandler
             return false;
         }
 
+        event(new SuccessfulLaravelCashierPaymentEvent($payment));
+
         return $payment->is_success == 1;
+    }
+
+    public function processPaymentNotification(Request $request)
+    {
+        $payment =$this->useNotificationHandlers($request);
+
+        if ($payment == null) {
+            return 'null transaction';
+        }
+
+        event(new SuccessfulLaravelCashierPaymentEvent($payment));
+
+        return self::NOTIFICATION_OKAY;
+    }
+
+    protected function useNotificationHandlers(Request $request): ?Payment
+    {
+        /**
+         * @var Payment
+         */
+        $payment = collect(self::getNamesOfPaymentHandlers())
+        ->map(function (string $paymentHandlerName) use ($request) {
+            $paymentHandler = PaymentService::getPaymentHandlerByName($paymentHandlerName);
+            $payment = $paymentHandler->handlePaymentNotification($request);
+
+            if (is_null($payment)) {
+                return;
+            }
+
+            if ($payment === false) {
+                return false;
+            }
+
+            return $payment;
+        })
+        ->filter()
+        ->first();
+
+        return $payment;
     }
 
     public function getPayment(string $transaction_reference): Payment

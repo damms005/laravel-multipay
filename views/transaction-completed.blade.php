@@ -50,7 +50,7 @@
 
 	@if ($payment->completion_url)
 
-	<a class="px-8 py-2 text-white bg-blue-800 main-btn" href="{{route('home')}}">
+	<a class="px-8 py-2 text-white bg-blue-800 main-btn" href="{{ $payment->completion_url }}">
 		Click here to continue
 	</a>
 

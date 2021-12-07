@@ -94,6 +94,14 @@ class UnifiedPayments extends BasePaymentHandler implements PaymentHandlerInterf
         throw new \Exception("Method not yet implemented");
     }
 
+    /**
+     * @see \Damms005\LaravelCashier\Contracts\PaymentHandlerInterface::handlePaymentNotification
+     */
+    public function handlePaymentNotification(Request $request): Payment|bool|null
+    {
+        return null;
+    }
+
     public function getHumanReadableTransactionResponse(Payment $payment): string
     {
         return '';

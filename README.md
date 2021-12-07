@@ -94,7 +94,7 @@ Upon user confirmation of transaction, user is redirected to the appropriate pay
 #### Step 3
 
 When user is done with the transaction on the payment handler's end (either successfully paid, or declined transaction), user is redirected
-back to `/api/payment/completed` (`route('payment.finished.callback_url')`) .
+back to `/payment/completed` (`route('payment.finished.callback_url')`) .
 
 > Ensure that your `User` model has a `name` property (Laravel's default). If you have removed the column for any reason, you may use [Model Accessor](https://laravel.com/docs/8.x/eloquent-mutators#accessors-and-mutators) to provide same. For Remita, ensure that `phone` property also exists on the User model.
 
@@ -111,7 +111,12 @@ If for any reason, your user/customer claims that the payment they made was succ
 $outcome = LaravelCashier::reQueryUnsuccessfulPayment( $payment )
 ```
 
-The payment will be re-resolved and the payment will be updated in the database. You can them run any domain/application-specific procedures based on `$outcome` above
+The payment will be re-resolved and the payment will be updated in the database. If the payment is successful, the `SuccessfulLaravelCahierPaymentEvent` event will be fired, availing you the opportunity to run any domain/application-specific procedures.
+
+## Payment Notifications
+Some payment handlers provide a means for sending details of successful notifications. Usually, you will need to provide the payment handler with a URL to which the details of such notification will be sent. Should you need this feature, the notification URL is `/payment/completed/notify`.
+
+> In your handler for `SuccessfulLaravelCahierPaymentEvent`, ensure to first check that you have not previously handled the event for that same payment, as payment notifications will also fire `SuccessfulLaravelCahierPaymentEvent` event if the payment was successful.
 
 ## Testing
 

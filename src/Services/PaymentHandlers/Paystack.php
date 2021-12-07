@@ -84,6 +84,14 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
         throw new \Exception("Method not yet implemented");
     }
 
+    /**
+     * @see \Damms005\LaravelCashier\Contracts\PaymentHandlerInterface::handlePaymentNotification
+     */
+    public function handlePaymentNotification(Request $request): Payment|bool|null
+    {
+        return null;
+    }
+
     public function getHumanReadableTransactionResponse(Payment $payment): string
     {
         return '';
