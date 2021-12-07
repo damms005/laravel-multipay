@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Foundation\Auth\User;
-use Illuminate\Support\Facades\Config;
 use Damms005\LaravelCashier\Models\Payment;
 use Damms005\LaravelCashier\Services\PaymentHandlers\Remita;
+use Illuminate\Foundation\Auth\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Config;
 
 it("can handle payment notification", function () {
     //Arrange
@@ -55,7 +55,7 @@ it("can handle payment notification", function () {
     $mock->makePartial();
     $mock->expect(
         queryRrr: function () {
-            $response = new stdClass;
+            $response = new stdClass();
             $response->status = '00';
             $response->email = 'example@mail.com';
             $response->description = 'sample description';
@@ -73,7 +73,7 @@ it("can handle payment notification", function () {
             return $user;
         },
         createNewPayment: function (User $user, stdClass $responseBody) {
-            return new Payment;
+            return new Payment();
         },
         updateSuccessfulPayment: function ($payment, $responseBody) {
             return $payment;
