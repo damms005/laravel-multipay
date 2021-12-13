@@ -7,7 +7,6 @@ use Damms005\LaravelCashier\Services\PaymentHandlers\BasePaymentHandler;
 use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Str;
 
 /**
