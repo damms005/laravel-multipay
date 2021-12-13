@@ -2,12 +2,13 @@
 
 namespace Damms005\LaravelCashier\Models;
 
-use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Casts\AsArrayObject;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelCashier\Services\PaymentHandlers\BasePaymentHandler;
+use Illuminate\Database\Eloquent\Casts\AsArrayObject;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User;
+use Illuminate\Support\Str;
 
 /**
  * @mixin IdeHelperPayment
