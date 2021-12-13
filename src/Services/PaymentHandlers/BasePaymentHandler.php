@@ -2,14 +2,15 @@
 
 namespace Damms005\LaravelCashier\Services\PaymentHandlers;
 
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Damms005\LaravelCashier\Models\Payment;
+use Damms005\LaravelCashier\Services\PaymentService;
 use Damms005\LaravelCashier\Actions\CreateNewPayment;
 use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
-use Damms005\LaravelCashier\Events\SuccessfulLaravelCashierPaymentEvent;
-use Damms005\LaravelCashier\Models\Payment;
 use Damms005\LaravelCashier\Notifications\TransactionCompleted;
-use Damms005\LaravelCashier\Services\PaymentService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use Damms005\LaravelCashier\Events\SuccessfulLaravelCashierPaymentEvent;
 
 class BasePaymentHandler
 {
@@ -127,8 +128,6 @@ class BasePaymentHandler
      * of the transaction (e.g. successful, fail, etc.)
      *
      * @param Request $paymentGatewayServerResponse
-     *
-     * @return void
      */
     public static function handleServerResponseForTransactionAndDisplayOutcome(Request $paymentGatewayServerResponse)
     {
@@ -173,7 +172,6 @@ class BasePaymentHandler
             }
 
             if ($payment->getPaymentProvider() == UnifiedPayments::getUniquePaymentHandlerName()) {
-                $payment->user->notify(TransactionCompleted::class);
             }
         }
 
@@ -193,6 +191,7 @@ class BasePaymentHandler
      */
     public function reQueryUnsuccessfulPayment(Payment $unsuccessfulPayment): bool
     {
+        Log::info("Requery started");
         $handler = $unsuccessfulPayment->getPaymentProvider();
 
         $payment = $handler->reQuery($unsuccessfulPayment);

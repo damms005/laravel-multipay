@@ -9,6 +9,7 @@ use Damms005\LaravelCashier\Models\Payment;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use stdClass;
 
@@ -143,11 +144,15 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
     public function reQuery(Payment $existingPayment): ?Payment
     {
+        Log::info("Remita trying requery");
+
         if ($existingPayment->payment_processor_name != $this->getUniquePaymentHandlerName()) {
+            Log::info("It is not a Remita transaction");
             return null;
         }
 
         if (empty($existingPayment->processor_transaction_reference)) {
+            Log::info("Payment does not have RRR");
             return null;
         }
 
@@ -157,12 +162,15 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
             ->first();
 
         if (is_null($payment)) {
+            Log::info("Payment with RRR {$rrr} not found");
             return null;
         }
 
         $responseBody = $this->queryRrr($rrr);
 
         $payment = $this->updateSuccessfulPayment($payment, $responseBody);
+
+        Log::info("Remita: Payment found and updated");
 
         return $payment;
     }

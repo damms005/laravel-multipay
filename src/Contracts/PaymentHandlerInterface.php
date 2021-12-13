@@ -22,7 +22,7 @@ interface PaymentHandlerInterface
      * process it should confirm that the payment_processor_name for the transaction is the
      * same as its own getUniquePaymentHandlerName() value, then handle the response and return the Payment object
      *
-     * @param Request $request
+     * @param Request $paymentGatewayServerResponse
      *
      * @return Payment
      */

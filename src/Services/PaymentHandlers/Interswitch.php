@@ -19,6 +19,7 @@ class Interswitch extends BasePaymentHandler implements PaymentHandlerInterface
     protected $url_to_redirect_when_transaction_completed;
     protected $requery_url = "https://sandbox.interswitchng.com/collections/api/v1/gettransaction.json";
     protected $macKey = 'D3D1D05AFE42AD50818167EAC73C109168A0F108F32645C8B59E897FA930DA44F9230910DAC9E20641823799A107A02068F7BC0F4CC41D2952E249552255710F';
+    protected $site_redirect_url = "";
 
     public function __construct()
     {
@@ -224,7 +225,6 @@ class Interswitch extends BasePaymentHandler implements PaymentHandlerInterface
             "43" => "Stolen Card, Pick-Up, Stolen Card, Pick-Up",
             "44" => "No Investment Account",
             "45" => "Account Closed",
-            "Z1(46)" => "Wrong login details on payment page attempting to login to QT",
             "51" => "Insufficient Funds",
             "52" => "No Check Account",
             "53" => "No Savings Account",
@@ -257,9 +257,10 @@ class Interswitch extends BasePaymentHandler implements PaymentHandlerInterface
             "98" => "Exceeds Cash Limit",
             "Z0" => "Transaction Not Completed",
             "Z4" => "Integration Error",
-            "Z1" => "Transaction Error",
             "Z1(46)" => "Wrong login details on payment page attempting to login to QT",
-            "Z1" => "(XM1)	Suspected Fraudulent Transaction",
+            "Z1-a" => "(X10)	3d Secure Authenticate failed",
+            "Z1-b" => "Transaction Error",
+            "Z1-c" => "(XM1)	Suspected Fraudulent Transaction",
             "Z5" => "Duplicate Transaction Reference",
             "Z6" => "Customer Cancellation",
             "Z25" => "Transaction not Found. Transaction you are querying does not exist on WebPAY",
@@ -289,7 +290,6 @@ class Interswitch extends BasePaymentHandler implements PaymentHandlerInterface
             "A9" => "Incorrect Phone Number",
             "X04" => "Minimum Amount for Payment Item Not Met",
             "X03" => "Exceeds Maximum Amount Allowed",
-            "Z1" => "(X10)	3d Secure Authenticate failed",
             "T0" => "Token Request Successful",
             "T1" => "Token Request Failed",
             "T2" => "Token Authentication Pending",

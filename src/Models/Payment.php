@@ -2,12 +2,13 @@
 
 namespace Damms005\LaravelCashier\Models;
 
-use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
-use Damms005\LaravelCashier\Services\PaymentHandlers\BasePaymentHandler;
+use Illuminate\Support\Str;
+use Illuminate\Foundation\Auth\User;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
+use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
+use Damms005\LaravelCashier\Services\PaymentHandlers\BasePaymentHandler;
 
 /**
  * @mixin IdeHelperPayment
@@ -38,7 +39,7 @@ class Payment extends Model
 
     public function user()
     {
-        return $this->belongsTo(\App\User::class);
+        return $this->belongsTo(User::class);
     }
 
     public function scopeSuccessful($query)
