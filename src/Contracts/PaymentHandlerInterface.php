@@ -48,7 +48,7 @@ interface PaymentHandlerInterface
      * could not be created (for various reasons like transaction failure, etc.).
      * Otherwise, create and return the Payment.
      *
-     * @return \Damms005\LaravelCashier\Models\Payment|boolean|null
+     * @return \Damms005\LaravelCashier\Models\Payment|bool|null
      */
     public function handlePaymentNotification(Request $paymentNotificationRequest): Payment|bool|null;
 }

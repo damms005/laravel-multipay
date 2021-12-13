@@ -180,7 +180,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
      */
     public function handlePaymentNotification(Request $request): Payment|bool|null
     {
-        if (!$request->filled('rrr')) {
+        if (! $request->filled('rrr')) {
             return null;
         }
 
@@ -198,7 +198,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
         $payment = $this->getPaymentByRrr($rrr);
 
-        if (!is_null($payment)) {
+        if (! is_null($payment)) {
             //it has been previously handled
             return false;
         }
@@ -216,9 +216,9 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         return $payment;
     }
 
-    protected function createNewPayment(User $user, stdClass $responseBody):Payment
+    protected function createNewPayment(User $user, stdClass $responseBody): Payment
     {
-        return (new CreateNewPayment)->execute(
+        return (new CreateNewPayment())->execute(
             $this->getUniquePaymentHandlerName(),
             $user->id,
             null,

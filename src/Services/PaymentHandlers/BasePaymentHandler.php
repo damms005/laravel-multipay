@@ -85,7 +85,7 @@ class BasePaymentHandler
      */
     public function storePaymentAndShowUserBeforeProcessing(int $user_id, $original_amount_displayed_to_user, string $transaction_description, $currency, string $transaction_reference, string $completion_url = null, Request $optionalRequestForEloquentModelLinkage = null, $preferredView = null, $metadata = null)
     {
-        $payment = (new CreateNewPayment)->execute(
+        $payment = (new CreateNewPayment())->execute(
             $this->paymentHandlerInterface->getUniquePaymentHandlerName(),
             $user_id,
             $completion_url,
@@ -207,7 +207,7 @@ class BasePaymentHandler
 
     public function processPaymentNotification(Request $request)
     {
-        $payment =$this->useNotificationHandlers($request);
+        $payment = $this->useNotificationHandlers($request);
 
         if ($payment == null) {
             return 'null transaction';

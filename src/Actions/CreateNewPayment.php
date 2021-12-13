@@ -28,7 +28,6 @@ class CreateNewPayment
     ]);
     }
 
-
     /**
      * The metadata column is cast as AsArrayObject. Hence, we need to ensure that any
      * value saved is not a string, else we risk getting a doubly-encoded string in db
@@ -43,7 +42,7 @@ class CreateNewPayment
             return null;
         }
 
-        if (!is_string($metadata)) {
+        if (! is_string($metadata)) {
             return null;
         }
 
