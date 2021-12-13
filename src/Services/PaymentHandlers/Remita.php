@@ -148,11 +148,13 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
         if ($existingPayment->payment_processor_name != $this->getUniquePaymentHandlerName()) {
             Log::info("It is not a Remita transaction");
+
             return null;
         }
 
         if (empty($existingPayment->processor_transaction_reference)) {
             Log::info("Payment does not have RRR");
+
             return null;
         }
 
@@ -163,6 +165,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
         if (is_null($payment)) {
             Log::info("Payment with RRR {$rrr} not found");
+
             return null;
         }
 

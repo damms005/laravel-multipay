@@ -2,15 +2,14 @@
 
 namespace Damms005\LaravelCashier\Services\PaymentHandlers;
 
-use Illuminate\Support\Str;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Damms005\LaravelCashier\Models\Payment;
-use Damms005\LaravelCashier\Services\PaymentService;
 use Damms005\LaravelCashier\Actions\CreateNewPayment;
 use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
-use Damms005\LaravelCashier\Notifications\TransactionCompleted;
 use Damms005\LaravelCashier\Events\SuccessfulLaravelCashierPaymentEvent;
+use Damms005\LaravelCashier\Models\Payment;
+use Damms005\LaravelCashier\Services\PaymentService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class BasePaymentHandler
 {
