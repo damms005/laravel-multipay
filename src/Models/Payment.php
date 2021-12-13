@@ -3,7 +3,6 @@
 namespace Damms005\LaravelCashier\Models;
 
 use Illuminate\Support\Str;
-use Illuminate\Foundation\Auth\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -39,7 +38,7 @@ class Payment extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(config('laravel-cashier.user_model_fqcn'));
     }
 
     public function scopeSuccessful($query)

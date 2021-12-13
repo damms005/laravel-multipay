@@ -4,6 +4,8 @@ use Damms005\LaravelCashier\Services\PaymentHandlers\Paystack;
 
 return [
 
+    'user_model_fqcn' => "\\App\\User",
+
     /**
      * The layout to extend when displaying views
      */
