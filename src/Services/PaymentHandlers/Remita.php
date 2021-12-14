@@ -252,8 +252,11 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
             $payment->processor_returned_transaction_date = Carbon::parse($responseBody->paymentDate);
         }
 
-        $payment->processor_returned_amount = $responseBody->amount;
         $payment->is_success = $responseBody->status == "00";
+
+        if ($payment->is_success) {
+            $payment->processor_returned_amount = $responseBody->amount;
+        }
 
         $payment->save();
         $payment->refresh();
