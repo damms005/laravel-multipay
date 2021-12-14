@@ -171,7 +171,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
         $responseBody = $this->queryRrr($rrr);
 
-        $payment = $this->updateSuccessfulPayment($payment, $responseBody);
+        $payment = $this->updatePaymentResponse($payment, $responseBody);
 
         Log::info("Remita: Payment found and updated");
 
@@ -214,7 +214,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
         $payment = $this->createNewPayment($user, $responseBody);
 
-        $payment = $this->updateSuccessfulPayment($payment, $responseBody);
+        $payment = $this->updatePaymentResponse($payment, $responseBody);
 
         return $payment;
     }
@@ -244,7 +244,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         ->first();
     }
 
-    protected function updateSuccessfulPayment(Payment $payment, stdClass $responseBody): Payment
+    protected function updatePaymentResponse(Payment $payment, stdClass $responseBody): Payment
     {
         $payment->processor_returned_response_description = json_encode($responseBody);
 
