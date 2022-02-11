@@ -254,8 +254,13 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
         $payment->is_success = $responseBody->status == "00";
 
-        if ($responseBody->status != "00" && $this->isTransactionCanStillBeReQueried($responseBody)) {
-            $payment->is_success = false;
+        // To re-query Remita transactions, users usually depend on the nullity 'is_success, such that
+        // if it is NULL (its original/default value), the user knows it is eligible to be retried. Since we
+        // cannot dependably rely on Remita to always push status of successful transactions (especially bank transactions),
+        // users usually re-query Remita at intervals. We should therefore not set is_success prematurely. We should set it only
+        // when we are sure that user cannot reasonably
+        if ($this->isTransactionCanStillBeReQueried($responseBody)) {
+            $payment->is_success = null;
         }
 
         if ($payment->is_success) {
@@ -270,12 +275,6 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
     protected function isTransactionCanStillBeReQueried(stdClass $responseBody)
     {
-        // To re-query Remita transactions, users usually depend on the nullity 'is_success, such that
-        // if it is NULL (its original/default value), the user knows it is eligible to be retried. Since we
-        // cannot dependably rely on Remita to always push status of successful transactions (especially bank transactions),
-        // users usually re-query Remita at intervals. We should therefore not set is_success prematurely. We should set it only
-        // when we are sure that user cannot reasonably
-
         // https://api.remita.net
         $responseCodesIndicatingUnFulfilledTransactionState = [
                 '021', // Transaction Pending
