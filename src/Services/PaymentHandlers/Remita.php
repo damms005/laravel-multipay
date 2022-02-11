@@ -171,7 +171,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
         $responseBody = $this->queryRrr($rrr);
 
-        $payment = $this->updatePaymentResponse($payment, $responseBody);
+        $payment = $this->useResponseToUpdatePayment($payment, $responseBody);
 
         Log::info("Remita: Payment found and updated");
 
@@ -214,7 +214,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
         $payment = $this->createNewPayment($user, $responseBody);
 
-        $payment = $this->updatePaymentResponse($payment, $responseBody);
+        $payment = $this->useResponseToUpdatePayment($payment, $responseBody);
 
         return $payment;
     }
@@ -244,7 +244,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         ->first();
     }
 
-    protected function updatePaymentResponse(Payment $payment, stdClass $responseBody): Payment
+    protected function useResponseToUpdatePayment(Payment $payment, stdClass $responseBody): Payment
     {
         $payment->processor_returned_response_description = json_encode($responseBody);
 
@@ -254,6 +254,10 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
         $payment->is_success = $responseBody->status == "00";
 
+        if ($responseBody->status != "00" && $this->isTransactionCanStillBeReQueried($responseBody)) {
+            $payment->is_success = false;
+        }
+
         if ($payment->is_success) {
             $payment->processor_returned_amount = $responseBody->amount;
         }
@@ -262,6 +266,34 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         $payment->refresh();
 
         return $payment;
+    }
+
+    protected function isTransactionCanStillBeReQueried(stdClass $responseBody)
+    {
+        // To re-query Remita transactions, users usually depend on the nullity 'is_success, such that
+        // if it is NULL (its original/default value), the user knows it is eligible to be retried. Since we
+        // cannot dependably rely on Remita to always push status of successful transactions (especially bank transactions),
+        // users usually re-query Remita at intervals. We should therefore not set is_success prematurely. We should set it only
+        // when we are sure that user cannot reasonably
+
+        // https://api.remita.net
+        $responseCodesIndicatingUnFulfilledTransactionState = [
+                '021', // Transaction Pending
+                '025', // Payment Reference generated
+                '040', // Initial Request OK
+                '041', // Transaction Forwarded for Processing
+                '045', // Awaiting Payment Confirmation
+                '058', // Pending Authorization
+                '069', // New Transaction
+                '070', // Awaiting Debit
+                '071', // Undergoing Bank Processing
+                '072', // Pending Credit
+                '25', // Error Processing Request
+        ];
+
+        Log::debug("Determining Remita requery for status: {$responseBody->status}");
+
+        return in_array($responseBody->status, $responseCodesIndicatingUnFulfilledTransactionState);
     }
 
     public function getHumanReadableTransactionResponse(Payment $payment): string
