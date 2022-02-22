@@ -81,5 +81,5 @@ it("can handle payment notification", function () {
     );
 
     //Act & Assert
-    expect(get_class($mock->handlePaymentNotification($request)))->toEqual(Payment::class);
+    expect(get_class($mock->handleExternalWebhookRequest($request)))->toEqual(Payment::class);
 });

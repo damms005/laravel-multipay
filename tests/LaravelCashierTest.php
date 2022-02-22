@@ -31,12 +31,12 @@ it("processes payment notification", function () {
     $mock->makePartial();
 
     $mock->expect(
-        useNotificationHandlers: function () {
+        processWebhook: function () {
             return new Payment();
         }
     );
 
-    expect($mock->processPaymentNotification(new Request()))->toEqual(BasePaymentHandler::NOTIFICATION_OKAY);
+    expect($mock->paymentCompletionWebhookHandler(new Request()))->toEqual(BasePaymentHandler::NOTIFICATION_OKAY);
 
     Event::assertDispatched(SuccessfulLaravelCashierPaymentEvent::class);
 });

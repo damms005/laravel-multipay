@@ -43,12 +43,12 @@ interface PaymentHandlerInterface
     /**
      * Handle payment notification and return response based on the outcome, as described below
      *
-     * Return null when payment handler cannot handle the payment notification.
+     * Returns null when payment handler cannot handle the payment notification.
      * Return false when payment handler can handle payment but the payment
      * could not be created (for various reasons like transaction failure, etc.).
      * Otherwise, create and return the Payment.
      *
      * @return \Damms005\LaravelCashier\Models\Payment|bool|null
      */
-    public function handlePaymentNotification(Request $paymentNotificationRequest): Payment|bool|null;
+    public function handleExternalWebhookRequest(Request $paymentNotificationRequest): Payment|bool|null;
 }

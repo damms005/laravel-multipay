@@ -173,15 +173,13 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
         $payment = $this->useResponseToUpdatePayment($payment, $responseBody);
 
-        Log::info("Remita: Payment found and updated");
-
         return $payment;
     }
 
     /**
-     * @see \Damms005\LaravelCashier\Contracts\PaymentHandlerInterface::handlePaymentNotification
+     * @see \Damms005\LaravelCashier\Contracts\PaymentHandlerInterface::handleExternalWebhookRequest
      */
-    public function handlePaymentNotification(Request $request): Payment|bool|null
+    public function handleExternalWebhookRequest(Request $request): Payment|bool|null
     {
         if (! $request->filled('rrr')) {
             return null;

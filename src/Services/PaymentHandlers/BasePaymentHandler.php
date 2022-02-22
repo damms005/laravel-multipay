@@ -8,7 +8,6 @@ use Damms005\LaravelCashier\Events\SuccessfulLaravelCashierPaymentEvent;
 use Damms005\LaravelCashier\Models\Payment;
 use Damms005\LaravelCashier\Services\PaymentService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class BasePaymentHandler
@@ -41,7 +40,7 @@ class BasePaymentHandler
 
         //ensure the class is registered, so we are sure we will
         //have a handler when payment gateway server returns response
-        if (! collect(self::getNamesOfPaymentHandlers())->contains($paymentHandlerInterface->getUniquePaymentHandlerName())) {
+        if (!collect(self::getNamesOfPaymentHandlers())->contains($paymentHandlerInterface->getUniquePaymentHandlerName())) {
             throw new \Exception("Unregistered payment handler: {$paymentHandlerInterface->getUniquePaymentHandlerName()}", 1);
         }
 
@@ -152,9 +151,9 @@ class BasePaymentHandler
         $isJsonDescription = false;
         $paymentDescription = null;
 
-        if (! is_null($payment)) {
+        if (!is_null($payment)) {
             $paymentDescription = json_decode($payment->processor_returned_response_description, true);
-            $isJsonDescription = ! is_null($paymentDescription);
+            $isJsonDescription = !is_null($paymentDescription);
 
             if (is_array($paymentDescription)) {
                 $paymentDescription = collect($paymentDescription)
@@ -190,7 +189,6 @@ class BasePaymentHandler
      */
     public function reQueryUnsuccessfulPayment(Payment $unsuccessfulPayment): bool
     {
-        Log::info("Requery started");
         $handler = $unsuccessfulPayment->getPaymentProvider();
 
         $payment = $handler->reQuery($unsuccessfulPayment);
@@ -199,46 +197,51 @@ class BasePaymentHandler
             return false;
         }
 
-        event(new SuccessfulLaravelCashierPaymentEvent($payment));
+        $isSuccessFulPayment = $payment->is_success == 1;
 
-        return $payment->is_success == 1;
+        if ($isSuccessFulPayment) {
+            event(new SuccessfulLaravelCashierPaymentEvent($payment));
+        }
+
+        return $isSuccessFulPayment;
     }
 
-    public function processPaymentNotification(Request $request)
+    public function paymentCompletionWebhookHandler(Request $request)
     {
-        $payment = $this->useNotificationHandlers($request);
+        $payment = $this->processWebhook($request);
 
         if ($payment == null) {
             return 'null transaction';
         }
 
-        event(new SuccessfulLaravelCashierPaymentEvent($payment));
+        // TODO: write tests that ensure that events are not dispatched for
+        // successful transactions here. This is because
 
         return self::NOTIFICATION_OKAY;
     }
 
-    protected function useNotificationHandlers(Request $request): ?Payment
+    protected function processWebhook(Request $request): ?Payment
     {
         /**
          * @var Payment
          */
         $payment = collect(self::getNamesOfPaymentHandlers())
-        ->map(function (string $paymentHandlerName) use ($request) {
-            $paymentHandler = PaymentService::getPaymentHandlerByName($paymentHandlerName);
-            $payment = $paymentHandler->handlePaymentNotification($request);
+            ->map(function (string $paymentHandlerName) use ($request) {
+                $paymentHandler = PaymentService::getPaymentHandlerByName($paymentHandlerName);
+                $payment = $paymentHandler->handleExternalWebhookRequest($request);
 
-            if (is_null($payment)) {
-                return;
-            }
+                if (is_null($payment)) {
+                    return;
+                }
 
-            if ($payment === false) {
-                return false;
-            }
+                if ($payment === false) {
+                    return false;
+                }
 
-            return $payment;
-        })
-        ->filter()
-        ->first();
+                return $payment;
+            })
+            ->filter()
+            ->first();
 
         return $payment;
     }

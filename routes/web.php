@@ -26,10 +26,12 @@ Route::group(['prefix' => config('laravel-cashier.payment_route_path', 'payment'
 
     //use 'api' route for payment completion callback because some payment providers do POST rather than GET
     Route::group(['middleware' => 'api'], function () {
+
+        // Route that users get redirected to when done with payment
         Route::match(['get', 'post'], '/completed', [PaymentController::class, 'handlePaymentGatewayResponse'])
             ->name('payment.finished.callback_url');
 
         Route::match(['get', 'post'], '/completed/notify', TransactionCompletedNotificationController::class)
-            ->name('payment.finished.notify');
+            ->name('payment.external-webhook-endpoint');
     });
 });

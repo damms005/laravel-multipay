@@ -95,9 +95,9 @@ class UnifiedPayments extends BasePaymentHandler implements PaymentHandlerInterf
     }
 
     /**
-     * @see \Damms005\LaravelCashier\Contracts\PaymentHandlerInterface::handlePaymentNotification
+     * @see \Damms005\LaravelCashier\Contracts\PaymentHandlerInterface::handleExternalWebhookRequest
      */
-    public function handlePaymentNotification(Request $request): Payment|bool|null
+    public function handleExternalWebhookRequest(Request $request): Payment|bool|null
     {
         return null;
     }
