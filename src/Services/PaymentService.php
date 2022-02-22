@@ -14,7 +14,7 @@ class PaymentService
         return $basePaymentHandler->storePaymentAndShowUserBeforeProcessing($user_id, $amount, $description, $currency, $transaction_reference, null, null, $view, $metadata);
     }
 
-    public static function getPaymentHandlerByName(string $paymentHandlerName): PaymentHandlerInterface
+    public function getPaymentHandlerByName(string $paymentHandlerName): PaymentHandlerInterface
     {
         try {
             $handlerFqcn = "\\Damms005\\LaravelCashier\\Services\\PaymentHandlers\\{$paymentHandlerName}";

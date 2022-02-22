@@ -1,7 +1,7 @@
 <?php
 
 use Damms005\LaravelCashier\Http\Controllers\PaymentController;
-use Damms005\LaravelCashier\Http\Controllers\TransactionCompletedNotificationController;
+use Damms005\LaravelCashier\Http\Controllers\PaymentWebhookController;
 use Damms005\LaravelCashier\Services\PaymentHandlers\BasePaymentHandler;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -31,7 +31,7 @@ Route::group(['prefix' => config('laravel-cashier.payment_route_path', 'payment'
         Route::match(['get', 'post'], '/completed', [PaymentController::class, 'handlePaymentGatewayResponse'])
             ->name('payment.finished.callback_url');
 
-        Route::match(['get', 'post'], '/completed/notify', TransactionCompletedNotificationController::class)
+        Route::match(['get', 'post'], '/completed/notify', PaymentWebhookController::class)
             ->name('payment.external-webhook-endpoint');
     });
 });

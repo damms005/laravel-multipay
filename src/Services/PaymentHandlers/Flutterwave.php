@@ -3,10 +3,13 @@
 namespace Damms005\LaravelCashier\Services\PaymentHandlers;
 
 use Carbon\Carbon;
-use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
-use Damms005\LaravelCashier\Models\Payment;
 use Illuminate\Http\Request;
+use Damms005\LaravelCashier\Models\Payment;
 use KingFlamez\Rave\Facades\Rave as FlutterwaveRave;
+
+use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
+use Damms005\LaravelCashier\Exceptions\UnknownWebhookException;
+
 
 class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
 {
@@ -70,7 +73,7 @@ class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
 
     public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $paymentGatewayServerResponse): ?Payment
     {
-        if (! $paymentGatewayServerResponse->has('tx_ref')) {
+        if (!$paymentGatewayServerResponse->has('tx_ref')) {
             return null;
         }
 
@@ -89,7 +92,7 @@ class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
         $transactionId = $paymentGatewayServerResponse->get('transaction_id');
         $flutterwavePaymentDetails = FlutterwaveRave::verifyTransaction($transactionId);
 
-        if (! $this->isValidTransaction($flutterwavePaymentDetails, $payment)) {
+        if (!$this->isValidTransaction($flutterwavePaymentDetails, $payment)) {
             $payment->processor_returned_response_description = "Invalid transaction";
             $payment->save();
 
@@ -109,16 +112,14 @@ class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
     /**
      * @see \Damms005\LaravelCashier\Contracts\PaymentHandlerInterface::handleExternalWebhookRequest
      */
-    public function handleExternalWebhookRequest(Request $request): Payment|bool|null
+    public function handleExternalWebhookRequest(Request $request): Payment
     {
-        return null;
+        throw new UnknownWebhookException($this, $request);
     }
 
     public function isValidTransaction(array $flutterwavePaymentDetails, Payment $payment)
     {
-        return
-        // $flutterwavePaymentDetails->currency &&  $payment->currency;
-        $flutterwavePaymentDetails['data']['amount'] == $payment->original_amount_displayed_to_user;
+        return $flutterwavePaymentDetails['data']['amount'] == $payment->original_amount_displayed_to_user;
     }
 
     protected function giveValue($flutterwaveReference, array $flutterwavePaymentDetails): Payment

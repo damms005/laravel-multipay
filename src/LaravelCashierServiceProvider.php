@@ -3,6 +3,7 @@
 namespace Damms005\LaravelCashier;
 
 use Damms005\LaravelCashier\Services\PaymentHandlers\BasePaymentHandler;
+use Damms005\LaravelCashier\Services\PaymentService;
 use Illuminate\Support\ServiceProvider;
 
 class LaravelCashierServiceProvider extends ServiceProvider
@@ -19,6 +20,10 @@ class LaravelCashierServiceProvider extends ServiceProvider
 
         $this->app->bind('laravel-cashier', function ($app) {
             return new BasePaymentHandler();
+        });
+
+        $this->app->bind(PaymentService::class, function ($app) {
+            return new PaymentService();
         });
     }
 

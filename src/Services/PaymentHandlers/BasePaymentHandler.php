@@ -2,17 +2,19 @@
 
 namespace Damms005\LaravelCashier\Services\PaymentHandlers;
 
-use Damms005\LaravelCashier\Actions\CreateNewPayment;
-use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
-use Damms005\LaravelCashier\Events\SuccessfulLaravelCashierPaymentEvent;
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
 use Damms005\LaravelCashier\Models\Payment;
 use Damms005\LaravelCashier\Services\PaymentService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use Damms005\LaravelCashier\Actions\CreateNewPayment;
+use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
+use Damms005\LaravelCashier\Exceptions\UnknownWebhookException;
+use Damms005\LaravelCashier\Events\SuccessfulLaravelCashierPaymentEvent;
+use Damms005\LaravelCashier\Exceptions\NonActionableWebhookPaymentException;
 
 class BasePaymentHandler
 {
-    public const NOTIFICATION_OKAY = 'OK';
+    public const WEBHOOK_OKAY = 'OK';
 
     /**
      * The Payment Handler processing this transaction
@@ -48,7 +50,7 @@ class BasePaymentHandler
     }
 
     /**
-     * @return string[]
+     * @return fqcn string[]
      */
     public static function getNamesOfPaymentHandlers()
     {
@@ -59,10 +61,10 @@ class BasePaymentHandler
             //this is because to handle payment provider response, we
             //currently new-up instances of these classes without constructors.
 
-            Flutterwave::class,
-            Paystack::class,
-            Interswitch::class,
-            UnifiedPayments::class,
+            // Flutterwave::class,
+            // Paystack::class,
+            // Interswitch::class,
+            // UnifiedPayments::class,
             Remita::class,
         ])
             ->map(function (string $paymentHandlerFqcn) {
@@ -127,7 +129,7 @@ class BasePaymentHandler
      *
      * @param Request $paymentGatewayServerResponse
      */
-    public static function handleServerResponseForTransactionAndDisplayOutcome(Request $paymentGatewayServerResponse)
+    public static function handleServerResponseForTransactionAndDisplayOutcome(Request $paymentGatewayServerResponse, PaymentService $paymentService)
     {
         /**
          * @var Payment
@@ -135,8 +137,8 @@ class BasePaymentHandler
         $payment = null;
 
         collect(self::getNamesOfPaymentHandlers())
-            ->each(function (string $paymentHandlerName) use ($paymentGatewayServerResponse, &$payment) {
-                $paymentHandler = PaymentService::getPaymentHandlerByName($paymentHandlerName);
+            ->each(function (string $paymentHandlerName) use ($paymentGatewayServerResponse, $paymentService, &$payment) {
+                $paymentHandler = $paymentService->getPaymentHandlerByName($paymentHandlerName);
                 $payment = $paymentHandler->confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome($paymentGatewayServerResponse);
 
                 if ($payment) {
@@ -148,32 +150,38 @@ class BasePaymentHandler
                 }
             });
 
-        $isJsonDescription = false;
-        $paymentDescription = null;
-
-        if (!is_null($payment)) {
-            $paymentDescription = json_decode($payment->processor_returned_response_description, true);
-            $isJsonDescription = !is_null($paymentDescription);
-
-            if (is_array($paymentDescription)) {
-                $paymentDescription = collect($paymentDescription)
-                    ->mapWithKeys(function ($item, $key) {
-                        $humanReadableKey = Str::of($key)
-                            ->snake()
-                            ->title()
-                            ->replace("_", " ")
-                            ->__toString();
-
-                        return [$humanReadableKey => $item];
-                    })
-                    ->toArray();
-            }
-
-            if ($payment->getPaymentProvider() == UnifiedPayments::getUniquePaymentHandlerName()) {
-            }
-        }
+        [$paymentDescription, $isJsonDescription] = self::getPaymentDescription($payment);
 
         return view('laravel-cashier::transaction-completed', compact('payment', 'isJsonDescription', 'paymentDescription'));
+    }
+
+    /**
+     * @return array [paymentDescription, isJsonDescription]
+     */
+    protected static function getPaymentDescription(?Payment $payment): array
+    {
+        if (is_null($payment)) {
+            return ['', false];
+        }
+
+        $paymentDescription = json_decode($payment->processor_returned_response_description, true);
+        $isJsonDescription = !is_null($paymentDescription);
+
+        if (is_array($paymentDescription)) {
+            $paymentDescription = collect($paymentDescription)
+                ->mapWithKeys(function ($item, $key) {
+                    $humanReadableKey = Str::of($key)
+                        ->snake()
+                        ->title()
+                        ->replace("_", " ")
+                        ->__toString();
+
+                    return [$humanReadableKey => $item];
+                })
+                ->toArray();
+        }
+
+        return [$paymentDescription, $isJsonDescription];
     }
 
     /**
@@ -210,14 +218,7 @@ class BasePaymentHandler
     {
         $payment = $this->processWebhook($request);
 
-        if ($payment == null) {
-            return 'null transaction';
-        }
-
-        // TODO: write tests that ensure that events are not dispatched for
-        // successful transactions here. This is because
-
-        return self::NOTIFICATION_OKAY;
+        return $payment ? self::WEBHOOK_OKAY : null;
     }
 
     protected function processWebhook(Request $request): ?Payment
@@ -228,17 +229,19 @@ class BasePaymentHandler
         $payment = collect(self::getNamesOfPaymentHandlers())
             ->map(function (string $paymentHandlerName) use ($request) {
                 $paymentHandler = PaymentService::getPaymentHandlerByName($paymentHandlerName);
-                $payment = $paymentHandler->handleExternalWebhookRequest($request);
 
-                if (is_null($payment)) {
-                    return;
-                }
+                try {
+                    $payment = $paymentHandler->handleExternalWebhookRequest($request);
 
-                if ($payment === false) {
+                    if ($payment->is_success) {
+                        event(new SuccessfulLaravelCashierPaymentEvent($payment));
+                    }
+
+                    return $payment;
+                } catch (UnknownWebhookException $exception) {
+                } catch (NonActionableWebhookPaymentException $exception) {
                     return false;
                 }
-
-                return $payment;
             })
             ->filter()
             ->first();

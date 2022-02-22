@@ -1,15 +1,15 @@
 <?php
 
+use Mockery\Mock;
+use Illuminate\Http\Request;
+use Illuminate\Foundation\Auth\User;
+use Illuminate\Support\Facades\Config;
 use Damms005\LaravelCashier\Models\Payment;
 use Damms005\LaravelCashier\Services\PaymentHandlers\Remita;
-use Illuminate\Foundation\Auth\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Config;
 
-it("can handle payment notification", function () {
+it("can handle Remita payment webhook ingress", function () {
     //Arrange
     Config::set("laravel-cashier.paystack_secret_key", 'abc');
-
 
     $request = new Request(json_decode('{
 				"rrr":"110002071256",
@@ -48,7 +48,7 @@ it("can handle payment notification", function () {
 		', true));
 
     /**
-     * @var mixed
+     * @var Mock<TObject>
      */
     $mock = mock(Remita::class);
     $mock->shouldAllowMockingProtectedMethods();
@@ -64,7 +64,14 @@ it("can handle payment notification", function () {
             return $response;
         },
         getPaymentByRrr: function ($rrr) {
-            return null;
+            return new Payment([
+                'user_id' => 1,
+                'original_amount_displayed_to_user' => 2,
+                'transaction_currency' => 2,
+                'transaction_description' => 'foo-bar',
+                'transaction_reference' => 'foo-bar',
+                'payment_processor_name' => 'foo-bar',
+            ]);
         },
         getUserByEmail: function ($email) {
             $user = new User();
@@ -72,12 +79,6 @@ it("can handle payment notification", function () {
 
             return $user;
         },
-        createNewPayment: function (User $user, stdClass $responseBody) {
-            return new Payment();
-        },
-        updateSuccessfulPayment: function ($payment, $responseBody) {
-            return $payment;
-        }
     );
 
     //Act & Assert

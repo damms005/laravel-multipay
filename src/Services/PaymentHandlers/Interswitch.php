@@ -2,10 +2,12 @@
 
 namespace Damms005\LaravelCashier\Services\PaymentHandlers;
 
-use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
-use Damms005\LaravelCashier\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Damms005\LaravelCashier\Models\Payment;
+
+use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
+use Damms005\LaravelCashier\Exceptions\UnknownWebhookException;
 
 class Interswitch extends BasePaymentHandler implements PaymentHandlerInterface
 {
@@ -171,9 +173,9 @@ class Interswitch extends BasePaymentHandler implements PaymentHandlerInterface
     /**
      * @see \Damms005\LaravelCashier\Contracts\PaymentHandlerInterface::handleExternalWebhookRequest
      */
-    public function handleExternalWebhookRequest(Request $request): Payment|bool|null
+    public function handleExternalWebhookRequest(Request $request): Payment
     {
-        return null;
+        throw new UnknownWebhookException($this, $request);
     }
 
     protected function getResponseCodesArray()

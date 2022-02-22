@@ -6,7 +6,7 @@ use Damms005\LaravelCashier\Services\PaymentHandlers\BasePaymentHandler;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
-class TransactionCompletedNotificationController extends Controller
+class PaymentWebhookController extends Controller
 {
     public function __invoke(Request $request)
     {

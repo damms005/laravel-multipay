@@ -88,8 +88,8 @@ class PaymentController extends Controller
         ]);
     }
 
-    public function handlePaymentGatewayResponse(Request $request)
+    public function handlePaymentGatewayResponse(Request $request, PaymentService $paymentService)
     {
-        return BasePaymentHandler::handleServerResponseForTransactionAndDisplayOutcome($request);
+        return BasePaymentHandler::handleServerResponseForTransactionAndDisplayOutcome($request, $paymentService);
     }
 }

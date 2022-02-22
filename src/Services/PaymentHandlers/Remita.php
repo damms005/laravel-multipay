@@ -2,16 +2,17 @@
 
 namespace Damms005\LaravelCashier\Services\PaymentHandlers;
 
+use stdClass;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use Illuminate\Foundation\Auth\User;
+use Illuminate\Support\Facades\Http;
+use Damms005\LaravelCashier\Models\Payment;
 use Damms005\LaravelCashier\Actions\CreateNewPayment;
 use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
-use Damms005\LaravelCashier\Models\Payment;
-use Illuminate\Foundation\Auth\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
-use stdClass;
+use Damms005\LaravelCashier\Exceptions\UnknownWebhookException;
+use Damms005\LaravelCashier\Exceptions\NonActionableWebhookPaymentException;
 
 class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 {
@@ -53,13 +54,13 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
         $response = Http::withHeaders($requestHeaders)->post($endpoint, $postData);
 
-        if (! $response->successful()) {
+        if (!$response->successful()) {
             return response("Remita could not process your transaction at the moment. Please try again later. " . $response->body());
         }
 
         $responseJson = $response->json();
 
-        if (! array_key_exists('RRR', $responseJson)) {
+        if (!array_key_exists('RRR', $responseJson)) {
             return response("An error occurred while generating your RRR. Please try again later. " . $response->body());
         }
 
@@ -73,7 +74,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
     public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $paymentGatewayServerResponse): ?Payment
     {
-        if (! $paymentGatewayServerResponse->has('RRR')) {
+        if (!$paymentGatewayServerResponse->has('RRR')) {
             return null;
         }
 
@@ -90,36 +91,9 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
             return null;
         }
 
-        $merchantId = config('laravel-cashier.remita_merchant_id');
-        $apiKey = config('laravel-cashier.remita_api_key');
-        $hash = hash("sha512", "{$rrr}{$apiKey}{$merchantId}");
-        $requestHeaders = $this->getHttpRequestHeaders($merchantId, $hash);
+        $rrrQueryResponse = $this->queryRrr($rrr);
 
-        $statusUrl = $this->getBaseUrl() . "/exapp/api/v1/send/api/echannelsvc/{$merchantId}/{$rrr}/{$hash}/status.reg";
-
-        $response = Http::withHeaders($requestHeaders)
-            ->get($statusUrl);
-
-        throw_if(
-            ! $response->successful(),
-            "Remita could not process your transaction at the moment. Please try again later. " . $response->body()
-        );
-
-        $responseBody = json_decode($response->body());
-
-        $payment->processor_returned_response_description = $response->body();
-
-        if (isset($responseBody->paymentDate)) {
-            $payment->processor_returned_transaction_date = Carbon::parse($responseBody->paymentDate);
-        }
-
-        $payment->processor_returned_amount = $responseBody->amount ?? null;
-        $payment->is_success = $responseBody->status == "00";
-
-        $payment->save();
-        $payment->refresh();
-
-        return $payment;
+        return $this->useResponseToUpdatePayment($payment, $rrrQueryResponse);
     }
 
     protected function queryRrr($rrr): stdClass
@@ -135,7 +109,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
             ->get($statusUrl);
 
         throw_if(
-            ! $response->successful(),
+            !$response->successful(),
             "Remita could not get transaction details at the moment. Please try again later. " . $response->body()
         );
 
@@ -144,17 +118,11 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
     public function reQuery(Payment $existingPayment): ?Payment
     {
-        Log::info("Remita trying requery");
-
         if ($existingPayment->payment_processor_name != $this->getUniquePaymentHandlerName()) {
-            Log::info("It is not a Remita transaction");
-
             return null;
         }
 
         if (empty($existingPayment->processor_transaction_reference)) {
-            Log::info("Payment does not have RRR");
-
             return null;
         }
 
@@ -164,14 +132,12 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
             ->first();
 
         if (is_null($payment)) {
-            Log::info("Payment with RRR {$rrr} not found");
-
             return null;
         }
 
-        $responseBody = $this->queryRrr($rrr);
+        $rrrQueryResponse = $this->queryRrr($rrr);
 
-        $payment = $this->useResponseToUpdatePayment($payment, $responseBody);
+        $payment = $this->useResponseToUpdatePayment($payment, $rrrQueryResponse);
 
         return $payment;
     }
@@ -179,40 +145,33 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
     /**
      * @see \Damms005\LaravelCashier\Contracts\PaymentHandlerInterface::handleExternalWebhookRequest
      */
-    public function handleExternalWebhookRequest(Request $request): Payment|bool|null
+    public function handleExternalWebhookRequest(Request $request): Payment
     {
-        if (! $request->filled('rrr')) {
-            return null;
+        if (!$request->filled('rrr')) {
+            throw new UnknownWebhookException($this, $request);
         }
 
         $rrr = $request->rrr;
 
-        $responseBody = $this->queryRrr($rrr);
+        $rrrQueryResponse = $this->queryRrr($rrr);
 
-        if (! property_exists($responseBody, "status")) {
-            return false;
-        }
-
-        if ($responseBody->status != "00") {
-            return false;
+        if (!property_exists($rrrQueryResponse, "status")) {
+            throw new NonActionableWebhookPaymentException($this, "No 'status' property in Remita server response", $request);
         }
 
         $payment = $this->getPaymentByRrr($rrr);
 
-        if (! is_null($payment)) {
-            //it has been previously handled
-            return false;
+        if (is_null($payment)) {
+            throw new NonActionableWebhookPaymentException($this, "Cannot fetch payment using RRR", $request);
         }
 
-        $user = $this->getUserByEmail($responseBody->email);
+        $user = $this->getUserByEmail($rrrQueryResponse->email);
 
         if (is_null($user)) {
             return false;
         }
 
-        $payment = $this->createNewPayment($user, $responseBody);
-
-        $payment = $this->useResponseToUpdatePayment($payment, $responseBody);
+        $payment = $this->useResponseToUpdatePayment($payment, $rrrQueryResponse);
 
         return $payment;
     }
@@ -239,30 +198,30 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
     protected function getPaymentByRrr($rrr)
     {
         return Payment::where('processor_transaction_reference', $rrr)
-        ->first();
+            ->first();
     }
 
-    protected function useResponseToUpdatePayment(Payment $payment, stdClass $responseBody): Payment
+    protected function useResponseToUpdatePayment(Payment $payment, stdClass $rrrQueryResponse): Payment
     {
-        $payment->processor_returned_response_description = json_encode($responseBody);
+        $payment->processor_returned_response_description = json_encode($rrrQueryResponse);
 
-        if (isset($responseBody->paymentDate)) {
-            $payment->processor_returned_transaction_date = Carbon::parse($responseBody->paymentDate);
+        if (isset($rrrQueryResponse->paymentDate)) {
+            $payment->processor_returned_transaction_date = Carbon::parse($rrrQueryResponse->paymentDate);
         }
 
-        $payment->is_success = $responseBody->status == "00";
+        $payment->is_success = $rrrQueryResponse->status == "00";
 
         // To re-query Remita transactions, users usually depend on the nullity 'is_success, such that
         // if it is NULL (its original/default value), the user knows it is eligible to be retried. Since we
         // cannot dependably rely on Remita to always push status of successful transactions (especially bank transactions),
         // users usually re-query Remita at intervals. We should therefore not set is_success prematurely. We should set it only
         // when we are sure that user cannot reasonably
-        if ($this->isTransactionCanStillBeReQueried($responseBody)) {
+        if ($this->isTransactionCanStillBeReQueried($rrrQueryResponse)) {
             $payment->is_success = null;
         }
 
         if ($payment->is_success) {
-            $payment->processor_returned_amount = $responseBody->amount;
+            $payment->processor_returned_amount = $rrrQueryResponse->amount;
         }
 
         $payment->save();
@@ -275,20 +234,18 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
     {
         // https://api.remita.net
         $responseCodesIndicatingUnFulfilledTransactionState = [
-                '021', // Transaction Pending
-                '025', // Payment Reference generated
-                '040', // Initial Request OK
-                '041', // Transaction Forwarded for Processing
-                '045', // Awaiting Payment Confirmation
-                '058', // Pending Authorization
-                '069', // New Transaction
-                '070', // Awaiting Debit
-                '071', // Undergoing Bank Processing
-                '072', // Pending Credit
-                '25', // Error Processing Request
+            '021', // Transaction Pending
+            '025', // Payment Reference generated
+            '040', // Initial Request OK
+            '041', // Transaction Forwarded for Processing
+            '045', // Awaiting Payment Confirmation
+            '058', // Pending Authorization
+            '069', // New Transaction
+            '070', // Awaiting Debit
+            '071', // Undergoing Bank Processing
+            '072', // Pending Credit
+            '25', // Error Processing Request
         ];
-
-        Log::debug("Determining Remita requery for status: {$responseBody->status}");
 
         return in_array($responseBody->status, $responseCodesIndicatingUnFulfilledTransactionState);
     }
@@ -333,10 +290,10 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         $availableServiceTypes = config("laravel-cashier.remita_service_types");
         $serviceTypeConfigKey = $this->getRemitaServiceTypeConfigKey($payment->transaction_description);
 
-        throw_if(! is_array($availableServiceTypes), "Remita service types not well defined");
+        throw_if(!is_array($availableServiceTypes), "Remita service types not well defined");
 
         throw_if(
-            ! array_key_exists($serviceTypeConfigKey, $availableServiceTypes),
+            !array_key_exists($serviceTypeConfigKey, $availableServiceTypes),
             "Remita service types configuration does not have definition for '{$serviceTypeConfigKey}"
         );
 
