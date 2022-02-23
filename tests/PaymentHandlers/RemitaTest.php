@@ -5,7 +5,40 @@ use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Config;
 use Damms005\LaravelCashier\Models\Payment;
+
+use function PHPUnit\Framework\assertEquals;
+use function PHPUnit\Framework\assertStringContainsString;
+use function PHPUnit\Framework\assertTrue;
+
 use Damms005\LaravelCashier\Services\PaymentHandlers\Remita;
+use Illuminate\Contracts\View\View;
+
+beforeEach(function () {
+
+    require_once(__DIR__ . "/../../database/factories/PaymentFactory.php");
+
+    $this->payment = (new \PaymentFactory)->create();
+});
+
+it('renders auto-submitted payment form', function () {
+    /**
+     * @var Mock<TObject>
+     */
+    $mock = mock(Remita::class);
+    $mock->makePartial();
+    $mock->shouldAllowMockingProtectedMethods();
+
+    $mock->expect(
+        getRrrToInitiatePayment: function () {
+            return 'abc-123';
+        },
+    );
+
+    $autoForm = $mock->renderAutoSubmittedPaymentForm($this->payment, 'foo');
+
+    assertTrue(is_subclass_of($autoForm, View::class));
+    assertStringContainsString('Loading...', $autoForm->render());
+});
 
 it("can handle Remita payment webhook ingress", function () {
     //Arrange

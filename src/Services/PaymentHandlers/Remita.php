@@ -12,6 +12,7 @@ use Damms005\LaravelCashier\Models\Payment;
 use Damms005\LaravelCashier\Actions\CreateNewPayment;
 use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelCashier\Exceptions\UnknownWebhookException;
+use Damms005\LaravelCashier\Exceptions\WrongPaymentHandlerException;
 use Damms005\LaravelCashier\Exceptions\NonActionableWebhookPaymentException;
 
 class Remita extends BasePaymentHandler implements PaymentHandlerInterface
@@ -32,6 +33,21 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
     }
 
     public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true)
+    {
+        try {
+            //code...
+            $rrr = $this->getRrrToInitiatePayment($payment);
+
+            $payment->processor_transaction_reference = $rrr;
+            $payment->save();
+
+            return $this->sendUserToPaymentGateway($rrr);
+        } catch (\Throwable $th) {
+            return response($th->getMessage());
+        }
+    }
+
+    protected function getRrrToInitiatePayment(Payment $payment): string
     {
         $merchantId = config('laravel-cashier.remita_merchant_id');
         $serviceTypeId = $this->getServiceTypeId($payment);
@@ -54,22 +70,13 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
         $response = Http::withHeaders($requestHeaders)->post($endpoint, $postData);
 
-        if (!$response->successful()) {
-            return response("Remita could not process your transaction at the moment. Please try again later. " . $response->body());
-        }
+        throw_if(!$response->successful(), "Remita could not process your transaction at the moment. Please try again later. " . $response->body());
 
         $responseJson = $response->json();
 
-        if (!array_key_exists('RRR', $responseJson)) {
-            return response("An error occurred while generating your RRR. Please try again later. " . $response->body());
-        }
+        throw_if(!array_key_exists('RRR', $responseJson), "An error occurred while generating your RRR. Please try again later. " . $response->body());
 
-        $rrr = $responseJson['RRR'];
-
-        $payment->processor_transaction_reference = $rrr;
-        $payment->save();
-
-        return $this->sendUserToPaymentGateway($rrr);
+        return $responseJson['RRR'];
     }
 
     public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $paymentGatewayServerResponse): ?Payment
@@ -119,7 +126,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
     public function reQuery(Payment $existingPayment): ?Payment
     {
         if ($existingPayment->payment_processor_name != $this->getUniquePaymentHandlerName()) {
-            return null;
+            throw new WrongPaymentHandlerException($this, $existingPayment);
         }
 
         if (empty($existingPayment->processor_transaction_reference)) {
@@ -131,9 +138,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         $payment = Payment::where('processor_transaction_reference', $rrr)
             ->first();
 
-        if (is_null($payment)) {
-            return null;
-        }
+        throw_if(is_null($payment), "Could not reconcile Remita RRR with provided transaction");
 
         $rrrQueryResponse = $this->queryRrr($rrr);
 

@@ -4,6 +4,7 @@ namespace Damms005\LaravelCashier\Services\PaymentHandlers;
 
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Damms005\LaravelCashier\Models\Payment;
 use Damms005\LaravelCashier\Services\PaymentService;
 use Damms005\LaravelCashier\Actions\CreateNewPayment;
@@ -49,12 +50,9 @@ class BasePaymentHandler
         $this->paymentHandlerInterface = $paymentHandlerInterface;
     }
 
-    /**
-     * @return fqcn string[]
-     */
-    public static function getNamesOfPaymentHandlers()
+    public static function getFQCNsOfPaymentHandlers()
     {
-        return collect([
+        return [
 
             //IMPORTANT: IF YOU NEED CONSTRUCTORS IN ANY OF CLASSES, ENSURE
             //THAT THE CONSTRUCTOR(S) DO NOT ACCEPT ANY PARAMETER
@@ -66,7 +64,12 @@ class BasePaymentHandler
             // Interswitch::class,
             // UnifiedPayments::class,
             Remita::class,
-        ])
+        ];
+    }
+
+    public static function getNamesOfPaymentHandlers()
+    {
+        return collect(self::getFQCNsOfPaymentHandlers())
             ->map(function (string $paymentHandlerFqcn) {
                 /** @var PaymentHandlerInterface */
                 $paymentHandler = new $paymentHandlerFqcn();
@@ -129,17 +132,28 @@ class BasePaymentHandler
      *
      * @param Request $paymentGatewayServerResponse
      */
-    public static function handleServerResponseForTransactionAndDisplayOutcome(Request $paymentGatewayServerResponse, PaymentService $paymentService)
+    public static function handleServerResponseForTransactionAndDisplayOutcome(Request $paymentGatewayServerResponse)
+    {
+        $payment = self::sendNotificationForSuccessFulPayment($paymentGatewayServerResponse);
+
+        [$paymentDescription, $isJsonDescription] = self::getPaymentDescription($payment);
+
+        return view('laravel-cashier::transaction-completed', compact('payment', 'isJsonDescription', 'paymentDescription'));
+    }
+
+    public static function sendNotificationForSuccessFulPayment(Request $paymentGatewayServerResponse): ?Payment
     {
         /**
          * @var Payment
          */
         $payment = null;
 
+        /** @var PaymentService */
+        $paymentService = App::make(PaymentService::class);
+
         collect(self::getNamesOfPaymentHandlers())
             ->each(function (string $paymentHandlerName) use ($paymentGatewayServerResponse, $paymentService, &$payment) {
-                $paymentHandler = $paymentService->getPaymentHandlerByName($paymentHandlerName);
-                $payment = $paymentHandler->confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome($paymentGatewayServerResponse);
+                $payment = $paymentService->handlerGatewayResponse($paymentGatewayServerResponse, $paymentHandlerName);
 
                 if ($payment) {
                     if ($payment->is_success == 1) {
@@ -150,9 +164,7 @@ class BasePaymentHandler
                 }
             });
 
-        [$paymentDescription, $isJsonDescription] = self::getPaymentDescription($payment);
-
-        return view('laravel-cashier::transaction-completed', compact('payment', 'isJsonDescription', 'paymentDescription'));
+        return $payment;
     }
 
     /**
@@ -185,19 +197,12 @@ class BasePaymentHandler
     }
 
     /**
-     * Gets the payment provider/handler for the specified payment
+     * @see PaymentHandlerInterface::reQuery()
      */
-    public function getHandlerForPayment(Payment $payment): BasePaymentHandler | PaymentHandlerInterface
+    public function reQueryUnsuccessfulPayment(Payment $unsuccessfulPayment)
     {
-        return $payment->getPaymentProvider();
-    }
-
-    /**
-     * @see Damms005\LaravelCashier\Contracts\PaymentHandlerInterface::reQuery()
-     */
-    public function reQueryUnsuccessfulPayment(Payment $unsuccessfulPayment): bool
-    {
-        $handler = $unsuccessfulPayment->getPaymentProvider();
+        /** @var PaymentHandlerInterface **/
+        $handler = App::make('handler-for-payment', [$unsuccessfulPayment]);
 
         $payment = $handler->reQuery($unsuccessfulPayment);
 
@@ -228,7 +233,7 @@ class BasePaymentHandler
          */
         $payment = collect(self::getNamesOfPaymentHandlers())
             ->map(function (string $paymentHandlerName) use ($request) {
-                $paymentHandler = PaymentService::getPaymentHandlerByName($paymentHandlerName);
+                $paymentHandler = (new PaymentService)->getPaymentHandlerByName($paymentHandlerName);
 
                 try {
                     $payment = $paymentHandler->handleExternalWebhookRequest($request);

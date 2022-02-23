@@ -2,14 +2,15 @@
 
 namespace Damms005\LaravelCashier\Http\Controllers;
 
-use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
-use Damms005\LaravelCashier\Http\Requests\InitiatePaymentRequest;
-use Damms005\LaravelCashier\Models\Payment;
-use Damms005\LaravelCashier\Services\PaymentHandlers\BasePaymentHandler;
-use Damms005\LaravelCashier\Services\PaymentService;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\App;
+use Damms005\LaravelCashier\Models\Payment;
+use Damms005\LaravelCashier\Services\PaymentService;
+use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
+use Damms005\LaravelCashier\Http\Requests\InitiatePaymentRequest;
+use Damms005\LaravelCashier\Services\PaymentHandlers\BasePaymentHandler;
 
 class PaymentController extends Controller
 {
@@ -20,7 +21,8 @@ class PaymentController extends Controller
      */
     public function confirm(InitiatePaymentRequest $initiatePaymentRequest)
     {
-        $paymentHandler = PaymentService::getPaymentHandlerByName($initiatePaymentRequest->payment_processor);
+        /** @var PaymentService */
+        $paymentService = App::make(PaymentService::class);
 
         $amount = $initiatePaymentRequest->amount;
 
@@ -30,8 +32,7 @@ class PaymentController extends Controller
 
         $view = $initiatePaymentRequest->filled('preferred_view') ? $initiatePaymentRequest->preferred_view : null;
 
-        return PaymentService::storePaymentAndShowUserBeforeProcessing(
-            $paymentHandler,
+        return $paymentService->storePaymentAndShowUserBeforeProcessing(
             $initiatePaymentRequest->user_id,
             $amount,
             $description,
@@ -59,7 +60,8 @@ class PaymentController extends Controller
                 ->withInput();
         }
 
-        $handler = new BasePaymentHandler($payment->getPaymentProvider());
+        /** @var BasePaymentHandler */
+        $handler = App::make(BasePaymentHandler::class);
 
         return $handler->sendTransactionToPaymentGateway($payment, route('payment.finished.callback_url'));
     }
@@ -88,8 +90,8 @@ class PaymentController extends Controller
         ]);
     }
 
-    public function handlePaymentGatewayResponse(Request $request, PaymentService $paymentService)
+    public function handlePaymentGatewayResponse(Request $request)
     {
-        return BasePaymentHandler::handleServerResponseForTransactionAndDisplayOutcome($request, $paymentService);
+        return BasePaymentHandler::handleServerResponseForTransactionAndDisplayOutcome($request);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Damms005\LaravelCashier;
 
+use Damms005\LaravelCashier\Models\Payment;
 use Damms005\LaravelCashier\Services\PaymentHandlers\BasePaymentHandler;
 use Damms005\LaravelCashier\Services\PaymentService;
 use Illuminate\Support\ServiceProvider;
@@ -19,6 +20,19 @@ class LaravelCashierServiceProvider extends ServiceProvider
         $this->bootFlutterwave();
 
         $this->app->bind('laravel-cashier', function ($app) {
+            return $app->make(BasePaymentHandler::class);
+        });
+
+        $this->app->bind('handler-for-payment', function ($app, $args) {
+            /** @var Payment */
+            $payment = $args[0];
+
+            throw_if(get_class($payment) !== Payment::class, 'System error: only Payment can be resolved by this binding');
+
+            return $payment->getPaymentProvider();
+        });
+
+        $this->app->bind(BasePaymentHandler::class, function ($app) {
             return new BasePaymentHandler();
         });
 

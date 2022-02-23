@@ -18,6 +18,8 @@ class TestCase extends Orchestra
         Factory::guessFactoryNamesUsing(
             fn (string $modelName) => 'Damms005\\LaravelCashier\\Database\\Factories\\'.class_basename($modelName).'Factory'
         );
+
+        $this->withoutExceptionHandling();
     }
 
     protected function getPackageProviders($app)
