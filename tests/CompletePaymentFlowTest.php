@@ -69,7 +69,12 @@ it('can use any payment provider to confirm payment and send user to payment gat
         return $mock;
     });
 
-    $this->post(route('payment.finished.callback_url'), ['RRR' => 12345, ...$payload])
+    $this->post(
+        route('payment.finished.callback_url'),
+        collect($payload)
+            ->put('RRR', 12345)
+            ->toArray()
+    )
         ->assertSee('was successful')
         ->assertSee($payment->transaction_reference)
         ->assertStatus(200);

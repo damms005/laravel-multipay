@@ -44,7 +44,13 @@ it('fires event for successful payment', function ($paymentProvider) {
 
     Event::fake();
 
-    $this->post(route('payment.finished.callback_url'), ['RRR' => 12345, ...$this->payment->toArray()])
+    $this->post(
+        route('payment.finished.callback_url'),
+        collect($this->payment->toArray())
+            ->put('RRR', 12345)
+            ->toArray()
+
+    )
         ->assertSee($this->payment->transaction_reference)
         ->assertSee('was successful')
         ->assertStatus(200);
@@ -76,7 +82,12 @@ it('unsuccessful payment does not cause event to be fired', function ($paymentPr
 
     Event::fake();
 
-    $this->post(route('payment.finished.callback_url'), ['RRR' => 12345, ...$this->payment->toArray()])
+    $this->post(
+        route('payment.finished.callback_url'),
+        collect($this->payment->toArray())
+            ->put('RRR', 12345)
+            ->toArray()
+    )
         ->assertSee($this->payment->transaction_reference)
         ->assertSee('was not successful')
         ->assertStatus(200);

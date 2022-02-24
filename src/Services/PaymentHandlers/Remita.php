@@ -35,7 +35,6 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
     public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true)
     {
         try {
-            //code...
             $rrr = $this->getRrrToInitiatePayment($payment);
 
             $payment->processor_transaction_reference = $rrr;
