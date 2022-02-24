@@ -16,7 +16,7 @@
 	<input name="cust_id" type="hidden" value="AD99">
 
 	<p>
-		Dear <b>{{$user->name}}</b>, please note your unique transaction reference: <code> {{$txn_ref}} </code>
+		Dear <b>{{$user?->name ?? 'user'}}</b>, please note your unique transaction reference: <code> {{$txn_ref}} </code>
 	</p>
 	<br>
 	<p>

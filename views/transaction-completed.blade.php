@@ -17,7 +17,7 @@
 <div class="p-10 rounded">
 	@if ( !is_null( $payment ) )
 
-	Dear <b>{{ $payment->user->name }}</b>, your transaction with reference number <code>{{ $payment->transaction_reference }}</code>
+	Dear <b>{{ $payment->user?->name ?? 'user' }}</b>, your transaction with reference number <code>{{ $payment->transaction_reference }}</code>
 
 	@if ($payment->is_success == 1)
 
