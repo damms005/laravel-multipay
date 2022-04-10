@@ -7,14 +7,14 @@ use Damms005\LaravelCashier\Models\Payment;
 class CreateNewPayment
 {
     public function execute(
-        $payment_processor_name,
-        $user_id,
-        $completion_url,
-        $transaction_reference,
-        $currency,
-        $transaction_description,
-        $original_amount_displayed_to_user,
-        $metadata
+        ?string $payment_processor_name,
+        string | int $user_id,
+        ?string $completion_url,
+        ?string $transaction_reference,
+        ?string $currency,
+        ?string $transaction_description,
+        ?string $original_amount_displayed_to_user,
+        ?string $metadata
     ): Payment {
         return Payment::firstOrCreate([
             "user_id" => $user_id,
@@ -25,7 +25,7 @@ class CreateNewPayment
             "transaction_description" => $transaction_description,
             "original_amount_displayed_to_user" => $original_amount_displayed_to_user,
             "metadata" => $this->formatMetadata($metadata),
-    ]);
+        ]);
     }
 
     /**
@@ -42,7 +42,7 @@ class CreateNewPayment
             return null;
         }
 
-        if (! is_string($metadata)) {
+        if (!is_string($metadata)) {
             return null;
         }
 

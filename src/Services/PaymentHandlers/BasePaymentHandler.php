@@ -33,6 +33,7 @@ class BasePaymentHandler
 
     public function __construct()
     {
+        /** @var mixed */
         $defaultPaymentHandler = config('laravel-cashier.default_payment_handler_fqcn');
 
         if (empty($defaultPaymentHandler)) {

@@ -4,9 +4,8 @@ namespace Damms005\LaravelCashier\Contracts;
 
 use Illuminate\Http\Request;
 use Damms005\LaravelCashier\Models\Payment;
-use Exceptions\Webhook\NonActionableWebhookPaymentException;
-use Damms005\LaravelCashier\Exceptions\PaymentExistsReQueryException;
 use Damms005\LaravelCashier\Exceptions\UnknownWebhookException;
+use Damms005\LaravelCashier\Exceptions\NonActionableWebhookPaymentException;
 
 interface PaymentHandlerInterface
 {

@@ -73,7 +73,7 @@ class PaymentController extends Controller
      * @param PaymentHandlerInterface $payment_processor
      * @param [type] $transaction_description
      *
-     * @return View
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Contracts\View\Factory
      */
     public static function makeAutoSubmittedFormRedirect(int $amountInLowestDenomination, $user, PaymentHandlerInterface $payment_processor, $transaction_description)
     {
