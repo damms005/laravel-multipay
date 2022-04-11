@@ -79,6 +79,11 @@ class BasePaymentHandler
             });
     }
 
+    public function getTransactionReferenceName(): string
+    {
+        return $this->getUniquePaymentHandlerName() . ' Transaction Reference';
+    }
+
     /**
      * This is where it all starts. It is like the initialization phase. User gets a chance to see summary of
      * transaction details before the payment handler proceeds to process the transaction.

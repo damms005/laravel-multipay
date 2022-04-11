@@ -313,4 +313,9 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
     {
         return config('laravel-cashier.remita_base_request_url');
     }
+
+    public function getTransactionReferenceName(): string
+    {
+        return 'RRR Code';
+    }
 }

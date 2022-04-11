@@ -47,4 +47,6 @@ interface PaymentHandlerInterface
      * @throws NonActionableWebhookPaymentException
      */
     public function handleExternalWebhookRequest(Request $paymentNotificationRequest): Payment;
+
+    public function getTransactionReferenceName(): string;
 }
