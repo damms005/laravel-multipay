@@ -12,6 +12,7 @@ use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelCashier\Exceptions\UnknownWebhookException;
 use Damms005\LaravelCashier\Events\SuccessfulLaravelCashierPaymentEvent;
 use Damms005\LaravelCashier\Exceptions\NonActionableWebhookPaymentException;
+use Illuminate\Database\Eloquent\Casts\ArrayObject;
 
 class BasePaymentHandler
 {
@@ -142,9 +143,34 @@ class BasePaymentHandler
     {
         $payment = self::sendNotificationForSuccessFulPayment($paymentGatewayServerResponse);
 
+        throw_if(!$payment, "Payment details not");
+
         [$paymentDescription, $isJsonDescription] = self::getPaymentDescription($payment);
 
+        if ($payment->is_success) {
+            if (self::paymentHasCustomTransactionCompletionPage($payment)) {
+                return self::redirectToCustomCompletionPage($payment);
+            }
+        }
+
         return view('laravel-cashier::transaction-completed', compact('payment', 'isJsonDescription', 'paymentDescription'));
+    }
+
+    protected static function paymentHasCustomTransactionCompletionPage(Payment $payment)
+    {
+        /** @var ArrayObject */
+        $metadata = $payment->metadata;
+
+        if (!$payment->metadata) {
+            return;
+        }
+
+        return array_key_exists('completion_url', $metadata->toArray());
+    }
+
+    protected static function redirectToCustomCompletionPage(Payment $payment)
+    {
+        return redirect()->away($payment->metadata['completion_url']);
     }
 
     public static function sendNotificationForSuccessFulPayment(Request $paymentGatewayServerResponse): ?Payment

@@ -85,7 +85,9 @@ REMITA_API_KEY=xxxxxxxxxxxxxxxxxxxxx-X
 #### Step 1
 
 Send a `POST` request to `/payment/details/confirm` (`route('payment.show_transaction_details_for_user_confirmation')`).
-Check the [InitiatePaymentRequest](src/Http/Requests/InitiatePaymentRequest.php#L28) form request to know the values you are to post to this endpoint. (tip: you can also check [test-drive/pay.blade.php](views/test-drive/pay.blade.php))
+Check the [InitiatePaymentRequest](src/Http/Requests/InitiatePaymentRequest.php#L28) form request to know the values you are to post to this endpoint. (tip: you can also check [test-drive/pay.blade.php](views/test-drive/pay.blade.php)).
+
+> Tip: if you to store additional/contextual data with this payment, you can include such data in the request, in a field named `metadata`. The value must be a valid JSON string.
 
 #### Step 2
 
@@ -99,6 +101,8 @@ back to `/payment/completed` (`route('payment.finished.callback_url')`) .
 > Ensure that your `User` model has a `name` property (Laravel's default). If you have removed the column for any reason, you may use [Model Accessor](https://laravel.com/docs/8.x/eloquent-mutators#accessors-and-mutators) to provide same. For Remita, ensure that `phone` property also exists on the User model.
 
 > If there are additional steps you want to take upon successful payment, listen for `SuccessfulLaravelCahierPaymentEvent`. It will be fired whenever a successful payment occurs, with its corresponding `Payment` model.
+
+> If the payment has [`metadata`](#Step 1) (supplied with the payment initiation request), with a key named `completion_url`. You can specify its the value to be the URL of a page to redirect user upon successful payment
 
 ## Payment Conflict Resolution (PCR)
 
