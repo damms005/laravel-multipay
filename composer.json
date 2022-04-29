@@ -62,5 +62,11 @@
         }
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "repositories":[
+        {
+            "type": "vcs",
+            "url": "https://github.com/kiiya/laravelrave"
+        }
+    ]
 }
