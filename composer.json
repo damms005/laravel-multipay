@@ -19,7 +19,7 @@
         "php": "^7.1|^8.0",
         "guzzlehttp/guzzle": "^7.3",
         "illuminate/support": "^8.61|^9.0",
-        "kingflamez/laravelrave": "^4.2",
+        "kingflamez/laravelrave": "dev-master",
         "yabacon/paystack-php": "^2.2"
     },
     "require-dev": {
