@@ -27,7 +27,7 @@ class LaravelCashierServiceProvider extends ServiceProvider
             /** @var Payment */
             $payment = $args[0];
 
-            throw_if(get_class($payment) !== Payment::class, 'System error: only Payment can be resolved by this binding');
+            throw_if(!$payment instanceof Payment, "Laravel Cashier Error: only Payment can be resolved by this binding. Found: " . get_class($payment));
 
             return $payment->getPaymentProvider();
         });
