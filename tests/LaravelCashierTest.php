@@ -8,6 +8,7 @@ use Damms005\LaravelCashier\Services\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
+
 use function Pest\Laravel\get;
 use function PHPUnit\Framework\assertTrue;
 
