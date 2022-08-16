@@ -3,6 +3,7 @@
 use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelCashier\Services\PaymentHandlers\BasePaymentHandler;
 use Damms005\LaravelCashier\Services\PaymentService;
+
 use function PHPUnit\Framework\assertTrue;
 
 it('ensures that all payment handlers can be initiate for payment processing', function () {
