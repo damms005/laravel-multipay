@@ -102,11 +102,11 @@ back to `/payment/completed` (`route('payment.finished.callback_url')`) .
 
 > If there are additional steps you want to take upon successful payment, listen for `SuccessfulLaravelCahierPaymentEvent`. It will be fired whenever a successful payment occurs, with its corresponding `Payment` model.
 
-> If the payment has [`metadata`](#Step 1) (supplied with the payment initiation request), with a key named `completion_url`. You can specify its the value to be the URL of a page to redirect user upon successful payment
+> If the payment has [`metadata`](#step-1) (supplied with the payment initiation request), with a key named `completion_url`. You can specify its the value to be the URL of a page to redirect user upon successful payment
 
 ## Payment Conflict Resolution (PCR)
 
-If for any reason, your user/customer claims that the payment they made was successful but they your platform did not reflect such successful payment, this PCR feature enables you to resolve such claims by simply calling:
+If for any reason, your user/customer claims that the payment they made was successful but that your platform did not reflect such successful payment, this PCR feature enables you to resolve such claims by simply calling:
 
 ```
 /**
