@@ -14,6 +14,11 @@ Whether you want to quickly bootstrap payment processing for your Laravel applic
 > Although opinionated, this package allows you to "theme" the views. It achieves this theming by
 > `@extend()`ing whatever view you specify in `config('laravel-multipay.extended_layout')` (defaults to `layout.app`). This provides a smooth Plug-and-play&trade; experience.
 
+## Requirements:
+This package is [tested against:](https://github.com/damms005/laravel-multipay/blob/68731735d50a18f6b8531cb107e63fed5151d0b8/.github/workflows/run-tests.yml#L16-L17)
+- Laravel 8/9
+- PHP 8.0, 8.1
+
 ## Currently supported payment handlers
 
 Currently, this package supports the following online payment processors/handlers
@@ -33,7 +38,7 @@ Currently, this package supports the following online payment processors/handler
 Install via composer.
 
 ```bash
-composer require damms005/laravel-multipay-config
+composer require damms005/laravel-multipay
 ```
 
 Publish the config file.
@@ -54,6 +59,16 @@ php artisan migrate
 
 Want to take things for a spin? simply visit `/payment/test-drive` (`route('payment.test-drive')`) .
 For [Paystack](https://paystack.com), ensure to set `paystack_secret_key` key in the `laravel-multipay.php` config file that you published previously at installation. You can get your key from your [settings page](https://dashboard.paystack.co/#/settings/developer).
+
+> **Warn**
+> Ensure you have [TailwindCSS installed](https://tailwindcss.com/docs/installation), then add this package's view to part of the files whose Tailwind style classes will be compiled. Add this to the `content` of your `tailwind.config.js` configuration file, like below:
+```
+    content: [
+        ...,
+        './vendor/damms005/laravel-multipay/views'
+    ],
+    ...
+```
 
 #### Needed Third-party Integrations:
 
