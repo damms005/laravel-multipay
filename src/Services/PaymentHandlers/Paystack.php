@@ -10,7 +10,6 @@ use Damms005\LaravelMultipay\Models\Payment;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 
-
 class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
 {
     protected $paystack_secret_key;
@@ -19,7 +18,17 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
     {
         $this->paystack_secret_key = config("laravel-multipay.paystack_secret_key");
 
-        throw_if(empty($this->paystack_secret_key), "Please provide SK for Paystack");
+        if (empty($this->paystack_secret_key)) {
+            // Paystack is currently the default payment handler (because
+            // it is the easiest to setup and get up-adn-running for starters/testing). Hence,
+            // let the error message be contextualized, so we have a better UX for testers/first-timers
+            if ($this->defaultPaymentHandler === self::class) {
+                throw new \Exception("Please provide SK for Paystack");
+                "Please provide SK for Paystack";
+            }
+
+            throw new \Exception("Please provide SK for Paystack");
+        }
     }
 
     public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true)
@@ -37,7 +46,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
      */
     public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $paymentGatewayServerResponse): ?Payment
     {
-        if (! $paymentGatewayServerResponse->has('reference')) {
+        if (!$paymentGatewayServerResponse->has('reference')) {
             return null;
         }
 
@@ -58,7 +67,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
         $trx = $this->getPaystackTransaction($transactionReferenceIdNumber);
 
         // status should be true if there was a successful call
-        if (! $trx->status) {
+        if (!$trx->status) {
             exit($trx->message);
         }
 
@@ -140,7 +149,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
         );
 
         // status should be true if there was a successful call
-        if (! $trx->status) {
+        if (!$trx->status) {
             exit($trx->message);
         }
 

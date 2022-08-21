@@ -32,16 +32,17 @@ class BasePaymentHandler
      */
     protected $payment;
 
+    protected string $defaultPaymentHandler;
+
     public function __construct()
     {
-        /** @var mixed */
-        $defaultPaymentHandler = config('laravel-multipay.default_payment_handler_fqcn');
+        $this->defaultPaymentHandler = config('laravel-multipay.default_payment_handler_fqcn');
 
-        if (empty($defaultPaymentHandler)) {
+        if (empty($this->defaultPaymentHandler)) {
             throw new \Exception("Payment handler not specified");
         }
 
-        $paymentHandlerInterface = new $defaultPaymentHandler();
+        $paymentHandlerInterface = new $this->defaultPaymentHandler();
 
         //ensure the class is registered, so we are sure we will
         //have a handler when payment gateway server returns response
