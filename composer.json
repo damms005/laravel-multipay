@@ -1,5 +1,5 @@
 {
-    "name": "damms005/laravel-cashier",
+    "name": "damms005/laravel-multipay",
     "description": "An opinionated, easily extendable and configurable package for handling payments in Laravel",
     "keywords": [
         "configurable laravel payments",
@@ -10,7 +10,7 @@
         "damms005",
         "Damilola Olowookere"
     ],
-    "homepage": "https://github.com/damms005/laravel-cashier",
+    "homepage": "https://github.com/damms005/laravel-multipay",
     "license": "MIT",
     "authors": [
         {
@@ -39,13 +39,13 @@
     },
     "autoload": {
         "psr-4": {
-            "Damms005\\LaravelCashier\\": "src",
-            "Damms005\\LaravelCashier\\Database\\Factories\\": "database/factories"
+            "Damms005\\LaravelMultipay\\": "src",
+            "Damms005\\LaravelMultipay\\Database\\Factories\\": "database/factories"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Damms005\\LaravelCashier\\Tests\\": "tests"
+            "Damms005\\LaravelMultipay\\Tests\\": "tests"
         }
     },
     "scripts": {
@@ -58,10 +58,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Damms005\\LaravelCashier\\LaravelCashierServiceProvider"
+                "Damms005\\LaravelMultipay\\LaravelMultipayServiceProvider"
             ],
             "aliases": {
-                "LaravelCashier": "Damms005\\LaravelCashier\\Facades\\LaravelCashier"
+                "LaravelMultipay": "Damms005\\LaravelMultipay\\Facades\\LaravelMultipay"
             }
         }
     },

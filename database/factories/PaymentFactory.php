@@ -1,6 +1,6 @@
 <?php
 
-use Damms005\LaravelCashier\Models\Payment;
+use Damms005\LaravelMultipay\Models\Payment;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class PaymentFactory extends Factory

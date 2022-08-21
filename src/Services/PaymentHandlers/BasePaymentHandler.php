@@ -1,17 +1,17 @@
 <?php
 
-namespace Damms005\LaravelCashier\Services\PaymentHandlers;
+namespace Damms005\LaravelMultipay\Services\PaymentHandlers;
 
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
-use Damms005\LaravelCashier\Models\Payment;
-use Damms005\LaravelCashier\Services\PaymentService;
-use Damms005\LaravelCashier\Actions\CreateNewPayment;
-use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
-use Damms005\LaravelCashier\Exceptions\UnknownWebhookException;
-use Damms005\LaravelCashier\Events\SuccessfulLaravelCashierPaymentEvent;
-use Damms005\LaravelCashier\Exceptions\NonActionableWebhookPaymentException;
+use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\Services\PaymentService;
+use Damms005\LaravelMultipay\Actions\CreateNewPayment;
+use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
+use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
+use Damms005\LaravelMultipay\Events\SuccessfulLaravelMultipayPaymentEvent;
+use Damms005\LaravelMultipay\Exceptions\NonActionableWebhookPaymentException;
 use Illuminate\Database\Eloquent\Casts\ArrayObject;
 
 class BasePaymentHandler
@@ -35,7 +35,7 @@ class BasePaymentHandler
     public function __construct()
     {
         /** @var mixed */
-        $defaultPaymentHandler = config('laravel-cashier.default_payment_handler_fqcn');
+        $defaultPaymentHandler = config('laravel-multipay.default_payment_handler_fqcn');
 
         if (empty($defaultPaymentHandler)) {
             throw new \Exception("Payment handler not specified");
@@ -122,7 +122,7 @@ class BasePaymentHandler
         $exports = compact('instructions', 'currency', 'payment', 'post_payment_confirmation_submit', 'user_id');
 
         if (empty($preferredView)) {
-            return view('laravel-cashier::generic-confirm_transaction', $exports);
+            return view('laravel-multipay::generic-confirm_transaction', $exports);
         } else {
             return view($preferredView, $exports);
         }
@@ -153,7 +153,7 @@ class BasePaymentHandler
             }
         }
 
-        return view('laravel-cashier::transaction-completed', compact('payment', 'isJsonDescription', 'paymentDescription'));
+        return view('laravel-multipay::transaction-completed', compact('payment', 'isJsonDescription', 'paymentDescription'));
     }
 
     protected static function paymentHasCustomTransactionCompletionPage(Payment $payment)
@@ -189,7 +189,7 @@ class BasePaymentHandler
 
                 if ($payment) {
                     if ($payment->is_success == 1) {
-                        event(new SuccessfulLaravelCashierPaymentEvent($payment));
+                        event(new SuccessfulLaravelMultipayPaymentEvent($payment));
                     }
 
                     return false;
@@ -245,7 +245,7 @@ class BasePaymentHandler
         $isSuccessFulPayment = $payment->is_success == 1;
 
         if ($isSuccessFulPayment) {
-            event(new SuccessfulLaravelCashierPaymentEvent($payment));
+            event(new SuccessfulLaravelMultipayPaymentEvent($payment));
         }
 
         return $isSuccessFulPayment;
@@ -271,7 +271,7 @@ class BasePaymentHandler
                     $payment = $paymentHandler->handleExternalWebhookRequest($request);
 
                     if ($payment->is_success) {
-                        event(new SuccessfulLaravelCashierPaymentEvent($payment));
+                        event(new SuccessfulLaravelMultipayPaymentEvent($payment));
                     }
 
                     return $payment;

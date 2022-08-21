@@ -1,8 +1,8 @@
 <?php
 
-namespace Damms005\LaravelCashier\Tests;
+namespace Damms005\LaravelMultipay\Tests;
 
-use Damms005\LaravelCashier\LaravelCashierServiceProvider;
+use Damms005\LaravelMultipay\LaravelMultipayServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Orchestra\Testbench\TestCase as Orchestra;
@@ -16,7 +16,7 @@ class TestCase extends Orchestra
         parent::setUp();
 
         Factory::guessFactoryNamesUsing(
-            fn (string $modelName) => 'Damms005\\LaravelCashier\\Database\\Factories\\'.class_basename($modelName).'Factory'
+            fn (string $modelName) => 'Damms005\\LaravelMultipay\\Database\\Factories\\'.class_basename($modelName).'Factory'
         );
 
         $this->withoutExceptionHandling();
@@ -25,7 +25,7 @@ class TestCase extends Orchestra
     protected function getPackageProviders($app)
     {
         return [
-            LaravelCashierServiceProvider::class,
+            LaravelMultipayServiceProvider::class,
         ];
     }
 

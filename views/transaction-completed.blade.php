@@ -1,4 +1,4 @@
-@extends(config('laravel-cashier.extended_layout'))
+@extends(config('laravel-multipay.extended_layout'))
 @section('title', 'Transaction Summary')
 
 @section('content')
@@ -24,9 +24,9 @@
 	was successful.
 
 	@if ($isJsonDescription)
-	@include('laravel-cashier::partials.payment-summary-json')
+	@include('laravel-multipay::partials.payment-summary-json')
 	@else
-	@include('laravel-cashier::partials.payment-summary-generic')
+	@include('laravel-multipay::partials.payment-summary-generic')
 	@endif
 
 

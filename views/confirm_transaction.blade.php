@@ -1,4 +1,4 @@
-@extends(config('laravel-cashier.extended_layout'))
+@extends(config('laravel-multipay.extended_layout'))
 @section('title', 'Payment Summary')
 
 @section('content')

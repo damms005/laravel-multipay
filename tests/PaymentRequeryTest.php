@@ -1,11 +1,11 @@
 <?php
 
-use Damms005\LaravelCashier\Events\SuccessfulLaravelCashierPaymentEvent;
+use Damms005\LaravelMultipay\Events\SuccessfulLaravelMultipayPaymentEvent;
 use Mockery\Mock;
 use Illuminate\Support\Facades\App;
-use Damms005\LaravelCashier\Models\Payment;
-use Damms005\LaravelCashier\Services\PaymentHandlers\Remita;
-use Damms005\LaravelCashier\Services\PaymentHandlers\BasePaymentHandler;
+use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\Services\PaymentHandlers\Remita;
+use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
 use Illuminate\Support\Facades\Event;
 
 beforeEach(function () {
@@ -65,7 +65,7 @@ it('fires success events for re-query of successful payments', function () {
     Event::fake();
     App::make(BasePaymentHandler::class)->reQueryUnsuccessfulPayment(new Payment());
 
-    Event::assertDispatched(SuccessfulLaravelCashierPaymentEvent::class);
+    Event::assertDispatched(SuccessfulLaravelMultipayPaymentEvent::class);
 });
 
 
@@ -92,5 +92,5 @@ it('does not fire success events for re-query of unsuccessful payments', functio
 
     App::make(BasePaymentHandler::class)->reQueryUnsuccessfulPayment(new Payment());
 
-    Event::assertNotDispatched(SuccessfulLaravelCashierPaymentEvent::class);
+    Event::assertNotDispatched(SuccessfulLaravelMultipayPaymentEvent::class);
 });

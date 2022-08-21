@@ -1,9 +1,9 @@
 <?php
-namespace Damms005\LaravelCashier\Exceptions;
+namespace Damms005\LaravelMultipay\Exceptions;
 
 use Exception;
 use Illuminate\Http\Request;
-use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
+use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 
 class NonActionableWebhookPaymentException extends Exception
 {

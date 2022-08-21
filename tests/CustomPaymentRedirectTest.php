@@ -3,12 +3,12 @@
 use Mockery\Mock;
 
 use Illuminate\Support\Facades\App;
-use Damms005\LaravelCashier\Models\Payment;
-use Damms005\LaravelCashier\Services\PaymentService;
-use Damms005\LaravelCashier\Services\PaymentHandlers\BasePaymentHandler;
+use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\Services\PaymentService;
+use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
 
 it('can navigate to custom url upon successful completion', function ($paymentProvider) {
-    config()->set('laravel-cashier.default_payment_handler_fqcn', $paymentProvider);
+    config()->set('laravel-multipay.default_payment_handler_fqcn', $paymentProvider);
 
     $sampleInitialPayment = getSampleInitialPaymentRequest();
     $sampleInitialPayment['metadata'] = json_encode([
@@ -36,7 +36,7 @@ it('can navigate to custom url upon successful completion', function ($paymentPr
     });
 
     $payload = collect($payments->first())
-        ->merge(['preferred_view' => 'laravel-cashier::test.layout'])
+        ->merge(['preferred_view' => 'laravel-multipay::test.layout'])
         ->toArray();
 
     $this->post(route('payment.confirmation.submit'), $payload);
@@ -73,7 +73,7 @@ it('can navigate to custom url upon successful completion', function ($paymentPr
     ->with(BasePaymentHandler::getFQCNsOfPaymentHandlers());
 
 test('when no custom successful completion page, display usual response', function ($paymentProvider) {
-    config()->set('laravel-cashier.default_payment_handler_fqcn', $paymentProvider);
+    config()->set('laravel-multipay.default_payment_handler_fqcn', $paymentProvider);
 
     $sampleInitialPayment = getSampleInitialPaymentRequest();
 
@@ -98,7 +98,7 @@ test('when no custom successful completion page, display usual response', functi
     });
 
     $payload = collect($payments->first())
-        ->merge(['preferred_view' => 'laravel-cashier::test.layout'])
+        ->merge(['preferred_view' => 'laravel-multipay::test.layout'])
         ->toArray();
 
     $this->post(route('payment.confirmation.submit'), $payload);

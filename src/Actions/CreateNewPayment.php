@@ -1,8 +1,8 @@
 <?php
 
-namespace Damms005\LaravelCashier\Actions;
+namespace Damms005\LaravelMultipay\Actions;
 
-use Damms005\LaravelCashier\Models\Payment;
+use Damms005\LaravelMultipay\Models\Payment;
 
 class CreateNewPayment
 {

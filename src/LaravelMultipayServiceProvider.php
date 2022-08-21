@@ -1,25 +1,25 @@
 <?php
 
-namespace Damms005\LaravelCashier;
+namespace Damms005\LaravelMultipay;
 
-use Damms005\LaravelCashier\Models\Payment;
-use Damms005\LaravelCashier\Services\PaymentHandlers\BasePaymentHandler;
-use Damms005\LaravelCashier\Services\PaymentService;
+use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
+use Damms005\LaravelMultipay\Services\PaymentService;
 use Illuminate\Support\ServiceProvider;
 
-class LaravelCashierServiceProvider extends ServiceProvider
+class LaravelMultipayServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
         $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
-        $this->loadViewsFrom(__DIR__ . '/../views', 'laravel-cashier');
+        $this->loadViewsFrom(__DIR__ . '/../views', 'laravel-multipay');
 
-        $this->publishes([__DIR__ . '/../config/laravel-cashier.php' => config_path('laravel-cashier.php')], 'laravel-cashier-config');
+        $this->publishes([__DIR__ . '/../config/laravel-multipay.php' => config_path('laravel-multipay.php')], 'laravel-multipay-config');
 
         $this->bootFlutterwave();
 
-        $this->app->bind('laravel-cashier', function ($app) {
+        $this->app->bind('laravel-multipay', function ($app) {
             return $app->make(BasePaymentHandler::class);
         });
 
@@ -27,7 +27,7 @@ class LaravelCashierServiceProvider extends ServiceProvider
             /** @var Payment */
             $payment = $args[0];
 
-            throw_if(!$payment instanceof Payment, "Laravel Cashier Error: only Payment can be resolved by this binding. Found: " . get_class($payment));
+            throw_if(!$payment instanceof Payment, "Laravel Multipay Error: only Payment can be resolved by this binding. Found: " . get_class($payment));
 
             return $payment->getPaymentProvider();
         });
@@ -44,8 +44,8 @@ class LaravelCashierServiceProvider extends ServiceProvider
     public function register()
     {
         $this->mergeConfigFrom(
-            __DIR__ . '/../config/laravel-cashier.php',
-            'laravel-cashier'
+            __DIR__ . '/../config/laravel-multipay.php',
+            'laravel-multipay'
         );
     }
 

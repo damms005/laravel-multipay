@@ -4,13 +4,13 @@ use Mockery\Mock;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Config;
-use Damms005\LaravelCashier\Models\Payment;
+use Damms005\LaravelMultipay\Models\Payment;
 
 use function PHPUnit\Framework\assertEquals;
 use function PHPUnit\Framework\assertStringContainsString;
 use function PHPUnit\Framework\assertTrue;
 
-use Damms005\LaravelCashier\Services\PaymentHandlers\Remita;
+use Damms005\LaravelMultipay\Services\PaymentHandlers\Remita;
 use Illuminate\Contracts\View\View;
 
 beforeEach(function () {
@@ -42,7 +42,7 @@ it('renders auto-submitted payment form', function () {
 
 it("can handle Remita payment webhook ingress", function () {
     //Arrange
-    Config::set("laravel-cashier.paystack_secret_key", 'abc');
+    Config::set("laravel-multipay.paystack_secret_key", 'abc');
 
     $request = new Request(json_decode('{
 				"rrr":"110002071256",

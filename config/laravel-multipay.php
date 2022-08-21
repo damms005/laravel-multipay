@@ -1,6 +1,6 @@
 <?php
 
-use Damms005\LaravelCashier\Services\PaymentHandlers\Paystack;
+use Damms005\LaravelMultipay\Services\PaymentHandlers\Paystack;
 
 return [
 

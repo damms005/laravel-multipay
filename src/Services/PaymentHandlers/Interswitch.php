@@ -1,13 +1,13 @@
 <?php
 
-namespace Damms005\LaravelCashier\Services\PaymentHandlers;
+namespace Damms005\LaravelMultipay\Services\PaymentHandlers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Damms005\LaravelCashier\Models\Payment;
+use Damms005\LaravelMultipay\Models\Payment;
 
-use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
-use Damms005\LaravelCashier\Exceptions\UnknownWebhookException;
+use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
+use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 
 class Interswitch extends BasePaymentHandler implements PaymentHandlerInterface
 {
@@ -47,7 +47,7 @@ class Interswitch extends BasePaymentHandler implements PaymentHandlerInterface
         ]);
 
         return view(
-            'laravel-cashier::interswitch-form',
+            'laravel-multipay::interswitch-form',
             [
                 "hash" => $this->generateHashToSendInPaymentRequest(),
                 "user" => $this->user,
@@ -171,7 +171,7 @@ class Interswitch extends BasePaymentHandler implements PaymentHandlerInterface
     }
 
     /**
-     * @see \Damms005\LaravelCashier\Contracts\PaymentHandlerInterface::handleExternalWebhookRequest
+     * @see \Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface::handleExternalWebhookRequest
      */
     public function handleExternalWebhookRequest(Request $request): Payment
     {

@@ -1,14 +1,14 @@
 <?php
 
-namespace Damms005\LaravelCashier\Services\PaymentHandlers;
+namespace Damms005\LaravelMultipay\Services\PaymentHandlers;
 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Yabacon\Paystack as PaystackHelper;
-use Damms005\LaravelCashier\Models\Payment;
+use Damms005\LaravelMultipay\Models\Payment;
 
-use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
-use Damms005\LaravelCashier\Exceptions\UnknownWebhookException;
+use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
+use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 
 
 class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
@@ -17,7 +17,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
 
     public function __construct()
     {
-        $this->paystack_secret_key = config("laravel-cashier.paystack_secret_key");
+        $this->paystack_secret_key = config("laravel-multipay.paystack_secret_key");
 
         throw_if(empty($this->paystack_secret_key), "Please provide SK for Paystack");
     }
@@ -88,7 +88,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
     }
 
     /**
-     * @see \Damms005\LaravelCashier\Contracts\PaymentHandlerInterface::handleExternalWebhookRequest
+     * @see \Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface::handleExternalWebhookRequest
      */
     public function handleExternalWebhookRequest(Request $request): Payment
     {

@@ -1,11 +1,11 @@
 <?php
 
-namespace Damms005\LaravelCashier\Contracts;
+namespace Damms005\LaravelMultipay\Contracts;
 
 use Illuminate\Http\Request;
-use Damms005\LaravelCashier\Models\Payment;
-use Damms005\LaravelCashier\Exceptions\UnknownWebhookException;
-use Damms005\LaravelCashier\Exceptions\NonActionableWebhookPaymentException;
+use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
+use Damms005\LaravelMultipay\Exceptions\NonActionableWebhookPaymentException;
 
 interface PaymentHandlerInterface
 {

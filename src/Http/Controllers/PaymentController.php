@@ -1,16 +1,16 @@
 <?php
 
-namespace Damms005\LaravelCashier\Http\Controllers;
+namespace Damms005\LaravelMultipay\Http\Controllers;
 
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\App;
-use Damms005\LaravelCashier\Models\Payment;
-use Damms005\LaravelCashier\Services\PaymentService;
-use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
-use Damms005\LaravelCashier\Http\Requests\InitiatePaymentRequest;
-use Damms005\LaravelCashier\Services\PaymentHandlers\BasePaymentHandler;
+use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\Services\PaymentService;
+use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
+use Damms005\LaravelMultipay\Http\Requests\InitiatePaymentRequest;
+use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
 
 class PaymentController extends Controller
 {
@@ -77,7 +77,7 @@ class PaymentController extends Controller
      */
     public static function makeAutoSubmittedFormRedirect(int $amountInLowestDenomination, $user, PaymentHandlerInterface $payment_processor, $transaction_description)
     {
-        return view('laravel-cashier::auto-submit-form', [
+        return view('laravel-multipay::auto-submit-form', [
             "amount" => $amountInLowestDenomination,
             "user_id" => $user->id,
             "payment_processor" => $payment_processor::getUniquePaymentHandlerName(),

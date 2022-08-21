@@ -1,6 +1,6 @@
 <?php
 
-namespace Damms005\LaravelCashier\Database\Factories;
+namespace Damms005\LaravelMultipay\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 

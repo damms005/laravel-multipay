@@ -1,12 +1,12 @@
 <?php
 
-use Damms005\LaravelCashier\Http\Controllers\PaymentController;
-use Damms005\LaravelCashier\Http\Controllers\PaymentWebhookController;
-use Damms005\LaravelCashier\Services\PaymentHandlers\BasePaymentHandler;
+use Damms005\LaravelMultipay\Http\Controllers\PaymentController;
+use Damms005\LaravelMultipay\Http\Controllers\PaymentWebhookController;
+use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-Route::group(['prefix' => config('laravel-cashier.payment_route_path', 'payment')], function () {
+Route::group(['prefix' => config('laravel-multipay.payment_route_path', 'payment')], function () {
 
     Route::group(['middleware' => ['web']], function () {
         Route::post('/details/confirm', [PaymentController::class, 'confirm'])->name('payment.show_transaction_details_for_user_confirmation');
@@ -19,7 +19,7 @@ Route::group(['prefix' => config('laravel-cashier.payment_route_path', 'payment'
             $paymentProviders = BasePaymentHandler::getNamesOfPaymentHandlers();
             $user_id          = auth()->user()->id;
 
-            return view('laravel-cashier::test-drive.pay', compact('paymentProviders', 'user_id'));
+            return view('laravel-multipay::test-drive.pay', compact('paymentProviders', 'user_id'));
         })
         ->name('payment.test-drive');
     });

@@ -1,8 +1,8 @@
 <?php
 
-namespace Damms005\LaravelCashier\Http\Controllers;
+namespace Damms005\LaravelMultipay\Http\Controllers;
 
-use Damms005\LaravelCashier\Services\PaymentHandlers\BasePaymentHandler;
+use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 

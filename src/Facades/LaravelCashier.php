@@ -1,13 +1,13 @@
 <?php
 
-namespace Damms005\LaravelCashier\Facades;
+namespace Damms005\LaravelMultipay\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
-class LaravelCashier extends Facade
+class LaravelMultipay extends Facade
 {
     protected static function getFacadeAccessor()
     {
-        return 'laravel-cashier';
+        return 'laravel-multipay';
     }
 }

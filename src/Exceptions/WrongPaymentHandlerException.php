@@ -1,9 +1,9 @@
 <?php
 
-namespace Damms005\LaravelCashier\Exceptions;
+namespace Damms005\LaravelMultipay\Exceptions;
 
-use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
-use Damms005\LaravelCashier\Models\Payment;
+use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
+use Damms005\LaravelMultipay\Models\Payment;
 use Exception;
 
 class WrongPaymentHandlerException extends Exception

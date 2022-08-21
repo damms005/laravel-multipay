@@ -1,6 +1,6 @@
 <?php
 
-namespace Damms005\LaravelCashier\Services\PaymentHandlers;
+namespace Damms005\LaravelMultipay\Services\PaymentHandlers;
 
 use stdClass;
 use Carbon\Carbon;
@@ -8,12 +8,12 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Http;
-use Damms005\LaravelCashier\Models\Payment;
-use Damms005\LaravelCashier\Actions\CreateNewPayment;
-use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
-use Damms005\LaravelCashier\Exceptions\UnknownWebhookException;
-use Damms005\LaravelCashier\Exceptions\WrongPaymentHandlerException;
-use Damms005\LaravelCashier\Exceptions\NonActionableWebhookPaymentException;
+use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\Actions\CreateNewPayment;
+use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
+use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
+use Damms005\LaravelMultipay\Exceptions\WrongPaymentHandlerException;
+use Damms005\LaravelMultipay\Exceptions\NonActionableWebhookPaymentException;
 
 class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 {
@@ -48,11 +48,11 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
     protected function getRrrToInitiatePayment(Payment $payment): string
     {
-        $merchantId = config('laravel-cashier.remita_merchant_id');
+        $merchantId = config('laravel-multipay.remita_merchant_id');
         $serviceTypeId = $this->getServiceTypeId($payment);
         $orderId = $payment->transaction_reference;
         $totalAmount = $payment->original_amount_displayed_to_user;
-        $apiKey = config('laravel-cashier.remita_api_key');
+        $apiKey = config('laravel-multipay.remita_api_key');
         $hash = hash("sha512", "{$merchantId}{$serviceTypeId}{$orderId}{$totalAmount}{$apiKey}");
         $endpoint = $this->getBaseUrl() . "/exapp/api/v1/send/api/echannelsvc/merchant/api/paymentinit";
         $requestHeaders = $this->getHttpRequestHeaders($merchantId, $hash);
@@ -104,8 +104,8 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
     protected function queryRrr($rrr): stdClass
     {
-        $merchantId = config('laravel-cashier.remita_merchant_id');
-        $apiKey = config('laravel-cashier.remita_api_key');
+        $merchantId = config('laravel-multipay.remita_merchant_id');
+        $apiKey = config('laravel-multipay.remita_api_key');
         $hash = hash("sha512", "{$rrr}{$apiKey}{$merchantId}");
         $requestHeaders = $this->getHttpRequestHeaders($merchantId, $hash);
 
@@ -147,7 +147,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
     }
 
     /**
-     * @see \Damms005\LaravelCashier\Contracts\PaymentHandlerInterface::handleExternalWebhookRequest
+     * @see \Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface::handleExternalWebhookRequest
      */
     public function handleExternalWebhookRequest(Request $request): Payment
     {
@@ -272,13 +272,13 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
     protected function sendUserToPaymentGateway(string $rrr)
     {
         $url = $this->getBaseUrl() . "/ecomm/finalize.reg";
-        $merchantId = config('laravel-cashier.remita_merchant_id');
-        $apiKey = config('laravel-cashier.remita_api_key');
+        $merchantId = config('laravel-multipay.remita_merchant_id');
+        $apiKey = config('laravel-multipay.remita_api_key');
         $hash = hash("sha512", "{$merchantId}{$rrr}{$apiKey}");
         $responseUrl = route('payment.finished.callback_url');
 
         return view(
-            'laravel-cashier::payment-handler-specific.remita-auto_submitted_form',
+            'laravel-multipay::payment-handler-specific.remita-auto_submitted_form',
             compact(
                 'url',
                 'rrr',
@@ -291,7 +291,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
     public function getServiceTypeId(Payment $payment)
     {
-        $availableServiceTypes = config("laravel-cashier.remita_service_types");
+        $availableServiceTypes = config("laravel-multipay.remita_service_types");
         $serviceTypeConfigKey = $this->getRemitaServiceTypeConfigKey($payment->transaction_description);
 
         throw_if(!is_array($availableServiceTypes), "Remita service types not well defined");
@@ -311,7 +311,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
     public function getBaseUrl()
     {
-        return config('laravel-cashier.remita_base_request_url');
+        return config('laravel-multipay.remita_base_request_url');
     }
 
     public function getTransactionReferenceName(): string

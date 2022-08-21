@@ -1,8 +1,8 @@
 <?php
 
-namespace Damms005\LaravelCashier\Http\Requests;
+namespace Damms005\LaravelMultipay\Http\Requests;
 
-use Damms005\LaravelCashier\Services\PaymentHandlers\BasePaymentHandler;
+use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 

@@ -1,12 +1,12 @@
 <?php
 
-namespace Damms005\LaravelCashier\Services;
+namespace Damms005\LaravelMultipay\Services;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
-use Damms005\LaravelCashier\Models\Payment;
-use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
-use Damms005\LaravelCashier\Services\PaymentHandlers\BasePaymentHandler;
+use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
+use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
 
 class PaymentService
 {
@@ -20,7 +20,7 @@ class PaymentService
     public function getPaymentHandlerByName(string $paymentHandlerName): PaymentHandlerInterface
     {
         try {
-            $handlerFqcn = "\\Damms005\\LaravelCashier\\Services\\PaymentHandlers\\{$paymentHandlerName}";
+            $handlerFqcn = "\\Damms005\\LaravelMultipay\\Services\\PaymentHandlers\\{$paymentHandlerName}";
 
             /** @var PaymentHandlerInterface */
             $paymentHandler = new $handlerFqcn();

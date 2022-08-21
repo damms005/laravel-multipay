@@ -5,10 +5,10 @@ use Mockery\Mock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
-use Damms005\LaravelCashier\Models\Payment;
-use Damms005\LaravelCashier\Services\PaymentService;
-use Damms005\LaravelCashier\Events\SuccessfulLaravelCashierPaymentEvent;
-use Damms005\LaravelCashier\Services\PaymentHandlers\BasePaymentHandler;
+use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\Services\PaymentService;
+use Damms005\LaravelMultipay\Events\SuccessfulLaravelMultipayPaymentEvent;
+use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
 
 beforeEach(function () {
     require_once(__DIR__ . "/../database/factories/PaymentFactory.php");
@@ -23,7 +23,7 @@ beforeEach(function () {
 
 it('fires event for successful payment', function ($paymentProvider) {
 
-    config()->set('laravel-cashier.default_payment_handler_fqcn', $paymentProvider);
+    config()->set('laravel-multipay.default_payment_handler_fqcn', $paymentProvider);
 
     /**
      * @var Mock<TObject>
@@ -55,13 +55,13 @@ it('fires event for successful payment', function ($paymentProvider) {
         ->assertSee('was successful')
         ->assertStatus(200);
 
-    Event::assertDispatched(SuccessfulLaravelCashierPaymentEvent::class);
+    Event::assertDispatched(SuccessfulLaravelMultipayPaymentEvent::class);
 })
     ->with(BasePaymentHandler::getNamesOfPaymentHandlers());
 
 it('unsuccessful payment does not cause event to be fired', function ($paymentProvider) {
 
-    config()->set('laravel-cashier.default_payment_handler_fqcn', $paymentProvider);
+    config()->set('laravel-multipay.default_payment_handler_fqcn', $paymentProvider);
 
     /**
      * @var Mock<TObject>
@@ -92,6 +92,6 @@ it('unsuccessful payment does not cause event to be fired', function ($paymentPr
         ->assertSee('was not successful')
         ->assertStatus(200);
 
-    Event::assertNotDispatched(SuccessfulLaravelCashierPaymentEvent::class);
+    Event::assertNotDispatched(SuccessfulLaravelMultipayPaymentEvent::class);
 })
     ->with(BasePaymentHandler::getNamesOfPaymentHandlers());

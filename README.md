@@ -1,18 +1,18 @@
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/damms005/laravel-cashier)](https://github.com/damms005/laravel-cashier/releases)
-[![GitHub Tests Action Status](https://img.shields.io/github/workflow/status/damms005/laravel-cashier/run-tests?label=tests)](https://github.com/damms005/laravel-cashier/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/workflow/status/damms005/laravel-cashier/Check%20&%20fix%20styling?label=code%20style)](https://github.com/damms005/laravel-cashier/actions?query=workflow%3A"Check+%26+fix+styling"+branch%3Amain)
-[![Total Downloads](https://img.shields.io/packagist/dt/damms005/laravel-cashier.svg?style=flat-square)](https://packagist.org/packages/damms005/laravel-cashier)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/damms005/laravel-multipay)](https://github.com/damms005/laravel-multipay/releases)
+[![GitHub Tests Action Status](https://img.shields.io/github/workflow/status/damms005/laravel-multipay/run-tests?label=tests)](https://github.com/damms005/laravel-multipay/actions?query=workflow%3Arun-tests+branch%3Amain)
+[![GitHub Code Style Action Status](https://img.shields.io/github/workflow/status/damms005/laravel-multipay/Check%20&%20fix%20styling?label=code%20style)](https://github.com/damms005/laravel-multipay/actions?query=workflow%3A"Check+%26+fix+styling"+branch%3Amain)
+[![Total Downloads](https://img.shields.io/packagist/dt/damms005/laravel-multipay.svg?style=flat-square)](https://packagist.org/packages/damms005/laravel-multipay)
 
-# Laravel Cashier 💸
+# Laravel Multipay 💸
 
-![Art image for laravel-cashier](https://banners.beyondco.de/Laravel%20Cashier.png?theme=light&packageManager=composer+require&packageName=damms005%2Flaravel-cashier&pattern=glamorous&style=style_1&description=An+opinionated+Laravel+package+for+handling+payments%2C+complete+with+blade+views&md=1&showWatermark=1&fontSize=100px&images=cash&widths=350)
+![Art image for laravel-multipay](https://banners.beyondco.de/Laravel%20Multipay.png?theme=light&packageManager=composer+require&packageName=damms005%2Flaravel-multipay&pattern=glamorous&style=style_1&description=An+opinionated+Laravel+package+for+handling+payments%2C+complete+with+blade+views&md=1&showWatermark=1&fontSize=100px&images=cash&widths=350)
 
 An opinionated Laravel package to handle payments, complete with blade views, routing, and everything in-between.
 
 Whether you want to quickly bootstrap payment processing for your Laravel applications, or you want a way to test supported payment processors, this package's got you covered.
 
 > Although opinionated, this package allows you to "theme" the views. It achieves this theming by
-> `@extend()`ing whatever view you specify in `config('laravel-cashier.extended_layout')` (defaults to `layout.app`). This provides a smooth Plug-and-play&trade; experience.
+> `@extend()`ing whatever view you specify in `config('laravel-multipay.extended_layout')` (defaults to `layout.app`). This provides a smooth Plug-and-play&trade; experience.
 
 ## Currently supported payment handlers
 
@@ -24,22 +24,22 @@ Currently, this package supports the following online payment processors/handler
 -   [Interswitch](https://www.interswitchgroup.com)
 -   [Remita](http://remita.net)
 
-> Your preferred payment handler is not yet supported? Please consider [opening the appropriate issue type](https://github.com/damms005/laravel-cashier/issues/new?assignees=&labels=&template=addition-of-new-payment-handler.md&title=Addition+of+new+payment+handler+-+%5Bpayment+handler+name+here%5D).
+> Your preferred payment handler is not yet supported? Please consider [opening the appropriate issue type](https://github.com/damms005/laravel-multipay/issues/new?assignees=&labels=&template=addition-of-new-payment-handler.md&title=Addition+of+new+payment+handler+-+%5Bpayment+handler+name+here%5D).
 
-> Adding a new payment handler is straight-forward. Simply add the new payment class to the `Damms005\LaravelCashier\Services\PaymentHandlers` namespace and implement `Damms005\LaravelCashier\Contracts\PaymentHandlerInterface`
+> Adding a new payment handler is straight-forward. Simply add the new payment class to the `Damms005\LaravelMultipay\Services\PaymentHandlers` namespace and implement `Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface`
 
 ## Installation
 
 Install via composer.
 
 ```bash
-composer require damms005/laravel-cashier
+composer require damms005/laravel-multipay-config
 ```
 
 Publish the config file.
 
 ```bash
-php artisan vendor:publish --tag=laravel-cashier-config
+php artisan vendor:publish --tag=laravel-multipay-config
 ```
 
 Run migrations.
@@ -53,7 +53,7 @@ php artisan migrate
 ### Test drive 🚀
 
 Want to take things for a spin? simply visit `/payment/test-drive` (`route('payment.test-drive')`) .
-For [Paystack](https://paystack.com), ensure to set `paystack_secret_key` key in the `laravel-cashier.php` config file that you published previously at installation. You can get your key from your [settings page](https://dashboard.paystack.co/#/settings/developer).
+For [Paystack](https://paystack.com), ensure to set `paystack_secret_key` key in the `laravel-multipay.php` config file that you published previously at installation. You can get your key from your [settings page](https://dashboard.paystack.co/#/settings/developer).
 
 #### Needed Third-party Integrations:
 
@@ -112,7 +112,7 @@ If for any reason, your user/customer claims that the payment they made was succ
 /**
 * @var bool //true if payment was successful, false otherwise
 **/
-$outcome = LaravelCashier::reQueryUnsuccessfulPayment( $payment )
+$outcome = LaravelMultipay::reQueryUnsuccessfulPayment( $payment )
 ```
 
 The payment will be re-resolved and the payment will be updated in the database. If the payment is successful, the `SuccessfulLaravelCahierPaymentEvent` event will be fired, availing you the opportunity to run any domain/application-specific procedures.

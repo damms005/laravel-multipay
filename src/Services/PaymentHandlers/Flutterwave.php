@@ -1,14 +1,14 @@
 <?php
 
-namespace Damms005\LaravelCashier\Services\PaymentHandlers;
+namespace Damms005\LaravelMultipay\Services\PaymentHandlers;
 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Damms005\LaravelCashier\Models\Payment;
+use Damms005\LaravelMultipay\Models\Payment;
 use KingFlamez\Rave\Facades\Rave as FlutterwaveRave;
 
-use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
-use Damms005\LaravelCashier\Exceptions\UnknownWebhookException;
+use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
+use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 
 
 class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
@@ -110,7 +110,7 @@ class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
     }
 
     /**
-     * @see \Damms005\LaravelCashier\Contracts\PaymentHandlerInterface::handleExternalWebhookRequest
+     * @see \Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface::handleExternalWebhookRequest
      */
     public function handleExternalWebhookRequest(Request $request): Payment
     {

@@ -1,9 +1,9 @@
 <?php
 
-namespace Damms005\LaravelCashier\Models;
+namespace Damms005\LaravelMultipay\Models;
 
-use Damms005\LaravelCashier\Contracts\PaymentHandlerInterface;
-use Damms005\LaravelCashier\Services\PaymentHandlers\BasePaymentHandler;
+use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
+use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
 use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -24,7 +24,7 @@ class Payment extends Model
 
     public function getTable(): string
     {
-        $userDefinedTablePrefix = config('laravel-cashier.table_prefix');
+        $userDefinedTablePrefix = config('laravel-multipay.table_prefix');
 
         if ($userDefinedTablePrefix) {
             return $userDefinedTablePrefix . self::TABLE_NAME;
@@ -35,7 +35,7 @@ class Payment extends Model
 
     public function user()
     {
-        return $this->belongsTo(config('laravel-cashier.user_model_fqcn'));
+        return $this->belongsTo(config('laravel-multipay.user_model_fqcn'));
     }
 
     public function scopeSuccessful($query)
