@@ -18,11 +18,11 @@
     "require": {
         "php": "^7.1|^8.0",
         "guzzlehttp/guzzle": "^7.3",
-        "kikter/laravelrave": "^4.2",
+        "illuminate/support": "^7.0|^8.0|^9.0",
+        "kikter/laravelrave": "dev-master",
         "yabacon/paystack-php": "^2.2"
     },
     "require-dev": {
-        "illuminate/support": "^7.0|^8.0|^9.0",
         "nunomaduro/collision": "^5.3",
         "nunomaduro/larastan": "^1.0",
         "orchestra/testbench": "^6.15",
