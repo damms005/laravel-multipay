@@ -32,17 +32,15 @@ class BasePaymentHandler
      */
     protected $payment;
 
-    protected string $defaultPaymentHandler;
-
     public function __construct()
     {
-        $this->defaultPaymentHandler = config('laravel-multipay.default_payment_handler_fqcn');
+        $defaultPaymentHandler = $this->getDefaultPaymentHandler();
 
-        if (empty($this->defaultPaymentHandler)) {
+        if (empty($defaultPaymentHandler)) {
             throw new \Exception("Payment handler not specified");
         }
 
-        $paymentHandlerInterface = new $this->defaultPaymentHandler();
+        $paymentHandlerInterface = new $defaultPaymentHandler;
 
         //ensure the class is registered, so we are sure we will
         //have a handler when payment gateway server returns response
@@ -51,6 +49,11 @@ class BasePaymentHandler
         }
 
         $this->paymentHandlerInterface = $paymentHandlerInterface;
+    }
+
+    public function getDefaultPaymentHandler():?string
+    {
+        return config('laravel-multipay.default_payment_handler_fqcn');
     }
 
     public static function getFQCNsOfPaymentHandlers()
@@ -63,7 +66,7 @@ class BasePaymentHandler
             //currently new-up instances of these classes without constructors.
 
             // Flutterwave::class,
-            // Paystack::class,
+            Paystack::class,
             // Interswitch::class,
             // UnifiedPayments::class,
             Remita::class,

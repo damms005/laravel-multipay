@@ -5,10 +5,13 @@ use Mockery\Mock;
 use Illuminate\Support\Facades\App;
 use Damms005\LaravelMultipay\Models\Payment;
 use Damms005\LaravelMultipay\Services\PaymentService;
+use Damms005\LaravelMultipay\Services\PaymentHandlers\Remita;
 use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
 
-it('can navigate to custom url upon successful completion', function ($paymentProvider) {
-    config()->set('laravel-multipay.default_payment_handler_fqcn', $paymentProvider);
+it('can navigate to custom url upon successful completion', function () {
+    $paymentProviderFqcn = Remita::class;
+
+    config()->set('laravel-multipay.default_payment_handler_fqcn', $paymentProviderFqcn);
 
     $sampleInitialPayment = getSampleInitialPaymentRequest();
     $sampleInitialPayment['metadata'] = json_encode([
@@ -69,11 +72,12 @@ it('can navigate to custom url upon successful completion', function ($paymentPr
             ->toArray()
     )
         ->assertRedirect('https://foo.bar');
-})
-    ->with(BasePaymentHandler::getFQCNsOfPaymentHandlers());
+});
 
-test('when no custom successful completion page, display usual response', function ($paymentProvider) {
-    config()->set('laravel-multipay.default_payment_handler_fqcn', $paymentProvider);
+test('when no custom successful completion page, display usual response', function () {
+    $paymentProviderFqcn = Remita::class;
+
+    config()->set('laravel-multipay.default_payment_handler_fqcn', $paymentProviderFqcn);
 
     $sampleInitialPayment = getSampleInitialPaymentRequest();
 
@@ -131,5 +135,4 @@ test('when no custom successful completion page, display usual response', functi
             ->toArray()
     )
         ->assertLocation('http://localhost');
-})
-    ->with(BasePaymentHandler::getFQCNsOfPaymentHandlers());
+});

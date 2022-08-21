@@ -8,9 +8,12 @@ use Damms005\LaravelMultipay\Models\Payment;
 use function PHPUnit\Framework\assertEquals;
 use Damms005\LaravelMultipay\Services\PaymentService;
 use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
+use Damms005\LaravelMultipay\Services\PaymentHandlers\Remita;
 
-it('can use any payment provider to confirm payment and send user to payment gateway', function ($paymentProvider) {
-    config()->set('laravel-multipay.default_payment_handler_fqcn', $paymentProvider);
+it('can confirm payment and send user to payment gateway', function () {
+    $paymentProviderFqcn = Remita::class;
+
+    config()->set('laravel-multipay.default_payment_handler_fqcn', $paymentProviderFqcn);
 
     $sampleInitialPayment = getSampleInitialPaymentRequest();
 
@@ -78,5 +81,4 @@ it('can use any payment provider to confirm payment and send user to payment gat
         ->assertSee('was successful')
         ->assertSee($payment->transaction_reference)
         ->assertStatus(200);
-})
-    ->with(BasePaymentHandler::getFQCNsOfPaymentHandlers());
+});

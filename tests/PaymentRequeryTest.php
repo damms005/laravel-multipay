@@ -44,10 +44,8 @@ it('calls payment handler for payment re-query', function () {
 });
 
 it('fires success events for re-query of successful payments', function () {
-    App::bind('handler-for-payment', function ($app) {
-        /**
-         * @var Mock<TObject>
-         */
+    App::bind('handler-for-payment', function () {
+        /** @var Mock<TObject> */
         $mock = mock(Remita::class);
         $mock->makePartial();
 
@@ -89,6 +87,8 @@ it('does not fire success events for re-query of unsuccessful payments', functio
     });
 
     Event::fake();
+
+    config()->set('laravel-multipay.paystack_secret_key', '12345');
 
     App::make(BasePaymentHandler::class)->reQueryUnsuccessfulPayment(new Payment());
 

@@ -16,6 +16,9 @@ uses(TestCase::class)
         config()->set('laravel-multipay.extended_layout', 'laravel-multipay::test.layout');
         config()->set('laravel-multipay.user_model_fqcn', User::class);
 
+        //
+        config()->set('laravel-multipay.paystack_secret_key', '12345');
+
         doAuth();
     })
     ->in(__DIR__);

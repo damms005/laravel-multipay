@@ -9,11 +9,12 @@ use Damms005\LaravelMultipay\Models\Payment;
 use Damms005\LaravelMultipay\Services\PaymentService;
 use Damms005\LaravelMultipay\Events\SuccessfulLaravelMultipayPaymentEvent;
 use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
+use Damms005\LaravelMultipay\Services\PaymentHandlers\Paystack;
 
 beforeEach(function () {
-    require_once(__DIR__ . "/../database/factories/PaymentFactory.php");
+    require_once(__DIR__ . '/../database/factories/PaymentFactory.php');
 
-    $payment = (new \PaymentFactory)->create();
+    $payment = (new \PaymentFactory())->create();
 
     $payment->processor_transaction_reference = 12345;
     $payment->save();
@@ -21,9 +22,14 @@ beforeEach(function () {
     $this->payment = $payment;
 });
 
-it('fires event for successful payment', function ($paymentProvider) {
+it('fires event for successful payment', function () {
+    $paymentProviderFqcn = Remita::class;
 
-    config()->set('laravel-multipay.default_payment_handler_fqcn', $paymentProvider);
+    config()->set('laravel-multipay.default_payment_handler_fqcn', $paymentProviderFqcn);
+
+    if ($paymentProviderFqcn === Paystack::class) {
+        config()->set('laravel-multipay.paystack_secret_key', '12345');
+    }
 
     /**
      * @var Mock<TObject>
@@ -32,13 +38,13 @@ it('fires event for successful payment', function ($paymentProvider) {
     $mock->makePartial();
 
     $mock->expect(
-        handlerGatewayResponse: function (Request $paymentGatewayServerResponse, string $paymentHandlerName): ?Payment {
+        handlerGatewayResponse: function (Request $paymentGatewayServerResponse, string $paymentHandlerName): Payment {
             $this->payment->is_success = true;
             return $this->payment;
         },
     );
 
-    App::bind(PaymentService::class, function ($app) use ($mock) {
+    App::bind(PaymentService::class, function () use ($mock) {
         return $mock;
     });
 
@@ -49,19 +55,22 @@ it('fires event for successful payment', function ($paymentProvider) {
         collect($this->payment->toArray())
             ->put('RRR', 12345)
             ->toArray()
-
     )
         ->assertSee($this->payment->transaction_reference)
         ->assertSee('was successful')
         ->assertStatus(200);
 
     Event::assertDispatched(SuccessfulLaravelMultipayPaymentEvent::class);
-})
-    ->with(BasePaymentHandler::getNamesOfPaymentHandlers());
+});
 
-it('unsuccessful payment does not cause event to be fired', function ($paymentProvider) {
+it('unsuccessful payment does not cause event to be fired', function () {
+    $paymentProviderFqcn = Remita::class;
 
-    config()->set('laravel-multipay.default_payment_handler_fqcn', $paymentProvider);
+    config()->set('laravel-multipay.default_payment_handler_fqcn', $paymentProviderFqcn);
+
+    if ($paymentProviderFqcn === Paystack::class) {
+        config()->set('laravel-multipay.paystack_secret_key', '12345');
+    }
 
     /**
      * @var Mock<TObject>
@@ -93,5 +102,4 @@ it('unsuccessful payment does not cause event to be fired', function ($paymentPr
         ->assertStatus(200);
 
     Event::assertNotDispatched(SuccessfulLaravelMultipayPaymentEvent::class);
-})
-    ->with(BasePaymentHandler::getNamesOfPaymentHandlers());
+});
