@@ -1,10 +1,14 @@
 {
     "name": "damms005/laravel-cashier",
-    "description": "An opinionated Laravel package for handling payments in a Laravel package",
+    "description": "An opinionated, easily extendable and configurable package for handling payments in Laravel",
     "keywords": [
-        "damms005",
+        "configurable laravel payments",
+        "multiple payments providers",
+        "multiple payments",
+        "laravel payments",
         "laravel",
-        "laravel-cashier"
+        "damms005",
+        "Damilola Olowookere"
     ],
     "homepage": "https://github.com/damms005/laravel-cashier",
     "license": "MIT",
@@ -17,12 +21,12 @@
     ],
     "require": {
         "php": "^7.1|^8.0",
+        "damms005/laravel-flutterwave": "^1.0",
         "guzzlehttp/guzzle": "^7.3",
-        "kikter/laravelrave": "^4.2",
+        "illuminate/support": "^7.0|^8.0|^9.0",
         "yabacon/paystack-php": "^2.2"
     },
     "require-dev": {
-        "illuminate/support": "^7.0|^8.0|^9.0",
         "nunomaduro/collision": "^5.3",
         "nunomaduro/larastan": "^1.0",
         "orchestra/testbench": "^6.15",
