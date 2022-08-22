@@ -4,26 +4,30 @@ namespace Damms005\LaravelMultipay\Services\PaymentHandlers;
 
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\App;
 use Damms005\LaravelMultipay\Models\Payment;
 use Damms005\LaravelMultipay\Services\PaymentService;
 use Damms005\LaravelMultipay\Actions\CreateNewPayment;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 use Damms005\LaravelMultipay\Events\SuccessfulLaravelMultipayPaymentEvent;
-use Damms005\LaravelMultipay\Exceptions\NonActionableWebhookPaymentException;
 use Illuminate\Database\Eloquent\Casts\ArrayObject;
 
-class BasePaymentHandler
+abstract class BasePaymentHandler implements PaymentHandlerInterface
 {
     public const WEBHOOK_OKAY = 'OK';
 
     /**
-     * The Payment Handler processing this transaction
-     *
-     * @var PaymentHandlerInterface
+     * FQCN of payment providers.
+     * These payment providers are resolved from the Laravel Container, so
+     * you may type-hint any dependency they have in their class constructors.
      */
-    protected $paymentHandlerInterface;
+    protected const PAYMENT_PROVIDERS_FQCNs = [
+        // Flutterwave::class,
+        Paystack::class,
+        // Interswitch::class,
+        // UnifiedPayments::class,
+        Remita::class,
+    ];
 
     /**
      * The Payment being made
@@ -34,48 +38,22 @@ class BasePaymentHandler
 
     public function __construct()
     {
-        $defaultPaymentHandler = $this->getDefaultPaymentHandler();
-
-        if (empty($defaultPaymentHandler)) {
-            throw new \Exception("Payment handler not specified");
+        //ensure we will have a handler when payment gateway server returns response
+        if ($this->isUnregisteredPaymentHandler()) {
+            throw new \Exception("Unregistered payment handler: {$this->getUniquePaymentHandlerName()}", 1);
         }
 
-        $paymentHandlerInterface = new $defaultPaymentHandler;
-
-        //ensure the class is registered, so we are sure we will
-        //have a handler when payment gateway server returns response
-        if (!collect(self::getNamesOfPaymentHandlers())->contains($paymentHandlerInterface->getUniquePaymentHandlerName())) {
-            throw new \Exception("Unregistered payment handler: {$paymentHandlerInterface->getUniquePaymentHandlerName()}", 1);
-        }
-
-        $this->paymentHandlerInterface = $paymentHandlerInterface;
+        $this->paymentHandlerInterface = $this;
     }
 
-    public function getDefaultPaymentHandler():?string
+    protected function isUnregisteredPaymentHandler()
     {
-        return config('laravel-multipay.default_payment_handler_fqcn');
-    }
-
-    public static function getFQCNsOfPaymentHandlers()
-    {
-        return [
-
-            //IMPORTANT: IF YOU NEED CONSTRUCTORS IN ANY OF CLASSES, ENSURE
-            //THAT THE CONSTRUCTOR(S) DO NOT ACCEPT ANY PARAMETER
-            //this is because to handle payment provider response, we
-            //currently new-up instances of these classes without constructors.
-
-            // Flutterwave::class,
-            Paystack::class,
-            // Interswitch::class,
-            // UnifiedPayments::class,
-            Remita::class,
-        ];
+        return !collect(self::PAYMENT_PROVIDERS_FQCNs)->contains(static::class);
     }
 
     public static function getNamesOfPaymentHandlers()
     {
-        return collect(self::getFQCNsOfPaymentHandlers())
+        return collect(self::PAYMENT_PROVIDERS_FQCNs)
             ->map(function (string $paymentHandlerFqcn) {
                 /** @var PaymentHandlerInterface */
                 $paymentHandler = new $paymentHandlerFqcn();
@@ -100,7 +78,7 @@ class BasePaymentHandler
     public function storePaymentAndShowUserBeforeProcessing(int $user_id, $original_amount_displayed_to_user, string $transaction_description, $currency, string $transaction_reference, string $completion_url = null, Request $optionalRequestForEloquentModelLinkage = null, $preferredView = null, $metadata = null)
     {
         $payment = (new CreateNewPayment())->execute(
-            $this->paymentHandlerInterface->getUniquePaymentHandlerName(),
+            $this->getUniquePaymentHandlerName(),
             $user_id,
             $completion_url,
             $transaction_reference,
@@ -110,7 +88,7 @@ class BasePaymentHandler
             $metadata
         );
 
-        if ($this->paymentHandlerInterface->getUniquePaymentHandlerName() == UnifiedPayments::getUniquePaymentHandlerName()) {
+        if ($this->getUniquePaymentHandlerName() == UnifiedPayments::getUniquePaymentHandlerName()) {
             $payment->customer_checkout_ip_address = request()->ip();
             $payment->save();
         }
@@ -132,9 +110,9 @@ class BasePaymentHandler
         }
     }
 
-    public function sendTransactionToPaymentGateway(Payment $payment, $callback_url)
+    public function isDefaultPaymentHandler(): bool
     {
-        return $this->paymentHandlerInterface->renderAutoSubmittedPaymentForm($payment, $callback_url);
+        return self::class === config('laravel-multipay.default_payment_handler_fqcn');
     }
 
     /**
@@ -185,7 +163,7 @@ class BasePaymentHandler
         $payment = null;
 
         /** @var PaymentService */
-        $paymentService = App::make(PaymentService::class);
+        $paymentService = app()->make(PaymentService::class);
 
         collect(self::getNamesOfPaymentHandlers())
             ->each(function (string $paymentHandlerName) use ($paymentGatewayServerResponse, $paymentService, &$payment) {
@@ -238,7 +216,7 @@ class BasePaymentHandler
     public function reQueryUnsuccessfulPayment(Payment $unsuccessfulPayment)
     {
         /** @var PaymentHandlerInterface **/
-        $handler = App::make('handler-for-payment', [$unsuccessfulPayment]);
+        $handler = app()->make(PaymentHandlerInterface::class, [$unsuccessfulPayment]);
 
         $payment = $handler->reQuery($unsuccessfulPayment);
 
@@ -262,14 +240,15 @@ class BasePaymentHandler
         return $payment ? self::WEBHOOK_OKAY : null;
     }
 
-    protected function processWebhook(Request $request): ?Payment
+    /**
+     * @return Payment|string Return the Payment or error string
+     */
+    protected function processWebhook(Request $request): Payment|string
     {
-        /**
-         * @var Payment
-         */
+        /** @var Payment */
         $payment = collect(self::getNamesOfPaymentHandlers())
-            ->map(function (string $paymentHandlerName) use ($request) {
-                $paymentHandler = (new PaymentService)->getPaymentHandlerByName($paymentHandlerName);
+            ->firstOrFail(function (string $paymentHandlerName) use ($request) {
+                $paymentHandler = (new PaymentService())->getPaymentHandlerByName($paymentHandlerName);
 
                 try {
                     $payment = $paymentHandler->handleExternalWebhookRequest($request);
@@ -280,12 +259,8 @@ class BasePaymentHandler
 
                     return $payment;
                 } catch (UnknownWebhookException $exception) {
-                } catch (NonActionableWebhookPaymentException $exception) {
-                    return false;
                 }
-            })
-            ->filter()
-            ->first();
+            });
 
         return $payment;
     }

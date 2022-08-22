@@ -2,10 +2,11 @@
 
 namespace Damms005\LaravelMultipay;
 
-use Damms005\LaravelMultipay\Models\Payment;
-use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
-use Damms005\LaravelMultipay\Services\PaymentService;
 use Illuminate\Support\ServiceProvider;
+use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\Services\PaymentService;
+use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
+use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
 
 class LaravelMultipayServiceProvider extends ServiceProvider
 {
@@ -19,21 +20,27 @@ class LaravelMultipayServiceProvider extends ServiceProvider
 
         $this->bootFlutterwave();
 
+        $this->app->bind(BasePaymentHandler::class, function ($app) {
+            $defaultPaymentHandler = config('laravel-multipay.default_payment_handler_fqcn');
+
+            if (!$defaultPaymentHandler) {
+                throw new \Exception('Please provide a default payment handler in the laravel-multipay.php config file');
+            }
+
+            return $app->make($defaultPaymentHandler);
+        });
+
         $this->app->bind('laravel-multipay', function ($app) {
             return $app->make(BasePaymentHandler::class);
         });
 
-        $this->app->bind('handler-for-payment', function ($app, $args) {
+        $this->app->bind(PaymentHandlerInterface::class, function ($app, $args) {
             /** @var Payment */
             $payment = $args[0];
 
             throw_if(!$payment instanceof Payment, "Laravel Multipay Error: only Payment can be resolved by this binding. Found: " . get_class($payment));
 
             return $payment->getPaymentProvider();
-        });
-
-        $this->app->bind(BasePaymentHandler::class, function ($app) {
-            return new BasePaymentHandler();
         });
 
         $this->app->bind(PaymentService::class, function ($app) {

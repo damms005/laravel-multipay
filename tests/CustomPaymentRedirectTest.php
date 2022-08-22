@@ -1,18 +1,13 @@
 <?php
 
 use Mockery\Mock;
-
-use Illuminate\Support\Facades\App;
 use Damms005\LaravelMultipay\Models\Payment;
 use Damms005\LaravelMultipay\Services\PaymentService;
 use Damms005\LaravelMultipay\Services\PaymentHandlers\Remita;
+use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
 
 it('can navigate to custom url upon successful completion', function () {
-    $paymentProviderFqcn = Remita::class;
-
-    config()->set('laravel-multipay.default_payment_handler_fqcn', $paymentProviderFqcn);
-
     $sampleInitialPayment = getSampleInitialPaymentRequest();
     $sampleInitialPayment['metadata'] = json_encode([
         'completion_url' => 'https://foo.bar'
@@ -22,20 +17,13 @@ it('can navigate to custom url upon successful completion', function () {
 
     $payments = Payment::all();
 
-    App::bind(BasePaymentHandler::class, function ($app) {
-        /**
-         * @var Mock<TObject>
-         */
-        $mock = mock(BasePaymentHandler::class);
-        $mock->makePartial();
-
-        $mock->expect(
-            sendTransactionToPaymentGateway: function ($args) {
+    app()->bind(PaymentHandlerInterface::class, function ($app) {
+        return new class () {
+            public function renderAutoSubmittedPaymentForm($args)
+            {
                 return 'to payment gateway we go!';
-            },
-        );
-
-        return $mock;
+            }
+        };
     });
 
     $payload = collect($payments->first())
@@ -61,7 +49,7 @@ it('can navigate to custom url upon successful completion', function () {
         },
     );
 
-    App::bind(PaymentService::class, function () use ($mock) {
+    app()->bind(PaymentService::class, function () use ($mock) {
         return $mock;
     });
 
@@ -85,7 +73,7 @@ test('when no custom successful completion page, display usual response', functi
 
     $payments = Payment::all();
 
-    App::bind(BasePaymentHandler::class, function ($app) {
+    app()->bind(PaymentHandlerInterface::class, function ($app) {
         /**
          * @var Mock<TObject>
          */
@@ -93,7 +81,7 @@ test('when no custom successful completion page, display usual response', functi
         $mock->makePartial();
 
         $mock->expect(
-            sendTransactionToPaymentGateway: function ($args) {
+            renderAutoSubmittedPaymentForm: function ($args) {
                 return 'to payment gateway we go!';
             },
         );
@@ -124,7 +112,7 @@ test('when no custom successful completion page, display usual response', functi
         },
     );
 
-    App::bind(PaymentService::class, function () use ($mock) {
+    app()->bind(PaymentService::class, function () use ($mock) {
         return $mock;
     });
 

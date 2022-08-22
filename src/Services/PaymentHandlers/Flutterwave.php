@@ -13,10 +13,6 @@ use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 
 class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
 {
-    public function __construct()
-    {
-    }
-
     public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true)
     {
         $transaction_reference = $payment->transaction_reference;

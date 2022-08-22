@@ -2,22 +2,20 @@
 
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Auth;
 use Damms005\LaravelMultipay\Tests\TestCase;
 use Damms005\LaravelMultipay\Services\PaymentHandlers\Remita;
-use Illuminate\Foundation\Auth\User;
+use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
 
 uses(TestCase::class)
     ->beforeEach(function () {
         config()->set('app.key', Str::random(32));
         config()->set('app.debug', true);
         config()->set('app.debug', true);
-        config()->set('laravel-multipay.default_payment_handler_fqcn', Remita::class);
         config()->set('laravel-multipay.extended_layout', 'laravel-multipay::test.layout');
         config()->set('laravel-multipay.user_model_fqcn', User::class);
-
-        //
-        config()->set('laravel-multipay.paystack_secret_key', '12345');
+        config()->set('laravel-multipay.paystack_secret_key', 'sk_12345');
 
         doAuth();
     })

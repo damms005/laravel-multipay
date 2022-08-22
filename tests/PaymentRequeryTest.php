@@ -1,12 +1,12 @@
 <?php
 
-use Damms005\LaravelMultipay\Events\SuccessfulLaravelMultipayPaymentEvent;
 use Mockery\Mock;
-use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Event;
 use Damms005\LaravelMultipay\Models\Payment;
 use Damms005\LaravelMultipay\Services\PaymentHandlers\Remita;
+use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
-use Illuminate\Support\Facades\Event;
+use Damms005\LaravelMultipay\Events\SuccessfulLaravelMultipayPaymentEvent;
 
 beforeEach(function () {
     require_once(__DIR__ . "/../database/factories/PaymentFactory.php");
@@ -24,7 +24,7 @@ beforeEach(function () {
 // it("processes payment webhooks", function () {});
 
 it('calls payment handler for payment re-query', function () {
-    App::bind('handler-for-payment', function ($app) {
+    app()->bind(PaymentHandlerInterface::class, function ($app) {
         /**
          * @var Mock<TObject>
          */
@@ -40,11 +40,11 @@ it('calls payment handler for payment re-query', function () {
         return $mock;
     });
 
-    App::make(BasePaymentHandler::class)->reQueryUnsuccessfulPayment(new Payment());
+    app()->make(BasePaymentHandler::class)->reQueryUnsuccessfulPayment(new Payment());
 });
 
 it('fires success events for re-query of successful payments', function () {
-    App::bind('handler-for-payment', function () {
+    app()->bind(PaymentHandlerInterface::class, function () {
         /** @var Mock<TObject> */
         $mock = mock(Remita::class);
         $mock->makePartial();
@@ -61,14 +61,14 @@ it('fires success events for re-query of successful payments', function () {
     });
 
     Event::fake();
-    App::make(BasePaymentHandler::class)->reQueryUnsuccessfulPayment(new Payment());
+    app()->make(BasePaymentHandler::class)->reQueryUnsuccessfulPayment(new Payment());
 
     Event::assertDispatched(SuccessfulLaravelMultipayPaymentEvent::class);
 });
 
 
 it('does not fire success events for re-query of unsuccessful payments', function () {
-    App::bind('handler-for-payment', function ($app) {
+    app()->bind(PaymentHandlerInterface::class, function ($app) {
         /**
          * @var Mock<TObject>
          */
@@ -88,9 +88,7 @@ it('does not fire success events for re-query of unsuccessful payments', functio
 
     Event::fake();
 
-    config()->set('laravel-multipay.paystack_secret_key', '12345');
-
-    App::make(BasePaymentHandler::class)->reQueryUnsuccessfulPayment(new Payment());
+    app()->make(BasePaymentHandler::class)->reQueryUnsuccessfulPayment(new Payment());
 
     Event::assertNotDispatched(SuccessfulLaravelMultipayPaymentEvent::class);
 });

@@ -2,7 +2,6 @@
 
 namespace Damms005\LaravelMultipay\Services\PaymentHandlers;
 
-use stdClass;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -17,11 +16,6 @@ use Damms005\LaravelMultipay\Exceptions\NonActionableWebhookPaymentException;
 
 class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 {
-    public function __construct()
-    {
-        //empty constructor, so we not forced to use parent's constructor
-    }
-
     protected function getHttpRequestHeaders(string $merchantId, string $hash): array
     {
         $auth = "remitaConsumerKey={$merchantId},remitaConsumerToken={$hash}";
@@ -102,7 +96,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         return $this->useResponseToUpdatePayment($payment, $rrrQueryResponse);
     }
 
-    protected function queryRrr($rrr): stdClass
+    protected function queryRrr($rrr): \stdClass
     {
         $merchantId = config('laravel-multipay.remita_merchant_id');
         $apiKey = config('laravel-multipay.remita_api_key');
@@ -180,7 +174,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         return $payment;
     }
 
-    protected function createNewPayment(User $user, stdClass $responseBody): Payment
+    protected function createNewPayment(User $user, \stdClass $responseBody): Payment
     {
         return (new CreateNewPayment())->execute(
             $this->getUniquePaymentHandlerName(),
@@ -205,7 +199,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
             ->first();
     }
 
-    protected function useResponseToUpdatePayment(Payment $payment, stdClass $rrrQueryResponse): Payment
+    protected function useResponseToUpdatePayment(Payment $payment, \stdClass $rrrQueryResponse): Payment
     {
         $payment->processor_returned_response_description = json_encode($rrrQueryResponse);
 
@@ -234,7 +228,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         return $payment;
     }
 
-    protected function isTransactionCanStillBeReQueried(stdClass $responseBody)
+    protected function isTransactionCanStillBeReQueried(\stdClass $responseBody)
     {
         // https://api.remita.net
         $responseCodesIndicatingUnFulfilledTransactionState = [

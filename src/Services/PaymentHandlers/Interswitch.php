@@ -23,10 +23,6 @@ class Interswitch extends BasePaymentHandler implements PaymentHandlerInterface
     protected $macKey = 'D3D1D05AFE42AD50818167EAC73C109168A0F108F32645C8B59E897FA930DA44F9230910DAC9E20641823799A107A02068F7BC0F4CC41D2952E249552255710F';
     protected $site_redirect_url = "";
 
-    public function __construct()
-    {
-    }
-
     public function build($user, $txn_ref, $amount_in_naira, $url_to_redirect_when_transaction_completed): Interswitch
     {
         $this->user = $user;

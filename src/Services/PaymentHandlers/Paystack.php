@@ -4,9 +4,7 @@ namespace Damms005\LaravelMultipay\Services\PaymentHandlers;
 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Config;
 use Yabacon\Paystack as PaystackHelper;
-
 use Damms005\LaravelMultipay\Models\Payment;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
@@ -23,7 +21,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
             // Paystack is currently the default payment handler (because
             // it is the easiest to setup and get up-adn-running for starters/testing). Hence,
             // let the error message be contextualized, so we have a better UX for testers/first-timers
-            if ($this->getDefaultPaymentHandler() === self::class) {
+            if ($this->isDefaultPaymentHandler()) {
                 throw new \Exception("You set Paystack as your default payment handler, but no Paystack Sk found. Please provide SK for Paystack.");
             }
 

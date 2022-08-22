@@ -3,31 +3,25 @@
 use Mockery\Mock;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\App;
 use Damms005\LaravelMultipay\Models\Payment;
-use function PHPUnit\Framework\assertEquals;
 use Damms005\LaravelMultipay\Services\PaymentService;
+use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
-use Damms005\LaravelMultipay\Services\PaymentHandlers\Remita;
 
 it('can confirm payment and send user to payment gateway', function () {
-    $paymentProviderFqcn = Remita::class;
-
-    config()->set('laravel-multipay.default_payment_handler_fqcn', $paymentProviderFqcn);
-
     $sampleInitialPayment = getSampleInitialPaymentRequest();
 
     $this->post(route('payment.show_transaction_details_for_user_confirmation'), $sampleInitialPayment)
-        ->assertSee([$sampleInitialPayment['currency']])
-        ->assertSee([$sampleInitialPayment['amount']])
-        ->assertSee([$sampleInitialPayment['transaction_description']])
-        ->assertStatus(200);
+    ->assertSee([$sampleInitialPayment['currency']])
+    ->assertSee([$sampleInitialPayment['amount']])
+    ->assertSee([$sampleInitialPayment['transaction_description']])
+    ->assertStatus(200);
 
     $payments = Payment::all();
 
-    assertEquals($payments->count(), 1);
+    expect($payments->count())->toEqual(1);
 
-    App::bind(BasePaymentHandler::class, function ($app) {
+    app()->bind(PaymentHandlerInterface::class, function ($app) {
         /**
          * @var Mock<TObject>
          */
@@ -35,7 +29,7 @@ it('can confirm payment and send user to payment gateway', function () {
         $mock->makePartial();
 
         $mock->expect(
-            sendTransactionToPaymentGateway: function ($args) {
+            renderAutoSubmittedPaymentForm: function ($args) {
                 return 'to payment gateway we go!';
             },
         );
@@ -68,7 +62,7 @@ it('can confirm payment and send user to payment gateway', function () {
         },
     );
 
-    App::bind(PaymentService::class, function ($app) use ($mock) {
+    app()->bind(PaymentService::class, function ($app) use ($mock) {
         return $mock;
     });
 

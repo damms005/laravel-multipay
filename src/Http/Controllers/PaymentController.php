@@ -5,7 +5,6 @@ namespace Damms005\LaravelMultipay\Http\Controllers;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\App;
 use Damms005\LaravelMultipay\Models\Payment;
 use Damms005\LaravelMultipay\Services\PaymentService;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
@@ -22,7 +21,7 @@ class PaymentController extends Controller
     public function confirm(InitiatePaymentRequest $initiatePaymentRequest)
     {
         /** @var PaymentService */
-        $paymentService = App::make(PaymentService::class);
+        $paymentService = app()->make(PaymentService::class);
 
         $amount = $initiatePaymentRequest->amount;
 
@@ -60,10 +59,10 @@ class PaymentController extends Controller
                 ->withInput();
         }
 
-        /** @var BasePaymentHandler */
-        $handler = App::make(BasePaymentHandler::class);
+        /** @var PaymentHandlerInterface */
+        $handler = app()->make(PaymentHandlerInterface::class, [$payment]);
 
-        return $handler->sendTransactionToPaymentGateway($payment, route('payment.finished.callback_url'));
+        return $handler->renderAutoSubmittedPaymentForm($payment, route('payment.finished.callback_url'));
     }
 
     /**
@@ -92,6 +91,9 @@ class PaymentController extends Controller
 
     public function handlePaymentGatewayResponse(Request $request)
     {
-        return BasePaymentHandler::handleServerResponseForTransactionAndDisplayOutcome($request);
+        /** @var BasePaymentHandler */
+        $handler = app()->make(BasePaymentHandler::class);
+
+        return $handler::handleServerResponseForTransactionAndDisplayOutcome($request);
     }
 }

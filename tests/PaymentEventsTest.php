@@ -3,13 +3,12 @@
 use Mockery\Mock;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
 use Damms005\LaravelMultipay\Models\Payment;
 use Damms005\LaravelMultipay\Services\PaymentService;
-use Damms005\LaravelMultipay\Events\SuccessfulLaravelMultipayPaymentEvent;
-use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
+use Damms005\LaravelMultipay\Services\PaymentHandlers\Remita;
 use Damms005\LaravelMultipay\Services\PaymentHandlers\Paystack;
+use Damms005\LaravelMultipay\Events\SuccessfulLaravelMultipayPaymentEvent;
 
 beforeEach(function () {
     require_once(__DIR__ . '/../database/factories/PaymentFactory.php');
@@ -44,7 +43,7 @@ it('fires event for successful payment', function () {
         },
     );
 
-    App::bind(PaymentService::class, function () use ($mock) {
+    app()->bind(PaymentService::class, function () use ($mock) {
         return $mock;
     });
 
@@ -85,7 +84,7 @@ it('unsuccessful payment does not cause event to be fired', function () {
         },
     );
 
-    App::bind(PaymentService::class, function ($app) use ($mock) {
+    app()->bind(PaymentService::class, function ($app) use ($mock) {
         return $mock;
     });
 

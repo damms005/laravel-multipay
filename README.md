@@ -24,14 +24,18 @@ This package is [tested against:](https://github.com/damms005/laravel-multipay/b
 Currently, this package supports the following online payment processors/handlers
 
 -   [Paystack](https://paystack.com)
--   [Flutterwave](https://flutterwave.com)
--   [UnifiedPayments](https://unifiedpayments.com)
--   [Interswitch](https://www.interswitchgroup.com)
 -   [Remita](http://remita.net)
+-   * [Flutterwave](https://flutterwave.com)
+-   * [Interswitch](https://www.interswitchgroup.com)
+-   * [UnifiedPayments](https://unifiedpayments.com)
+`* implementation is not yet complete, but can be prioritized on demand`
 
 > Your preferred payment handler is not yet supported? Please consider [opening the appropriate issue type](https://github.com/damms005/laravel-multipay/issues/new?assignees=&labels=&template=addition-of-new-payment-handler.md&title=Addition+of+new+payment+handler+-+%5Bpayment+handler+name+here%5D).
 
 > Adding a new payment handler is straight-forward. Simply add the new payment class to the `Damms005\LaravelMultipay\Services\PaymentHandlers` namespace and implement `Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface`
+
+> **Note**
+> Payment providers that you so register as described above are resolved from the [Laravel Container](https://laravel.com/docs/9.x/container) to reduce the improve the flexibility of this package.
 
 ## Installation
 
