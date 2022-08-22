@@ -1,19 +1,22 @@
 <?php
 
-use App\User;
-use Damms005\LaravelMultipay\Services\PaymentHandlers\Paystack;
-
 return [
 
     /**
      * FQCN of model that your app uses for authentication
      */
-    'user_model_fqcn' => User::class,
+    'user_model_fqcn' => App\Models\User::class,
 
     /**
      * The layout to extend when displaying views
      */
     'extended_layout'         => 'layouts.app',
+
+     /**
+     * In the layout extended, provide the name of the section
+     * that yields the content
+     */
+    'section_name'         => 'content',
 
     /**
      * String to pre-pend to database table names
@@ -27,7 +30,7 @@ return [
 
     'paystack_secret_key'     => env('PAYSTACK_SECRET_KEY'),
 
-    'default_payment_handler_fqcn' => Paystack::class,
+    'default_payment_handler_fqcn' => Damms005\LaravelMultipay\Services\PaymentHandlers\Paystack::class,
 
     //https://remitademo.net/remita
     'remita_base_request_url' => env('REMITA_BASE_REQUEST_URL', 'https://login.remita.net/remita'),
@@ -42,6 +45,5 @@ return [
      * the snake_case of your payment description and the corresponding
      * Remita service type id
      */
-    'remita_service_types'    => [
-    ],
+    'remita_service_types'    => [],
 ];

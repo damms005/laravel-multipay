@@ -13,14 +13,15 @@ jobs:
       fail-fast: true
       matrix:
         os: [ubuntu-latest, windows-latest]
-        php: [8.0]
-        laravel: [8.*]
-        stability: [prefer-lowest, prefer-stable]
+        php: [8.0, 8.1]
+        laravel: [8.*, 9.*]
         include:
           - laravel: 8.*
-            testbench: ^6.6
+            testbench: ^6.0
+          - laravel: 9.*
+            testbench: ^7.0
 
-    name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}
+    name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }} (${{ matrix.os }})
 
     steps:
       - name: Checkout code
@@ -33,15 +34,13 @@ jobs:
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo
           coverage: none
 
-      - name: Setup problem matchers
-        run: |
-          echo "::add-matcher::${{ runner.tool_cache }}/php.json"
-          echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
+      - name: Composer version
+        run: echo composer --version
 
-      - name: Install dependencies
+      - name: Install composer packages
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
-          composer update --${{ matrix.stability }} --prefer-dist --no-interaction
+          composer update --prefer-stable --prefer-dist --no-interaction
 
       - name: Execute tests
-        run: vendor/bin/pest
+        run: ./vendor/bin/pest

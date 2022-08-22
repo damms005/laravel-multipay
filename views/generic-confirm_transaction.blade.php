@@ -1,8 +1,7 @@
 @extends(config('laravel-multipay.extended_layout'))
 @section('title', 'Payment Confirmation')
 
-@section('content')
-
+@section(config('laravel-multipay.section_name'))
 <style>
 	@media print {
 
