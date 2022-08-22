@@ -2,11 +2,11 @@
     "name": "damms005/laravel-multipay",
     "description": "An opinionated, easily extendable and configurable package for handling payments in Laravel",
     "keywords": [
-        "configurable laravel payments",
-        "multiple payments providers",
-        "multiple payments",
-        "laravel payments",
         "laravel",
+        "laravel payments",
+        "multiple payments",
+        "multiple payments providers",
+        "configurable laravel payments",
         "damms005",
         "Damilola Olowookere"
     ],
