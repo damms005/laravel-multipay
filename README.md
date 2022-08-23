@@ -25,33 +25,37 @@ Currently, this package supports the following online payment processors/handler
 
 -   [Paystack](https://paystack.com)
 -   [Remita](http://remita.net)
--   * [Flutterwave](https://flutterwave.com)
--   * [Interswitch](https://www.interswitchgroup.com)
--   * [UnifiedPayments](https://unifiedpayments.com)
-`* implementation is not yet complete, but can be prioritized on demand`
+-   [Flutterwave](https://flutterwave.com)**
+-   [Interswitch](https://www.interswitchgroup.com)**
+-   [UnifiedPayments](https://unifiedpayments.com)**
+
+_key_:
+`** implementation not yet complete for specified payment handler. PRs welcomed if you cannot afford to wait 😉`
 
 > Your preferred payment handler is not yet supported? Please consider [opening the appropriate issue type](https://github.com/damms005/laravel-multipay/issues/new?assignees=&labels=&template=addition-of-new-payment-handler.md&title=Addition+of+new+payment+handler+-+%5Bpayment+handler+name+here%5D).
 
 > Adding a new payment handler is straight-forward. Simply add the new payment class to the `Damms005\LaravelMultipay\Services\PaymentHandlers` namespace and implement `Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface`
 
-> **Note**
+> **Note** <br />
 > Payment providers that you so register as described above are resolved from the [Laravel Container](https://laravel.com/docs/9.x/container) to reduce the improve the flexibility of this package.
 
 ## Installation
 
-Install via composer.
+You need to do just 3 things:
+
+- Install via composer.
 
 ```bash
 composer require damms005/laravel-multipay
 ```
 
-Publish the config file.
+- Publish the config file.
 
 ```bash
 php artisan vendor:publish --tag=laravel-multipay-config
 ```
 
-Run migrations.
+- Run migrations.
 
 ```
 php artisan migrate
@@ -64,7 +68,7 @@ php artisan migrate
 Want to take things for a spin? simply visit `/payment/test-drive` (`route('payment.test-drive')`) .
 For [Paystack](https://paystack.com), ensure to set `paystack_secret_key` key in the `laravel-multipay.php` config file that you published previously at installation. You can get your key from your [settings page](https://dashboard.paystack.co/#/settings/developer).
 
-> **Warn**
+> **Warning** <br />
 > Ensure you have [TailwindCSS installed](https://tailwindcss.com/docs/installation), then add this package's view to part of the files whose Tailwind style classes will be compiled. Add this to the `content` of your `tailwind.config.js` configuration file, like below:
 ```
     content: [

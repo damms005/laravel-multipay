@@ -22,11 +22,11 @@ abstract class BasePaymentHandler implements PaymentHandlerInterface
      * you may type-hint any dependency they have in their class constructors.
      */
     protected const PAYMENT_PROVIDERS_FQCNs = [
-        // Flutterwave::class,
         Paystack::class,
+        Remita::class,
+        // Flutterwave::class,
         // Interswitch::class,
         // UnifiedPayments::class,
-        Remita::class,
     ];
 
     /**
