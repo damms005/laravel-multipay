@@ -108,7 +108,10 @@ REMITA_API_KEY=xxxxxxxxxxxxxxxxxxxxx-X
 #### Step 1
 
 Send a `POST` request to `/payment/details/confirm` (`route('payment.show_transaction_details_for_user_confirmation')`).
+
 Check the [InitiatePaymentRequest](src/Http/Requests/InitiatePaymentRequest.php#L28) form request to know the values you are to post to this endpoint. (tip: you can also check [test-drive/pay.blade.php](views/test-drive/pay.blade.php)).
+
+This `POST` request will typically simply be made by submitting via a `<form>` action.
 
 > Tip: if you to store additional/contextual data with this payment, you can include such data in the request, in a field named `metadata`. The value must be a valid JSON string.
 
@@ -123,7 +126,7 @@ back to `/payment/completed` (`route('payment.finished.callback_url')`) .
 
 > Ensure that your `User` model has a `name` property (Laravel's default). If you have removed the column for any reason, you may use [Model Accessor](https://laravel.com/docs/8.x/eloquent-mutators#accessors-and-mutators) to provide same. For Remita, ensure that `phone` property also exists on the User model.
 
-> If there are additional steps you want to take upon successful payment, listen for `SuccessfulLaravelCahierPaymentEvent`. It will be fired whenever a successful payment occurs, with its corresponding `Payment` model.
+> If there are additional steps you want to take upon successful payment, listen for `SuccessfulLaravelMultipayPaymentEvent`. It will be fired whenever a successful payment occurs, with its corresponding `Payment` model.
 
 > If the payment has [`metadata`](#step-1) (supplied with the payment initiation request), with a key named `completion_url`. You can specify its the value to be the URL of a page to redirect user upon successful payment
 
@@ -138,12 +141,12 @@ If for any reason, your user/customer claims that the payment they made was succ
 $outcome = LaravelMultipay::reQueryUnsuccessfulPayment( $payment )
 ```
 
-The payment will be re-resolved and the payment will be updated in the database. If the payment is successful, the `SuccessfulLaravelCahierPaymentEvent` event will be fired, availing you the opportunity to run any domain/application-specific procedures.
+The payment will be re-resolved and the payment will be updated in the database. If the payment is successful, the `SuccessfulLaravelMultipayPaymentEvent` event will be fired, availing you the opportunity to run any domain/application-specific procedures.
 
 ## Payment Notifications
 Some payment handlers provide a means for sending details of successful notifications. Usually, you will need to provide the payment handler with a URL to which the details of such notification will be sent. Should you need this feature, the notification URL is `/payment/completed/notify`.
 
-> In your handler for `SuccessfulLaravelCahierPaymentEvent`, ensure to first check that you have not previously handled the event for that same payment, as payment notifications will also fire `SuccessfulLaravelCahierPaymentEvent` event if the payment was successful.
+> If you use this payment notification URL feature, ensure that in your handler for `SuccessfulLaravelMultipayPaymentEvent`, check that you have not previously handled the event for that same payment.
 
 ## Testing
 
