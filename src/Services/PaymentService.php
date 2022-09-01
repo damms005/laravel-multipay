@@ -11,6 +11,7 @@ class PaymentService
 {
     public static function storePaymentAndShowUserBeforeProcessing(int $user_id, float $amount, string $description, string $currency, string $transaction_reference, string | null $view, $metadata = null)
     {
+        /** @var BasePaymentHandler */
         $basePaymentHandler = app()->make(BasePaymentHandler::class);
 
         return $basePaymentHandler->storePaymentAndShowUserBeforeProcessing($user_id, $amount, $description, $currency, $transaction_reference, null, null, $view, $metadata);

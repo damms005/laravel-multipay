@@ -283,7 +283,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         );
     }
 
-    public function getServiceTypeId(Payment $payment)
+    protected function getServiceTypeId(Payment $payment)
     {
         $availableServiceTypes = config("laravel-multipay.remita_service_types");
         $serviceTypeConfigKey = $this->getRemitaServiceTypeConfigKey($payment->transaction_description);
