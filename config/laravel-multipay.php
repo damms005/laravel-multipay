@@ -12,7 +12,7 @@ return [
      */
     'extended_layout'         => 'layouts.app',
 
-     /**
+    /**
      * In the layout extended, provide the name of the section
      * that yields the content
      */
@@ -45,5 +45,10 @@ return [
      * the snake_case of your payment description and the corresponding
      * Remita service type id
      */
-    'remita_service_types'    => [],
+    'remita_service_types' => [],
+
+    'payment_confirmation_notice' => env(
+        'PAYMENT_CONFIRMATION_NOTICE',
+        'The details of your transaction is given below. Kindly print this page first before proceeding to click on Pay Now (this ensures that you have your transaction reference in case you need to refer to this transaction in the future).'
+    ),
 ];

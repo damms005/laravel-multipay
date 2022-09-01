@@ -99,7 +99,7 @@ abstract class BasePaymentHandler implements PaymentHandlerInterface
             $this->linkPaymentToEloquentModel($optionalRequestForEloquentModelLinkage, $payment);
         }
 
-        $instructions = "The details of your transaction is given below. Kindly print this page first before proceeding to click on Pay Now (this ensures that you have your transaction reference in case you need to refer to this transaction in the future).";
+        $instructions = config('laravel-multipay.payment_confirmation_notice');
 
         $exports = compact('instructions', 'currency', 'payment', 'post_payment_confirmation_submit', 'user_id');
 
