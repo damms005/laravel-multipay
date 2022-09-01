@@ -292,7 +292,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
         throw_if(
             !array_key_exists($serviceTypeConfigKey, $availableServiceTypes),
-            "Remita service types configuration does not have definition for '{$serviceTypeConfigKey}"
+            "Remita service types configuration does not have definition for '{$serviceTypeConfigKey}'"
         );
 
         return $availableServiceTypes[$serviceTypeConfigKey];
