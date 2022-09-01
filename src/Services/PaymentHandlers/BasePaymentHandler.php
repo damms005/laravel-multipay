@@ -125,7 +125,7 @@ abstract class BasePaymentHandler implements PaymentHandlerInterface
     {
         $payment = self::sendNotificationForSuccessFulPayment($paymentGatewayServerResponse);
 
-        throw_if(!$payment, "Payment details not");
+        throw_if(!$payment, "Could not retrieve payment");
 
         [$paymentDescription, $isJsonDescription] = self::getPaymentDescription($payment);
 
@@ -155,7 +155,7 @@ abstract class BasePaymentHandler implements PaymentHandlerInterface
         return redirect()->away($payment->metadata['completion_url']);
     }
 
-    public static function sendNotificationForSuccessFulPayment(Request $paymentGatewayServerResponse): ?Payment
+    protected static function sendNotificationForSuccessFulPayment(Request $paymentGatewayServerResponse): ?Payment
     {
         /**
          * @var Payment
