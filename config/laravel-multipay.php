@@ -51,4 +51,6 @@ return [
         'PAYMENT_CONFIRMATION_NOTICE',
         'The details of your transaction is given below. Kindly print this page first before proceeding to click on Pay Now (this ensures that you have your transaction reference in case you need to refer to this transaction in the future).'
     ),
+
+    'enable_payment_confirmation_page_print' => env('ENABLE_PAYMENT_CONFIRMATION_PAGE_PRINT', true),
 ];
