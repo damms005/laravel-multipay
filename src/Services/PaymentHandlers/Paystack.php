@@ -29,7 +29,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
         }
     }
 
-    public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true)
+    public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true, Request $request)
     {
         $transaction_reference = $payment->transaction_reference;
         $this->sendUserToPaymentGateway($redirect_or_callback_url, $this->getPayment($transaction_reference));

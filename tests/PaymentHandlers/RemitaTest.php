@@ -5,19 +5,14 @@ use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Config;
 use Damms005\LaravelMultipay\Models\Payment;
-
-use function PHPUnit\Framework\assertEquals;
-use function PHPUnit\Framework\assertStringContainsString;
-use function PHPUnit\Framework\assertTrue;
-
 use Damms005\LaravelMultipay\Services\PaymentHandlers\Remita;
 use Illuminate\Contracts\View\View;
 
+use function PHPUnit\Framework\assertStringContainsString;
+use function PHPUnit\Framework\assertTrue;
+
 beforeEach(function () {
-
-    require_once(__DIR__ . "/../../database/factories/PaymentFactory.php");
-
-    $this->payment = (new \PaymentFactory)->create();
+    $this->payment = createDummyPayment();
 });
 
 it('renders auto-submitted payment form', function () {
@@ -40,7 +35,7 @@ it('renders auto-submitted payment form', function () {
     assertStringContainsString('Loading...', $autoForm->render());
 });
 
-it("can handle Remita payment webhook ingress", function () {
+it('can handle Remita payment webhook ingress', function () {
     //Arrange
     Config::set("laravel-multipay.paystack_secret_key", 'abc');
 
@@ -116,4 +111,12 @@ it("can handle Remita payment webhook ingress", function () {
 
     //Act & Assert
     expect(get_class($mock->handleExternalWebhookRequest($request)))->toEqual(Payment::class);
+});
+
+it('can read user-defined service type id in request', function () {
+    $payload = collect()->put('remita_service_id', 'some-cool-value');
+
+    $parsedId =    (new Remita())->getServiceTypeId(createDummyPayment(), $payload);
+
+    expect($parsedId)->toBe('some-cool-value');
 });

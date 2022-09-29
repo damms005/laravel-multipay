@@ -1,12 +1,12 @@
 <?php
 
+use Damms005\LaravelMultipay\Models\Payment;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Auth;
 use Damms005\LaravelMultipay\Tests\TestCase;
 use Damms005\LaravelMultipay\Services\PaymentHandlers\Remita;
-use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
 
 uses(TestCase::class)
     ->beforeEach(function () {
@@ -40,4 +40,19 @@ function getSampleInitialPaymentRequest()
         'transaction_description' => 'foo-bar',
         'payment_processor' => Remita::getUniquePaymentHandlerName(),
     ];
+}
+
+
+function createDummyPayment()
+{
+    return Payment::create([
+        "user_id" => 1,
+        "completion_url" => 'https://www.localhost.com',
+        "transaction_reference" => Str::uuid(),
+        "payment_processor_name" => Str::uuid(),
+        "transaction_currency" => 'USD',
+        "transaction_description" => Str::random(),
+        "original_amount_displayed_to_user" => 500,
+        "metadata" => [],
+    ]);
 }

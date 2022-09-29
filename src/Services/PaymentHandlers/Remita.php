@@ -13,6 +13,7 @@ use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 use Damms005\LaravelMultipay\Exceptions\WrongPaymentHandlerException;
 use Damms005\LaravelMultipay\Exceptions\NonActionableWebhookPaymentException;
+use Illuminate\Support\Collection;
 
 class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 {
@@ -26,10 +27,10 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         ];
     }
 
-    public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true)
+    public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true, ?Request $request = null)
     {
         try {
-            $rrr = $this->getRrrToInitiatePayment($payment);
+            $rrr = $this->getRrrToInitiatePayment($payment, $request);
 
             $payment->processor_transaction_reference = $rrr;
             $payment->save();
@@ -40,10 +41,10 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         }
     }
 
-    protected function getRrrToInitiatePayment(Payment $payment): string
+    protected function getRrrToInitiatePayment(Payment $payment, ?Request $request): string
     {
         $merchantId = config('laravel-multipay.remita_merchant_id');
-        $serviceTypeId = $this->getServiceTypeId($payment);
+        $serviceTypeId = $this->getServiceTypeId($payment, collect($request?->all()));
         $orderId = $payment->transaction_reference;
         $totalAmount = $payment->original_amount_displayed_to_user;
         $apiKey = config('laravel-multipay.remita_api_key');
@@ -283,12 +284,18 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         );
     }
 
-    protected function getServiceTypeId(Payment $payment)
+    public function getServiceTypeId(Payment $payment, Collection $requestPayload)
     {
+        // Prioritize user-defined service id in the request
+        if ($requestPayload->has('remita_service_id')) {
+            return $requestPayload->get('remita_service_id');
+        }
+
         $availableServiceTypes = config("laravel-multipay.remita_service_types");
+
         $serviceTypeConfigKey = $this->getRemitaServiceTypeConfigKey($payment->transaction_description);
 
-        throw_if(!is_array($availableServiceTypes), "Remita service types not well defined");
+        throw_if(!is_array($availableServiceTypes), "Remita service types not well defined. Reason: unsupported data type; array data type expected");
 
         throw_if(
             !array_key_exists($serviceTypeConfigKey, $availableServiceTypes),
