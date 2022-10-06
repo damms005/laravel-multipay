@@ -3,8 +3,10 @@
 namespace Damms005\LaravelMultipay\Services\PaymentHandlers;
 
 use Carbon\Carbon;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Http;
 use Damms005\LaravelMultipay\Models\Payment;
@@ -13,7 +15,6 @@ use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 use Damms005\LaravelMultipay\Exceptions\WrongPaymentHandlerException;
 use Damms005\LaravelMultipay\Exceptions\NonActionableWebhookPaymentException;
-use Illuminate\Support\Collection;
 
 class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 {
@@ -27,10 +28,10 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         ];
     }
 
-    public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true, ?Request $request = null)
+    public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true)
     {
         try {
-            $rrr = $this->getRrrToInitiatePayment($payment, $request);
+            $rrr = $this->getRrrToInitiatePayment($payment);
 
             $payment->processor_transaction_reference = $rrr;
             $payment->save();
@@ -41,10 +42,10 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         }
     }
 
-    protected function getRrrToInitiatePayment(Payment $payment, ?Request $request): string
+    protected function getRrrToInitiatePayment(Payment $payment): string
     {
         $merchantId = config('laravel-multipay.remita_merchant_id');
-        $serviceTypeId = $this->getServiceTypeId($payment, collect($request?->all()));
+        $serviceTypeId = $this->getServiceTypeId($payment);
         $orderId = $payment->transaction_reference;
         $totalAmount = $payment->original_amount_displayed_to_user;
         $apiKey = config('laravel-multipay.remita_api_key');
@@ -284,11 +285,11 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         );
     }
 
-    public function getServiceTypeId(Payment $payment, Collection $requestPayload)
+    public function getServiceTypeId(Payment $payment)
     {
         // Prioritize user-defined service id in the request
-        if ($requestPayload->has('remita_service_id')) {
-            return $requestPayload->get('remita_service_id');
+        if (Arr::has($payment->metadata, 'remita_service_id')) {
+            return Arr::get($payment->metadata, 'remita_service_id');
         }
 
         $availableServiceTypes = config("laravel-multipay.remita_service_types");

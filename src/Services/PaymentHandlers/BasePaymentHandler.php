@@ -101,7 +101,13 @@ abstract class BasePaymentHandler implements PaymentHandlerInterface
 
         $instructions = config('laravel-multipay.payment_confirmation_notice');
 
-        $exports = compact('instructions', 'currency', 'payment', 'post_payment_confirmation_submit', 'user_id');
+        $exports = [
+            'instructions' => $instructions,
+            'currency' => $currency,
+            'payment' => $payment,
+            'post_payment_confirmation_submit' => $post_payment_confirmation_submit,
+            'user_id' => $user_id
+        ];
 
         if (empty($preferredView)) {
             return view('laravel-multipay::generic-confirm_transaction', $exports);

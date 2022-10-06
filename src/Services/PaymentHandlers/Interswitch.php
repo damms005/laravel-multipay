@@ -57,7 +57,7 @@ class Interswitch extends BasePaymentHandler implements PaymentHandlerInterface
         );
     }
 
-    public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, bool $getFormForLiveApiNotTest = false, Request $request)
+    public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, bool $getFormForLiveApiNotTest = false)
     {
     }
 

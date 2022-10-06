@@ -19,17 +19,15 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
 
         if (empty($this->paystack_secret_key)) {
             // Paystack is currently the default payment handler (because
-            // it is the easiest to setup and get up-adn-running for starters/testing). Hence,
+            // it is the easiest to setup and get up-and-running for starters/testing). Hence,
             // let the error message be contextualized, so we have a better UX for testers/first-timers
             if ($this->isDefaultPaymentHandler()) {
                 throw new \Exception("You set Paystack as your default payment handler, but no Paystack Sk found. Please provide SK for Paystack.");
             }
-
-            throw new \Exception("Please provide SK for Paystack");
         }
     }
 
-    public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true, Request $request)
+    public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true)
     {
         $transaction_reference = $payment->transaction_reference;
         $this->sendUserToPaymentGateway($redirect_or_callback_url, $this->getPayment($transaction_reference));

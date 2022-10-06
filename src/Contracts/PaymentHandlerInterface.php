@@ -16,7 +16,7 @@ interface PaymentHandlerInterface
      * @param bool $getFormForLiveApiNotTest Payment providers must be able to generate forms for both live and test scenarios. We flip it here
      *
      */
-    public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, bool $getFormForLiveApiNotTest = false, Request $request);
+    public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, bool $getFormForLiveApiNotTest = false);
 
     /**
      * When payment provider sends transaction outcome to our callback url, we pass

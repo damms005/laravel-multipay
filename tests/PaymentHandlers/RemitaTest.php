@@ -114,9 +114,10 @@ it('can handle Remita payment webhook ingress', function () {
 });
 
 it('can read user-defined service type id in request', function () {
-    $payload = collect()->put('remita_service_id', 'some-cool-value');
+    $payment = createDummyPayment();
+    $payment->update(['metadata' => ['remita_service_id' => 'some-cool-value']]);
 
-    $parsedId =    (new Remita())->getServiceTypeId(createDummyPayment(), $payload);
+    $parsedId =    (new Remita())->getServiceTypeId($payment->refresh());
 
     expect($parsedId)->toBe('some-cool-value');
 });

@@ -14,7 +14,7 @@ class UnifiedPayments extends BasePaymentHandler implements PaymentHandlerInterf
     protected const UP_SECRET_KEY = '0EC25CF8EEFD0706CBE93A7067D7F734BB1FC635BA226F99';
     protected const UP_SERVER_URL = "https://test.payarena.com";
 
-    public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true, Request $request)
+    public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true)
     {
         $response = Http::withHeaders([
             'accept' => 'application/json',
