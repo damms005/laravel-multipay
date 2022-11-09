@@ -10,6 +10,7 @@ use Damms005\LaravelMultipay\Services\PaymentService;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Http\Requests\InitiatePaymentRequest;
 use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
+use Illuminate\Foundation\Auth\User;
 
 class PaymentController extends Controller
 {
@@ -62,19 +63,19 @@ class PaymentController extends Controller
         /** @var PaymentHandlerInterface */
         $handler = app()->make(PaymentHandlerInterface::class, [$payment]);
 
-        return $handler->renderAutoSubmittedPaymentForm($payment, route('payment.finished.callback_url'), true, $request);
+        return $handler->renderAutoSubmittedPaymentForm($payment, route('payment.finished.callback_url'), true);
     }
 
     /**
      *
      * @param int $amountInLowestDenomination e.g. To pay NGN 500, pass 50000 (which is kobo - the lowest denomination for NGN)
-     * @param int $user_id
+     * @param User $user
      * @param PaymentHandlerInterface $payment_processor
-     * @param [type] $transaction_description
+     * @param string $transaction_description
      *
      * @return \Illuminate\Contracts\View\View|\Illuminate\Contracts\View\Factory
      */
-    public static function makeAutoSubmittedFormRedirect(int $amountInLowestDenomination, $user, PaymentHandlerInterface $payment_processor, $transaction_description)
+    public static function makeAutoSubmittedFormRedirect(int $amountInLowestDenomination, User $user, PaymentHandlerInterface $payment_processor, string $transaction_description)
     {
         return view('laravel-multipay::auto-submit-form', [
             "amount" => $amountInLowestDenomination,

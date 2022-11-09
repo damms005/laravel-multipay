@@ -6,11 +6,11 @@ use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Http;
 use Damms005\LaravelMultipay\Models\Payment;
 use Damms005\LaravelMultipay\Actions\CreateNewPayment;
+use Damms005\LaravelMultipay\Exceptions\MissingUserException;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 use Damms005\LaravelMultipay\Exceptions\WrongPaymentHandlerException;
@@ -168,7 +168,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         $user = $this->getUserByEmail($rrrQueryResponse->email);
 
         if (is_null($user)) {
-            return false;
+            throw new MissingUserException($this, "Cannot get user by email. Email was {$rrrQueryResponse->email}");
         }
 
         $payment = $this->useResponseToUpdatePayment($payment, $rrrQueryResponse);
@@ -287,7 +287,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
     public function getServiceTypeId(Payment $payment)
     {
-        // Prioritize user-defined service id in the request
+        // Prioritize user-defined service id
         if (Arr::has($payment->metadata, 'remita_service_id')) {
             return Arr::get($payment->metadata, 'remita_service_id');
         }

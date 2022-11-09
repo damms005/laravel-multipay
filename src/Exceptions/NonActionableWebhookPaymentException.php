@@ -1,4 +1,5 @@
 <?php
+
 namespace Damms005\LaravelMultipay\Exceptions;
 
 use Exception;

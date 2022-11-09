@@ -4,6 +4,7 @@ namespace Damms005\LaravelMultipay\Contracts;
 
 use Illuminate\Http\Request;
 use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\Exceptions\MissingUserException;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 use Damms005\LaravelMultipay\Exceptions\NonActionableWebhookPaymentException;
 
@@ -45,6 +46,7 @@ interface PaymentHandlerInterface
     /**
      * @throws UnknownWebhookException
      * @throws NonActionableWebhookPaymentException
+     * @throws MissingUserException
      */
     public function handleExternalWebhookRequest(Request $paymentNotificationRequest): Payment;
 

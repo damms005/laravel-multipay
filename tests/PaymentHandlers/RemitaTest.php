@@ -117,7 +117,7 @@ it('can read user-defined service type id in request', function () {
     $payment = createDummyPayment();
     $payment->update(['metadata' => ['remita_service_id' => 'some-cool-value']]);
 
-    $parsedId =    (new Remita())->getServiceTypeId($payment->refresh());
+    $parsedId = (new Remita())->getServiceTypeId($payment->refresh());
 
     expect($parsedId)->toBe('some-cool-value');
 });

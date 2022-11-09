@@ -33,32 +33,18 @@ class Interswitch extends BasePaymentHandler implements PaymentHandlerInterface
         return $this;
     }
 
-    public function persistToDatabaseAndShowAutosubmittedPaymentForm($getFormForTesting = true): \Illuminate\View\View
-    {
-        Payment::firstOrCreate([
-            "user_id" => $this->user->id,
-            "payment_processor" => self::NAME,
-            "amount" => $this->amount_in_naira,
-            "transaction_reference" => $this->txn_ref,
-        ]);
-
-        return view(
-            'laravel-multipay::interswitch-form',
-            [
-                "hash" => $this->generateHashToSendInPaymentRequest(),
-                "user" => $this->user,
-                "amount" => $this->amount_in_naira * 100, //required amount to be posted in kobo
-                "amount_in_naira" => $this->amount_in_naira,
-                "txn_ref" => $this->txn_ref,
-                "product_id" => self::PRODUCT_ID,
-                "pay_item_id" => self::PAY_ITEM_ID,
-                "site_redirect_url" => $this->site_redirect_url,
-            ]
-        );
-    }
-
     public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, bool $getFormForLiveApiNotTest = false)
     {
+        return view('laravel-multipay::payment-handler-specific.interswitch-form', [
+            "hash" => $this->generateHashToSendInPaymentRequest(),
+            "user" => $this->user,
+            "amount" => $this->amount_in_naira * 100, //required amount to be posted in kobo
+            "amount_in_naira" => $this->amount_in_naira,
+            "txn_ref" => $this->txn_ref,
+            "product_id" => self::PRODUCT_ID,
+            "pay_item_id" => self::PAY_ITEM_ID,
+            "site_redirect_url" => $this->site_redirect_url,
+        ]);
     }
 
     public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $paymentGatewayServerResponse): ?Payment
@@ -79,7 +65,7 @@ class Interswitch extends BasePaymentHandler implements PaymentHandlerInterface
         if (json_last_error() === JSON_ERROR_NONE) {
             Log::debug($transaction_status_string);
             $payment = Payment::where('transaction_reference', $this->txn_ref)->firstOrFail();
-            $payment->is_success = $transactionStatus->ResponseCode == '00' ? 1 : 0;
+            $payment->is_success = $transactionStatus->ResponseCode == '00' ? true : false;
             $payment->processor_returned_amount = $transactionStatus->Amount;
             $payment->processor_returned_card_number = $transactionStatus->CardNumber ?? null;
             $payment->processor_transaction_reference = $transactionStatus->PaymentReference ?? null;
@@ -88,7 +74,7 @@ class Interswitch extends BasePaymentHandler implements PaymentHandlerInterface
             $payment->processor_returned_response_description = $transactionStatus->ResponseDescription ?? null;
 
             $human_readable = $this->getHumanReadableTransactionResponse($payment);
-            if (! empty($human_readable)) {
+            if (!empty($human_readable)) {
                 if (empty($payment->processor_returned_response_description) || (trim($human_readable, ". \t\n\r\0\x0B") != trim($payment->processor_returned_response_description, ". \t\n\r\0\x0B"))) {
                     $payment->processor_returned_response_description = $transactionStatus->ResponseDescription;
                 }

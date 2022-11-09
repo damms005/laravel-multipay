@@ -42,8 +42,6 @@ abstract class BasePaymentHandler implements PaymentHandlerInterface
         if ($this->isUnregisteredPaymentHandler()) {
             throw new \Exception("Unregistered payment handler: {$this->getUniquePaymentHandlerName()}", 1);
         }
-
-        $this->paymentHandlerInterface = $this;
     }
 
     protected function isUnregisteredPaymentHandler()
@@ -247,13 +245,13 @@ abstract class BasePaymentHandler implements PaymentHandlerInterface
     }
 
     /**
-     * @return Payment|string Return the Payment or error string
+     * @return ?Payment
      */
-    protected function processWebhook(Request $request): Payment|string
+    protected function processWebhook(Request $request): ?Payment
     {
-        /** @var Payment */
+        /** @var ?Payment */
         $payment = collect(self::getNamesOfPaymentHandlers())
-            ->firstOrFail(function (string $paymentHandlerName) use ($request) {
+            ->map(function (string $paymentHandlerName) use ($request) {
                 $paymentHandler = (new PaymentService())->getPaymentHandlerByName($paymentHandlerName);
 
                 try {
@@ -266,7 +264,9 @@ abstract class BasePaymentHandler implements PaymentHandlerInterface
                     return $payment;
                 } catch (UnknownWebhookException $exception) {
                 }
-            });
+            })
+            ->filter()
+            ->first();
 
         return $payment;
     }

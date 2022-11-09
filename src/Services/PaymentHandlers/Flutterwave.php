@@ -12,7 +12,7 @@ use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 
 class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
 {
-    public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true, Request $request)
+    public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true)
     {
         $transaction_reference = $payment->transaction_reference;
         $this->sendUserToPaymentGateway($redirect_or_callback_url, $this->getPayment($transaction_reference));
@@ -43,7 +43,7 @@ class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
             'customer' => [
                 'email' => $payment->user->email,
                 "phone_number" => null,
-                "name" => $payment->user->fullname,
+                "name" => $payment->user->name,
             ],
 
             "customizations" => [
@@ -87,14 +87,14 @@ class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
         $transactionId = $paymentGatewayServerResponse->get('transaction_id');
         $flutterwavePaymentDetails = FlutterwaveRave::verifyTransaction($transactionId);
 
-        if (!$this->isValidTransaction($flutterwavePaymentDetails, $payment)) {
+        if (!$this->isValidTransaction((array)$flutterwavePaymentDetails, $payment)) {
             $payment->processor_returned_response_description = "Invalid transaction";
             $payment->save();
 
             return $payment;
         }
 
-        $payment = $this->giveValue($flutterwaveReference, $flutterwavePaymentDetails);
+        $payment = $this->giveValue($flutterwaveReference, (array)$flutterwavePaymentDetails);
 
         return $payment;
     }

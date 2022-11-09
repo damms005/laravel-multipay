@@ -51,10 +51,6 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
 
     /**
      * For Paystack, this is a get request. (https://developers.paystack.co/docs/paystack-standard#section-4-verify-transaction)
-     *
-     * @param Request $paymentGatewayServerResponse
-     *
-     * @return Payment
      */
     public function processValueForTransaction(string $transactionReferenceIdNumber): ?Payment
     {
@@ -89,7 +85,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
 
     public function reQuery(Payment $existingPayment): ?Payment
     {
-        throw new \Exception("Method not yet implemented");
+        throw new \Exception("No requery implementation for Paystack");
     }
 
     /**
@@ -122,6 +118,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
         // the code below throws an exception if there was a problem completing the request,
         // else returns an object created from the json response
         // (full sample verify response is here: https://developers.paystack.co/docs/verifying-transactions)
+
         return $paystack->transaction->verify(['reference' => $paystackReference]);
     }
 
