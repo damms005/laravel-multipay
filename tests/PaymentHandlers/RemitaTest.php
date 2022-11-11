@@ -1,13 +1,12 @@
 <?php
 
-use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Mockery\Mock;
 use Illuminate\Http\Request;
+use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Config;
 use Damms005\LaravelMultipay\Models\Payment;
 use Damms005\LaravelMultipay\Services\PaymentHandlers\Remita;
-use Illuminate\Contracts\View\View;
 
 use function PHPUnit\Framework\assertStringContainsString;
 use function PHPUnit\Framework\assertTrue;

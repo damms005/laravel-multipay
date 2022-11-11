@@ -14,13 +14,13 @@ use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 
 class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
 {
-    protected $paystack_secret_key;
+    protected $secret_key;
 
     public function __construct()
     {
-        $this->paystack_secret_key = config("laravel-multipay.paystack_secret_key");
+        $this->secret_key = config("laravel-multipay.paystack_secret_key");
 
-        if (empty($this->paystack_secret_key)) {
+        if (empty($this->secret_key)) {
             // Paystack is currently the default payment handler (because
             // it is the easiest to setup and get up-and-running for starters/testing). Hence,
             // let the error message be contextualized, so we have a better UX for testers/first-timers
@@ -114,8 +114,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
     {
         // Confirm that reference has not already gotten value
         // This would have happened most times if you handle the charge.success event.
-
-        $paystack = new PaystackHelper($this->paystack_secret_key);
+        $paystack = app()->make(PaystackHelper::class, ['secret_key' => $this->secret_key]);
 
         // the code below throws an exception if there was a problem completing the request,
         // else returns an object created from the json response
@@ -131,7 +130,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
 
     protected function sendUserToPaymentGateway(string $redirect_or_callback_url, Payment $payment)
     {
-        $paystack = new PaystackHelper($this->paystack_secret_key);
+        $paystack = app()->make(PaystackHelper::class, ['secret_key' => $this->secret_key]);
 
         // the code below throws an exception if there was a problem completing the request,
         // else returns an object created from the json response
@@ -153,7 +152,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
 
         $payment->update([
             'processor_transaction_reference' => $trx->data->reference,
-            'metadata' => array_merge(($payment->metadata ?? []), [
+            'metadata' => array_merge(((array)$payment->metadata ?? []), [
                 'paystack_authorization_url' => $trx->data->authorization_url
             ]),
         ]);
@@ -182,7 +181,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
 
     public function resumeUnsettledPayment(Payment $payment): View|ViewFactory|RedirectResponse
     {
-        if (!array_key_exists('paystack_authorization_url', $payment->metadata)) {
+        if (!array_key_exists('paystack_authorization_url', (array)$payment->metadata)) {
             throw new \Exception("Attempt was made to resume a Paystack payment that does not have payment URL. Payment id is {$payment->id}");
         }
 
