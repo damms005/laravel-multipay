@@ -4,11 +4,8 @@ namespace Damms005\LaravelMultipay\Services\PaymentHandlers;
 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Contracts\View\View;
-use Illuminate\Http\RedirectResponse;
 use Yabacon\Paystack as PaystackHelper;
 use Damms005\LaravelMultipay\Models\Payment;
-use Illuminate\Contracts\View\Factory as ViewFactory;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 
@@ -30,7 +27,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
         }
     }
 
-    public function proceedToPaymentGateway(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true): View|ViewFactory|RedirectResponse
+    public function proceedToPaymentGateway(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true): mixed
     {
         $transaction_reference = $payment->transaction_reference;
 
@@ -150,9 +147,11 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
         $payment = Payment::where('transaction_reference', $payment->transaction_reference)
             ->firstOrFail();
 
+        $metadata = is_null($payment->metadata) ? [] : (array)$payment->metadata;
+
         $payment->update([
             'processor_transaction_reference' => $trx->data->reference,
-            'metadata' => array_merge(((array)$payment->metadata ?? []), [
+            'metadata' => array_merge($metadata, [
                 'paystack_authorization_url' => $trx->data->authorization_url
             ]),
         ]);
@@ -179,7 +178,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
         return is_null($payment->is_success);
     }
 
-    public function resumeUnsettledPayment(Payment $payment): View|ViewFactory|RedirectResponse
+    public function resumeUnsettledPayment(Payment $payment): mixed
     {
         if (!array_key_exists('paystack_authorization_url', (array)$payment->metadata)) {
             throw new \Exception("Attempt was made to resume a Paystack payment that does not have payment URL. Payment id is {$payment->id}");

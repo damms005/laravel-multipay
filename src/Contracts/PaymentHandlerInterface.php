@@ -3,13 +3,10 @@
 namespace Damms005\LaravelMultipay\Contracts;
 
 use Illuminate\Http\Request;
-use Illuminate\Contracts\View\View;
-use Illuminate\Contracts\View\Factory as ViewFactory;
 use Damms005\LaravelMultipay\Models\Payment;
 use Damms005\LaravelMultipay\Exceptions\MissingUserException;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 use Damms005\LaravelMultipay\Exceptions\NonActionableWebhookPaymentException;
-use Illuminate\Http\RedirectResponse;
 
 interface PaymentHandlerInterface
 {
@@ -20,7 +17,7 @@ interface PaymentHandlerInterface
      * @param bool $getFormForLiveApiNotTest Payment providers must be able to generate forms for both live and test scenarios. We flip it here
      *
      */
-    public function proceedToPaymentGateway(Payment $payment, $redirect_or_callback_url, bool $getFormForLiveApiNotTest = false): View|ViewFactory|RedirectResponse;
+    public function proceedToPaymentGateway(Payment $payment, $redirect_or_callback_url, bool $getFormForLiveApiNotTest = false): mixed;
 
     /**
      * When payment provider sends transaction outcome to our callback url, we pass
@@ -56,8 +53,16 @@ interface PaymentHandlerInterface
     /**
      * If a payment was initiated but not completed, we can
      * resume such payment session (for supported payment handlers)
+     *
+     * Ideally, we should only return one of:
+     * Illuminate\Contracts\View\View | Illuminate\Contracts\View\Factory | Illuminate\Http\RedirectResponse
+     *
+     * However, we are returning 'mixed' to provide support for some packages
+     * that fiddle with default Laravel APIs (.e.g. Livewire replaces the
+     * default redirector from the container. See:
+     * https://github.com/livewire/livewire/blob/72ffd3833c96709121083ee1368c9ed62fdf9935/src/Features/SupportRedirects.php#L17)
      */
-    public function resumeUnsettledPayment(Payment $payment): View|ViewFactory|RedirectResponse;
+    public function resumeUnsettledPayment(Payment $payment): mixed;
 
     /**
      * @throws UnknownWebhookException

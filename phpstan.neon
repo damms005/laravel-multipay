@@ -12,7 +12,6 @@ parameters:
     ignoreErrors:
         -
             messages:
-                - '#^Access to an undefined property Yabacon\\Paystack\:\:\$transaction\.$#'
                 - '#^Access to an undefined property Illuminate\\Foundation\\Auth\\User\:\:\$email\.$#'
             path: src/Services/PaymentHandlers/Paystack.php
         -

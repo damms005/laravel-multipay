@@ -30,7 +30,7 @@ use Illuminate\Support\Str;
  * @property boolean|null $is_success
  * @property integer $retries_count
  * @property string $completion_url
- * @property array $metadata
+ * @property ?array $metadata
 
  * @property User $user
  *

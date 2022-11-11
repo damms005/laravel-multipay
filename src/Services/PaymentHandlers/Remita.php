@@ -6,12 +6,9 @@ use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Http\RedirectResponse;
 use Damms005\LaravelMultipay\Models\Payment;
-use Illuminate\Contracts\View\Factory as ViewFactory;
 use Damms005\LaravelMultipay\Actions\CreateNewPayment;
 use Damms005\LaravelMultipay\Exceptions\MissingUserException;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
@@ -45,7 +42,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         ];
     }
 
-    public function proceedToPaymentGateway(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true): View|ViewFactory|RedirectResponse
+    public function proceedToPaymentGateway(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true): mixed
     {
         try {
             $rrr = $this->getRrrToInitiatePayment($payment);
@@ -345,7 +342,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         return false;
     }
 
-    public function resumeUnsettledPayment(Payment $payment): View|ViewFactory|RedirectResponse
+    public function resumeUnsettledPayment(Payment $payment): mixed
     {
         if (!$payment->processor_transaction_reference) {
             throw new \Exception("Attempt was made to resume a payment that does not have RRR. Payment id is {$payment->id}");

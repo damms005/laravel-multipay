@@ -4,11 +4,8 @@ namespace Damms005\LaravelMultipay\Services\PaymentHandlers;
 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Http\RedirectResponse;
 use Damms005\LaravelMultipay\Models\Payment;
-use Illuminate\Contracts\View\Factory as ViewFactory;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 
@@ -17,7 +14,7 @@ class UnifiedPayments extends BasePaymentHandler implements PaymentHandlerInterf
     protected const UP_SECRET_KEY = '0EC25CF8EEFD0706CBE93A7067D7F734BB1FC635BA226F99';
     protected const UP_SERVER_URL = "https://test.payarena.com";
 
-    public function proceedToPaymentGateway(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true): View|ViewFactory|RedirectResponse
+    public function proceedToPaymentGateway(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true): mixed
     {
         $response = Http::withHeaders([
             'accept' => 'application/json',
