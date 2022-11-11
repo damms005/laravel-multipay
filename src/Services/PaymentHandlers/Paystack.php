@@ -74,7 +74,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
                 return null;
             }
 
-            $this->give_value($transactionReferenceIdNumber, $trx);
+            $this->giveValue($transactionReferenceIdNumber, $trx);
 
             $payment->refresh();
         } else {
@@ -114,8 +114,6 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
     {
         // Confirm that reference has not already gotten value
         // This would have happened most times if you handle the charge.success event.
-        // If it has already gotten value by your records, you may call
-        // perform_success()
 
         $paystack = new PaystackHelper($this->paystack_secret_key);
 
@@ -150,16 +148,22 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
             exit($trx->message);
         }
 
-        Payment::where('transaction_reference', $payment->transaction_reference)
-            ->firstOrFail()
-            ->update(['processor_transaction_reference' => $trx->data->reference]);
+        $payment = Payment::where('transaction_reference', $payment->transaction_reference)
+            ->firstOrFail();
+
+        $payment->update([
+            'processor_transaction_reference' => $trx->data->reference,
+            'metadata' => array_merge(($payment->metadata ?? []), [
+                'paystack_authorization_url' => $trx->data->authorization_url
+            ]),
+        ]);
 
         // full sample initialize response is here: https://developers.paystack.co/docs/initialize-a-transaction
         // Get the user to click link to start payment or simply redirect to the url generated
         return redirect()->away($trx->data->authorization_url);
     }
 
-    protected function give_value($paystackReference, $paystackResponse)
+    protected function giveValue($paystackReference, $paystackResponse)
     {
         Payment::where('processor_transaction_reference', $paystackReference)
             ->firstOrFail()
@@ -171,8 +175,17 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
             ]);
     }
 
-    protected function perform_success($paystackReference)
+    public function paymentIsUnsettled(Payment $payment): bool
     {
-        return true;
+        return is_null($payment->is_success);
+    }
+
+    public function resumeUnsettledPayment(Payment $payment): View|ViewFactory|RedirectResponse
+    {
+        if (!array_key_exists('paystack_authorization_url', $payment->metadata)) {
+            throw new \Exception("Attempt was made to resume a Paystack payment that does not have payment URL. Payment id is {$payment->id}");
+        }
+
+        return redirect()->away($payment->metadata['paystack_authorization_url']);
     }
 }
