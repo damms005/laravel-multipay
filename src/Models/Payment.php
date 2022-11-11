@@ -23,7 +23,7 @@ use Illuminate\Support\Str;
  * @property string $processor_transaction_reference
  * @property string $processor_returned_response_code
  * @property string $processor_returned_card_number
- * @property string $processor_returned_response_description
+ * @property ?string $processor_returned_response_description
  * @property string $processor_returned_amount
  * @property string $processor_returned_transaction_date
  * @property string $customer_checkout_ip_address

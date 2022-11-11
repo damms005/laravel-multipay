@@ -1,5 +1,6 @@
 <?php
 
+use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Mockery\Mock;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\User;
@@ -12,7 +13,10 @@ use function PHPUnit\Framework\assertStringContainsString;
 use function PHPUnit\Framework\assertTrue;
 
 beforeEach(function () {
-    $this->payment = createDummyPayment();
+    $this->payment = createPayment();
+    $this->payment->update(['payment_processor_name' => 'Remita']);
+
+    $this->payment->refresh();
 });
 
 it('renders auto-submitted payment form', function () {
@@ -29,7 +33,7 @@ it('renders auto-submitted payment form', function () {
         },
     );
 
-    $autoForm = $mock->renderAutoSubmittedPaymentForm($this->payment, 'foo');
+    $autoForm = $mock->proceedToPaymentGateway($this->payment, 'foo');
 
     assertTrue(is_subclass_of($autoForm, View::class));
     assertStringContainsString('Loading...', $autoForm->render());
@@ -114,10 +118,24 @@ it('can handle Remita payment webhook ingress', function () {
 });
 
 it('can read user-defined service type id in request', function () {
-    $payment = createDummyPayment();
-    $payment->update(['metadata' => ['remita_service_id' => 'some-cool-value']]);
+    $this->payment->update(['metadata' => ['remita_service_id' => 'some-cool-value']]);
 
-    $parsedId = (new Remita())->getServiceTypeId($payment->refresh());
+    $parsedId = (new Remita())->getServiceTypeId($this->payment->refresh());
 
     expect($parsedId)->toBe('some-cool-value');
 });
+
+it('detects double payment', function ($status) {
+    $this->payment->update(['processor_returned_response_description' => json_encode(['status' => $status])]);
+    $this->payment->refresh();
+
+    if ($status == '00') {
+        expect((new Remita())->paymentIsUnsettled($this->payment))->toBeFalse();
+    } else {
+        expect((new Remita())->paymentIsUnsettled($this->payment))->toBeTrue();
+    }
+})
+    ->with(array_merge((new Remita())->responseCodesIndicatingUnFulfilledTransactionState, [
+        '998', // Internal Remita error
+        '00'
+    ]));

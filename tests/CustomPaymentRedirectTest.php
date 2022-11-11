@@ -19,9 +19,9 @@ it('can navigate to custom url upon successful completion', function () {
 
     app()->bind(PaymentHandlerInterface::class, function ($app) {
         return new class () {
-            public function renderAutoSubmittedPaymentForm($args)
+            public function proceedToPaymentGateway($args)
             {
-                return 'to payment gateway we go!';
+                return redirect()->away('nowhere');
             }
         };
     });
@@ -81,8 +81,8 @@ test('when no custom successful completion page, display usual response', functi
         $mock->makePartial();
 
         $mock->expect(
-            renderAutoSubmittedPaymentForm: function ($args) {
-                return 'to payment gateway we go!';
+            proceedToPaymentGateway: function ($args) {
+                return redirect()->away('nowhere');
             },
         );
 

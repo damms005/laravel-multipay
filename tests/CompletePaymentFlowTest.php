@@ -12,10 +12,10 @@ it('can confirm payment and send user to payment gateway', function () {
     $sampleInitialPayment = getSampleInitialPaymentRequest();
 
     $this->post(route('payment.show_transaction_details_for_user_confirmation'), $sampleInitialPayment)
-    ->assertSee([$sampleInitialPayment['currency']])
-    ->assertSee([$sampleInitialPayment['amount']])
-    ->assertSee([$sampleInitialPayment['transaction_description']])
-    ->assertStatus(200);
+        ->assertSee([$sampleInitialPayment['currency']])
+        ->assertSee([$sampleInitialPayment['amount']])
+        ->assertSee([$sampleInitialPayment['transaction_description']])
+        ->assertStatus(200);
 
     $payments = Payment::all();
 
@@ -29,8 +29,8 @@ it('can confirm payment and send user to payment gateway', function () {
         $mock->makePartial();
 
         $mock->expect(
-            renderAutoSubmittedPaymentForm: function ($args) {
-                return 'to payment gateway we go!';
+            proceedToPaymentGateway: function ($args) {
+                return redirect()->away('nowhere');
             },
         );
 
@@ -42,8 +42,7 @@ it('can confirm payment and send user to payment gateway', function () {
         ->toArray();
 
     $this->post(route('payment.confirmation.submit'), $payload)
-        ->assertStatus(200)
-        ->assertSee('to payment gateway we go!');
+        ->assertRedirect();
 
     $payment = $payments->first();
     $payment->processor_transaction_reference = 12345;

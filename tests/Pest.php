@@ -43,7 +43,7 @@ function getSampleInitialPaymentRequest()
 }
 
 
-function createDummyPayment(): Payment
+function createPayment(): Payment
 {
     return Payment::create([
         "user_id" => 1,

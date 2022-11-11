@@ -63,7 +63,7 @@ class PaymentController extends Controller
         /** @var PaymentHandlerInterface */
         $handler = app()->make(PaymentHandlerInterface::class, [$payment]);
 
-        return $handler->renderAutoSubmittedPaymentForm($payment, route('payment.finished.callback_url'), true);
+        return $handler->proceedToPaymentGateway($payment, route('payment.finished.callback_url'), true);
     }
 
     /**

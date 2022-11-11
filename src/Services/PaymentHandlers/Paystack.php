@@ -4,8 +4,11 @@ namespace Damms005\LaravelMultipay\Services\PaymentHandlers;
 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Yabacon\Paystack as PaystackHelper;
 use Damms005\LaravelMultipay\Models\Payment;
+use Illuminate\Contracts\View\Factory as ViewFactory;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 
@@ -27,10 +30,11 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
         }
     }
 
-    public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true)
+    public function proceedToPaymentGateway(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true): View|ViewFactory|RedirectResponse
     {
         $transaction_reference = $payment->transaction_reference;
-        $this->sendUserToPaymentGateway($redirect_or_callback_url, $this->getPayment($transaction_reference));
+
+        return $this->sendUserToPaymentGateway($redirect_or_callback_url, $this->getPayment($transaction_reference));
     }
 
     /**
@@ -152,8 +156,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
 
         // full sample initialize response is here: https://developers.paystack.co/docs/initialize-a-transaction
         // Get the user to click link to start payment or simply redirect to the url generated
-        header('Location: ' . $trx->data->authorization_url);
-        exit;
+        return redirect()->away($trx->data->authorization_url);
     }
 
     protected function give_value($paystackReference, $paystackResponse)

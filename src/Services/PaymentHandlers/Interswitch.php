@@ -4,8 +4,9 @@ namespace Damms005\LaravelMultipay\Services\PaymentHandlers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Contracts\View\View;
 use Damms005\LaravelMultipay\Models\Payment;
-
+use Illuminate\Contracts\View\Factory as ViewFactory;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 
@@ -33,7 +34,7 @@ class Interswitch extends BasePaymentHandler implements PaymentHandlerInterface
         return $this;
     }
 
-    public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, bool $getFormForLiveApiNotTest = false)
+    public function proceedToPaymentGateway(Payment $payment, $redirect_or_callback_url, bool $getFormForLiveApiNotTest = false): View|ViewFactory
     {
         return view('laravel-multipay::payment-handler-specific.interswitch-form', [
             "hash" => $this->generateHashToSendInPaymentRequest(),

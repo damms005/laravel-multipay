@@ -4,8 +4,11 @@ namespace Damms005\LaravelMultipay\Services\PaymentHandlers;
 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Http\RedirectResponse;
 use Damms005\LaravelMultipay\Models\Payment;
+use Illuminate\Contracts\View\Factory as ViewFactory;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 
@@ -14,7 +17,7 @@ class UnifiedPayments extends BasePaymentHandler implements PaymentHandlerInterf
     protected const UP_SECRET_KEY = '0EC25CF8EEFD0706CBE93A7067D7F734BB1FC635BA226F99';
     protected const UP_SERVER_URL = "https://test.payarena.com";
 
-    public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true)
+    public function proceedToPaymentGateway(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true): View|ViewFactory|RedirectResponse
     {
         $response = Http::withHeaders([
             'accept' => 'application/json',
@@ -28,7 +31,7 @@ class UnifiedPayments extends BasePaymentHandler implements PaymentHandlerInterf
                 "fee" => 0,
             ]);
 
-        if (! $response->successful()) {
+        if (!$response->successful()) {
             return redirect()
                 ->back()
                 ->withErrors("Unified Payments could not process your transaction at the moment. Please try again later. " . $response->body())->withInput();
@@ -50,7 +53,7 @@ class UnifiedPayments extends BasePaymentHandler implements PaymentHandlerInterf
      */
     public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $paymentGatewayServerResponse): ?Payment
     {
-        if (! $paymentGatewayServerResponse->has('trxId')) {
+        if (!$paymentGatewayServerResponse->has('trxId')) {
             return null;
         }
 
@@ -66,7 +69,7 @@ class UnifiedPayments extends BasePaymentHandler implements PaymentHandlerInterf
 
         $response = Http::get(self::UP_SERVER_URL . "/Status/{$payment->processor_transaction_reference}");
 
-        throw_if(! $response->successful(), "Could not validate Unified Payment transaction");
+        throw_if(!$response->successful(), "Could not validate Unified Payment transaction");
 
         $responseBody = json_decode($response->body());
 
@@ -115,7 +118,6 @@ class UnifiedPayments extends BasePaymentHandler implements PaymentHandlerInterf
 
     protected function sendUserToPaymentGateway($unified_payment_redirect_url)
     {
-        header('Location: ' . $unified_payment_redirect_url);
-        exit;
+        return redirect()->away($unified_payment_redirect_url);
     }
 }

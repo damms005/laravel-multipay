@@ -34,10 +34,10 @@ _key_:
 
 > Your preferred payment handler is not yet supported? Please consider [opening the appropriate issue type](https://github.com/damms005/laravel-multipay/issues/new?assignees=&labels=&template=addition-of-new-payment-handler.md&title=Addition+of+new+payment+handler+-+%5Bpayment+handler+name+here%5D).
 
-> Adding a new payment handler is straight-forward. Simply add the new payment class to the `Damms005\LaravelMultipay\Services\PaymentHandlers` namespace and implement `Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface`
+> Adding a new payment handler is straight-forward. Simply add a class that extends `Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler`  and implement `Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface`
 
 > **Note** <br />
-> Payment providers that you so register as described above are resolved from the [Laravel Container](https://laravel.com/docs/9.x/container) to reduce the improve the flexibility of this package.
+> Payment providers that you so register as described above are resolved from the [Laravel Container](https://laravel.com/docs/9.x/container) to improve the flexibility of this package and improve DX.
 
 ## Installation
 
@@ -64,15 +64,15 @@ php artisan migrate
 ## Usage
 
 ### Demo Repo
-I published an open source app that uses this payment package. It is also an excellent example of a Laravel app that uses [Laravel Vite](https://laravel.com/docs/9.x/vite#main-content) and leverages on [Laravel Echo](https://laravel.com/docs/9.x/broadcasting#client-side-installation) to provide realtime experience via public and private channels using [Laravel Websocket](https://beyondco.de/docs/laravel-websockets), powered by [Livewire](https://laravel-livewire.com/docs). The is called [NFT Marketplace. Click here to check it out ✌🏼](https://github.com/damms005/nft-marketplace-l9)
+I published an open source app that uses this payment package. It is also an excellent example of a Laravel app that uses [Laravel Vite](https://laravel.com/docs/9.x/vite#main-content) and leverages on [Laravel Echo](https://laravel.com/docs/9.x/broadcasting#client-side-installation) to provide realtime experience via public and private channels using [Laravel Websocket](https://beyondco.de/docs/laravel-websockets), powered by [Livewire](https://laravel-livewire.com/docs). The app is called [NFT Marketplace. Click here to check it out ✌🏼](https://github.com/damms005/nft-marketplace-l9)
 
 ### Test drive 🚀
 
-Want to take things for a spin? simply visit `/payment/test-drive` (`route('payment.test-drive')`) .
+Want to take things for a spin? Visit `/payment/test-drive` (`route('payment.test-drive')`) .
 For [Paystack](https://paystack.com), ensure to set `paystack_secret_key` key in the `laravel-multipay.php` config file that you published previously at installation. You can get your key from your [settings page](https://dashboard.paystack.co/#/settings/developer).
 
 > **Warning** <br />
-> Ensure you have [TailwindCSS installed](https://tailwindcss.com/docs/installation), then add this package's view to part of the files whose Tailwind style classes will be compiled. Add this to the `content` of your `tailwind.config.js` configuration file, like below:
+> Ensure you have [TailwindCSS installed](https://tailwindcss.com/docs/installation), then add this package's views to the `content` key of your `tailwind.config.js` configuration file, like below:
 ```
     content: [
         ...,
@@ -91,7 +91,7 @@ FLW_SECRET_KEY=FLWSECK-xxxxxxxxxxxxxxxxxxxxx-X
 FLW_SECRET_HASH='My_lovelysite123'
 ```
 
--   Paystack: Paystack requires a secret key to interact. Go to [the Paystack dashboard](https://dashboard.paystack.co/#/settings/developer) to obtain one, and use it to set the following environmental variable:
+-   Paystack: Paystack requires a secret key. Go to [the Paystack dashboard](https://dashboard.paystack.co/#/settings/developer) to obtain one, and use it to set the following environmental variable:
 
 ```
 PAYSTACK_SECRET_KEY=FLWPUBK-xxxxxxxxxxxxxxxxxxxxx-X
@@ -104,7 +104,7 @@ REMITA_MERCHANT_ID=xxxxxxxxxxxxxxxxxxxxx-X
 REMITA_API_KEY=xxxxxxxxxxxxxxxxxxxxx-X
 ```
 
-> For most of the above environmental variables, you should rather use the (pubished) config file to set the corresponding values.
+> For most of the above environmental variables, you should rather use the (published) config file to set the corresponding values.
 
 ### Typical process-flow
 
@@ -114,9 +114,9 @@ Send a `POST` request to `/payment/details/confirm` (`route('payment.show_transa
 
 Check the [InitiatePaymentRequest](src/Http/Requests/InitiatePaymentRequest.php#L28) form request to know the values you are to post to this endpoint. (tip: you can also check [test-drive/pay.blade.php](views/test-drive/pay.blade.php)).
 
-This `POST` request will typically simply be made by submitting via a `<form>` action.
+This `POST` request will typically simply be made by submitting a form from your frontend.
 
-> Tip: if you to store additional/contextual data with this payment, you can include such data in the request, in a field named `metadata`. The value must be a valid JSON string.
+> Tip: if you need to store additional/contextual data with this payment, you can include such data in the request, in a field named `metadata`. The value must be a valid JSON string.
 
 #### Step 2
 
@@ -131,7 +131,7 @@ back to `/payment/completed` (`route('payment.finished.callback_url')`) .
 
 > If there are additional steps you want to take upon successful payment, listen for `SuccessfulLaravelMultipayPaymentEvent`. It will be fired whenever a successful payment occurs, with its corresponding `Payment` model.
 
-> If the payment has [`metadata`](#step-1) (supplied with the payment initiation request), with a key named `completion_url`. You can specify its the value to be the URL of a page to redirect user upon successful payment
+> If the `Payment` has [`metadata`](#step-1) (supplied with the payment initiation request), with a key named `completion_url`, the user will be redirected to that URL upon successful payment.
 
 ## Payment Conflict Resolution (PCR)
 
@@ -146,7 +146,7 @@ $outcome = LaravelMultipay::reQueryUnsuccessfulPayment( $payment )
 
 The payment will be re-resolved and the payment will be updated in the database. If the payment is successful, the `SuccessfulLaravelMultipayPaymentEvent` event will be fired, availing you the opportunity to run any domain/application-specific procedures.
 
-## Payment Notifications
+## Payment Notifications (WebHooks)
 Some payment handlers provide a means for sending details of successful notifications. Usually, you will need to provide the payment handler with a URL to which the details of such notification will be sent. Should you need this feature, the notification URL is `/payment/completed/notify`.
 
 > If you use this payment notification URL feature, ensure that in your handler for `SuccessfulLaravelMultipayPaymentEvent`, check that you have not previously handled the event for that same payment.
@@ -167,7 +167,3 @@ This package is made possible by the nice works done by the following awesome pr
 ## License
 
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
-
-## Roadmap
-
--   [ ] Use Tailwindcss to apply minimal styling

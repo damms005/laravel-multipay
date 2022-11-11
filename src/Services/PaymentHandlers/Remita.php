@@ -6,9 +6,12 @@ use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Http\RedirectResponse;
 use Damms005\LaravelMultipay\Models\Payment;
+use Illuminate\Contracts\View\Factory as ViewFactory;
 use Damms005\LaravelMultipay\Actions\CreateNewPayment;
 use Damms005\LaravelMultipay\Exceptions\MissingUserException;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
@@ -18,6 +21,20 @@ use Damms005\LaravelMultipay\Exceptions\NonActionableWebhookPaymentException;
 
 class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 {
+    public $responseCodesIndicatingUnFulfilledTransactionState = [
+        '021', // Transaction Pending
+        '025', // Payment Reference generated
+        '040', // Initial Request OK
+        '041', // Transaction Forwarded for Processing
+        '045', // Awaiting Payment Confirmation
+        '058', // Pending Authorization
+        '069', // New Transaction
+        '070', // Awaiting Debit
+        '071', // Undergoing Bank Processing
+        '072', // Pending Credit
+        '25', // Error Processing Request
+    ];
+
     protected function getHttpRequestHeaders(string $merchantId, string $hash): array
     {
         $auth = "remitaConsumerKey={$merchantId},remitaConsumerToken={$hash}";
@@ -28,7 +45,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         ];
     }
 
-    public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true)
+    public function proceedToPaymentGateway(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true): View|ViewFactory|RedirectResponse
     {
         try {
             $rrr = $this->getRrrToInitiatePayment($payment);
@@ -38,7 +55,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
             return $this->sendUserToPaymentGateway($rrr);
         } catch (\Throwable $th) {
-            return response($th->getMessage());
+            return redirect()->back()->withErrors($th->getMessage());
         }
     }
 
@@ -211,12 +228,12 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
         $payment->is_success = $rrrQueryResponse->status == "00";
 
-        // To re-query Remita transactions, users usually depend on the nullity 'is_success, such that
+        // To re-query Remita transactions, users usually depend on the nullity is_success, such that
         // if it is NULL (its original/default value), the user knows it is eligible to be retried. Since we
         // cannot dependably rely on Remita to always push status of successful transactions (especially bank transactions),
         // users usually re-query Remita at intervals. We should therefore not set is_success prematurely. We should set it only
         // when we are sure that user cannot reasonably
-        if ($this->isTransactionCanStillBeReQueried($rrrQueryResponse)) {
+        if ($this->isTransactionCanStillBeReQueried($rrrQueryResponse->status)) {
             $payment->is_success = null;
         }
 
@@ -230,24 +247,9 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         return $payment;
     }
 
-    protected function isTransactionCanStillBeReQueried(\stdClass $responseBody)
+    protected function isTransactionCanStillBeReQueried(string $paymentStatus)
     {
-        // https://api.remita.net
-        $responseCodesIndicatingUnFulfilledTransactionState = [
-            '021', // Transaction Pending
-            '025', // Payment Reference generated
-            '040', // Initial Request OK
-            '041', // Transaction Forwarded for Processing
-            '045', // Awaiting Payment Confirmation
-            '058', // Pending Authorization
-            '069', // New Transaction
-            '070', // Awaiting Debit
-            '071', // Undergoing Bank Processing
-            '072', // Pending Credit
-            '25', // Error Processing Request
-        ];
-
-        return in_array($responseBody->status, $responseCodesIndicatingUnFulfilledTransactionState);
+        return in_array($paymentStatus, $this->responseCodesIndicatingUnFulfilledTransactionState);
     }
 
     public function getHumanReadableTransactionResponse(Payment $payment): string
@@ -273,16 +275,13 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         $hash = hash("sha512", "{$merchantId}{$rrr}{$apiKey}");
         $responseUrl = route('payment.finished.callback_url');
 
-        return view(
-            'laravel-multipay::payment-handler-specific.remita-auto_submitted_form',
-            compact(
-                'url',
-                'rrr',
-                'hash',
-                'merchantId',
-                'responseUrl',
-            )
-        );
+        return view('laravel-multipay::payment-handler-specific.remita-auto_submitted_form', [
+            'url' => $url,
+            'rrr' => $rrr,
+            'hash' => $hash,
+            'merchantId' => $merchantId,
+            'responseUrl' => $responseUrl,
+        ]);
     }
 
     public function getServiceTypeId(Payment $payment)
@@ -319,5 +318,39 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
     public function getTransactionReferenceName(): string
     {
         return 'RRR Code';
+    }
+
+    public function paymentIsUnsettled(Payment $payment): bool
+    {
+        if (is_null($payment->processor_returned_response_description)) {
+            return true;
+        }
+
+        $returnedResponse = json_decode($payment->processor_returned_response_description, true);
+
+        if (!$returnedResponse) {
+            return true;
+        }
+
+        if ($this->isTransactionCanStillBeReQueried($returnedResponse['status'])) {
+            return true;
+        }
+
+        $internalErrorOccurred = $returnedResponse['status'] == '998';
+
+        if ($internalErrorOccurred) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function resumeUnsettledPayment(Payment $payment): View|ViewFactory|RedirectResponse
+    {
+        if (!$payment->processor_transaction_reference) {
+            throw new \Exception("Attempt was made to resume a payment that does not have RRR. Payment id is {$payment->id}");
+        }
+
+        return $this->sendUserToPaymentGateway($payment->processor_transaction_reference);
     }
 }

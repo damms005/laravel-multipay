@@ -4,18 +4,21 @@ namespace Damms005\LaravelMultipay\Services\PaymentHandlers;
 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Damms005\LaravelMultipay\Models\Payment;
 use KingFlamez\Rave\Facades\Rave as FlutterwaveRave;
-
+use Illuminate\Contracts\View\Factory as ViewFactory;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 
 class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
 {
-    public function renderAutoSubmittedPaymentForm(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true)
+    public function proceedToPaymentGateway(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true): View|ViewFactory|RedirectResponse
     {
         $transaction_reference = $payment->transaction_reference;
-        $this->sendUserToPaymentGateway($redirect_or_callback_url, $this->getPayment($transaction_reference));
+
+        return $this->sendUserToPaymentGateway($redirect_or_callback_url, $this->getPayment($transaction_reference));
     }
 
     public function getHumanReadableTransactionResponse(Payment $payment): string

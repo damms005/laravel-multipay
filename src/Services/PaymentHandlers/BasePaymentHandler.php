@@ -4,13 +4,16 @@ namespace Damms005\LaravelMultipay\Services\PaymentHandlers;
 
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Damms005\LaravelMultipay\Models\Payment;
+use Illuminate\Database\Eloquent\Casts\ArrayObject;
+use Illuminate\Contracts\View\Factory as ViewFactory;
 use Damms005\LaravelMultipay\Services\PaymentService;
 use Damms005\LaravelMultipay\Actions\CreateNewPayment;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 use Damms005\LaravelMultipay\Events\SuccessfulLaravelMultipayPaymentEvent;
-use Illuminate\Database\Eloquent\Casts\ArrayObject;
 
 abstract class BasePaymentHandler implements PaymentHandlerInterface
 {
@@ -303,5 +306,15 @@ abstract class BasePaymentHandler implements PaymentHandlerInterface
     public static function getUniquePaymentHandlerName(): string
     {
         return Str::of(static::class)->afterLast("\\");
+    }
+
+    public function resumeUnsettledPayment(Payment $payment): View|ViewFactory|RedirectResponse
+    {
+        throw new \Exception(static::class . " cannot resume previous payment session");
+    }
+
+    public function paymentIsUnsettled(Payment $payment): bool
+    {
+        throw new \Exception(static::class . " does not support double payment prevention checks");
     }
 }

@@ -9,7 +9,7 @@ use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
 use Damms005\LaravelMultipay\Events\SuccessfulLaravelMultipayPaymentEvent;
 
 beforeEach(function () {
-    $payment = createDummyPayment();
+    $payment = createPayment();
 
     $payment->processor_transaction_reference = 12345;
     $payment->save();
