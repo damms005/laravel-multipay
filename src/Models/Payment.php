@@ -7,6 +7,7 @@ use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
 use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Str;
 
@@ -38,6 +39,7 @@ use Illuminate\Support\Str;
 class Payment extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     protected $guarded = ['id'];
 
