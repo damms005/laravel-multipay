@@ -27,7 +27,7 @@
         "yabacon/paystack-php": "^2.2"
     },
     "require-dev": {
-        "doctrine/dbal": "*",
+        "doctrine/dbal": "^3.6",
         "nunomaduro/larastan": "^2.2",
         "orchestra/testbench": "^7.11",
         "pestphp/pest": "^1.18",
