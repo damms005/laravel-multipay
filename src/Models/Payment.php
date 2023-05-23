@@ -2,14 +2,16 @@
 
 namespace Damms005\LaravelMultipay\Models;
 
-use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
-use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
-use Illuminate\Database\Eloquent\Casts\AsArrayObject;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Str;
+use Illuminate\Foundation\Auth\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Foundation\Auth\User;
-use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Eloquent\Casts\AsArrayObject;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
+use Damms005\LaravelMultipay\Database\Factories\PaymentFactory;
+use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
 
 /**
  * @property int $id
@@ -49,6 +51,14 @@ class Payment extends Model
 
     protected const TABLE_NAME = 'payments';
     public const KOBO_TO_NAIRA = 100;
+
+    /**
+     * Create a new factory instance for the model.
+     */
+    protected static function newFactory(): Factory
+    {
+        return PaymentFactory::new();
+    }
 
     public function getTable(): string
     {
