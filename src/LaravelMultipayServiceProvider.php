@@ -34,13 +34,10 @@ class LaravelMultipayServiceProvider extends ServiceProvider
             return $app->make(BasePaymentHandler::class);
         });
 
-        $this->app->bind(PaymentHandlerInterface::class, function ($app, $args) {
-            /** @var Payment */
-            $payment = $args[0];
+        $this->app->bind(PaymentHandlerInterface::class, function ($app) {
+            $defaultPaymentHandler = config('laravel-multipay.default_payment_handler_fqcn');
 
-            throw_if(!$payment instanceof Payment, "Laravel Multipay Error: only Payment can be resolved by this binding. Found: " . get_class($payment));
-
-            return $payment->getPaymentProvider();
+            return new $defaultPaymentHandler();
         });
 
         $this->app->bind(PaymentService::class, function ($app) {
