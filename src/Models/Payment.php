@@ -40,7 +40,6 @@ use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
  */
 class Payment extends Model
 {
-    use HasFactory;
     use SoftDeletes;
 
     protected $guarded = ['id'];
