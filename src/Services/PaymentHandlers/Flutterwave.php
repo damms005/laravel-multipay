@@ -36,14 +36,14 @@ class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
         $data = [
             'payment_options' => 'card',
             'amount' => $payment->original_amount_displayed_to_user,
-            'email' => $payment->user->email,
+            'email' => $payment->getPayerEmail(),
             'tx_ref' => $flutterwaveReference,
             'currency' => "USD",
             'redirect_url' => $redirect_or_callback_url,
             'customer' => [
-                'email' => $payment->user->email,
+                'email' => $payment->getPayerEmail(),
                 "phone_number" => null,
-                "name" => $payment->user->name,
+                "name" => $payment->getPayerName(),
             ],
 
             "customizations" => [

@@ -133,7 +133,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
         // else returns an object created from the json response
         $trx = $paystack->transaction->initialize(
             [
-                'email' => $payment->user->email,
+                'email' => $payment->getPayerEmail(),
                 'amount' => $this->convertAmountToValueRequiredByPaystack($payment->original_amount_displayed_to_user),
                 'callback_url' => $redirect_or_callback_url,
             ]

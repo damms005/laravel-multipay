@@ -73,7 +73,7 @@ abstract class BasePaymentHandler implements PaymentHandlerInterface
      * This method should also create a record for this transaction in the database payments table.
      *
      */
-    public function storePaymentAndShowUserBeforeProcessing(int $user_id, $original_amount_displayed_to_user, string $transaction_description, $currency, string $transaction_reference, string $completion_url = null, Request $optionalRequestForEloquentModelLinkage = null, $preferredView = null, $metadata = null)
+    public function storePaymentAndShowUserBeforeProcessing(?int $user_id, $original_amount_displayed_to_user, string $transaction_description, $currency, string $transaction_reference, string $completion_url = null, Request $optionalRequestForEloquentModelLinkage = null, $preferredView = null, ?array $metadata = null)
     {
         $payment = (new CreateNewPayment())->execute(
             $this->getUniquePaymentHandlerName(),
@@ -139,7 +139,11 @@ abstract class BasePaymentHandler implements PaymentHandlerInterface
             }
         }
 
-        return view('laravel-multipay::transaction-completed', compact('payment', 'isJsonDescription', 'paymentDescription'));
+        return view('laravel-multipay::transaction-completed', [
+            'payment' => $payment,
+            'isJsonDescription' => $isJsonDescription,
+            'paymentDescription' => $paymentDescription
+        ]);
     }
 
     protected static function paymentHasCustomTransactionCompletionPage(Payment $payment)

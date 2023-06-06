@@ -112,7 +112,7 @@ REMITA_API_KEY=xxxxxxxxxxxxxxxxxxxxx-X
 
 Send a `POST` request to `/payment/details/confirm` (`route('payment.show_transaction_details_for_user_confirmation')`).
 
-Check the [InitiatePaymentRequest](src/Http/Requests/InitiatePaymentRequest.php#L28) form request to know the values you are to post to this endpoint. (tip: you can also check [test-drive/pay.blade.php](views/test-drive/pay.blade.php)).
+Check the [InitiatePaymentRequest](src/Http/Requests/InitiatePaymentRequest.php#L28) form request class to know the values you are to post to this endpoint. (tip: you can also check [test-drive/pay.blade.php](views/test-drive/pay.blade.php)).
 
 This `POST` request will typically simply be made by submitting a form from your frontend.
 
@@ -126,8 +126,6 @@ Upon user confirmation of transaction, user is redirected to the appropriate pay
 
 When user is done with the transaction on the payment handler's end (either successfully paid, or declined transaction), user is redirected
 back to `/payment/completed` (`route('payment.finished.callback_url')`) .
-
-> Ensure that your `User` model has a `name` property (Laravel's default). If you have removed the column for any reason, you may use [Model Accessor](https://laravel.com/docs/8.x/eloquent-mutators#accessors-and-mutators) to provide same. For Remita, ensure that `phone` property also exists on the User model.
 
 > If there are additional steps you want to take upon successful payment, listen for `SuccessfulLaravelMultipayPaymentEvent`. It will be fired whenever a successful payment occurs, with its corresponding `Payment` model.
 

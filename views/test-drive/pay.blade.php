@@ -37,8 +37,8 @@
 			Payment handler (Good UX tip 👍: this should be a hidden field)
 			<div>
 				<select name="payment_processor">
-					@foreach ($paymentProviders as $paymentProvider)
-					<option>{{$paymentProvider}}</option>
+					@foreach ($providers as $provider)
+					<option>{{$provider}}</option>
 					@endforeach
 				</select>
 			</div>
@@ -62,7 +62,7 @@
 		<br>
 
 		<div>
-			<input type="hidden" name="user_id" value="{{$user_id}}" />
+			<input type="hidden" name="user_id" value="{{$userId}}" />
 		</div>
 		<br>
 

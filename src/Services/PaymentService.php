@@ -9,7 +9,7 @@ use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
 
 class PaymentService
 {
-    public static function storePaymentAndShowUserBeforeProcessing(int $user_id, float $amount, string $description, string $currency, string $transaction_reference, string | null $view, $metadata = null)
+    public static function storePaymentAndShowUserBeforeProcessing(?int $user_id, float $amount, string $description, string $currency, string $transaction_reference, string | null $view, ?array $metadata = null)
     {
         /** @var BasePaymentHandler */
         $basePaymentHandler = app()->make(BasePaymentHandler::class);
