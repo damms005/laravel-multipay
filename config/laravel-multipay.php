@@ -3,9 +3,31 @@
 return [
 
     /**
-     * FQCN of model that your app uses for authentication
+     * It is sometimes needed to get the payer's name, email or phone number.
+     * LaravelMultipay associates you User model to the Payment model, such
+     * that the payer's name, email and phone number can be gotten from
+     * the User model if the user model is associated with the payment,
+     * either as direct column names or Eloquent model accessors.
+     * For your app, it may be Customer model, Student model, etc.
      */
     'user_model_fqcn' => App\Models\User::class,
+
+    /**
+     * For 'user_model_fqcn' above, provide the name of the column
+     * that corresponds to the user model's primary key
+     */
+    'user_model_owner_key' => 'id',
+
+    /**
+     * For 'user_model_fqcn' above, provide the names of the model properties
+     * that correspond to the payer's name, email and phone number.
+     * These can be direct column names or Eloquent model accessors.
+     */
+    'user_model_properties' => [
+        'name' => 'name',
+        'email' => 'email',
+        'phone' => 'phone',
+    ],
 
     /**
      * The layout to extend when displaying views

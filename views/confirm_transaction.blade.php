@@ -24,7 +24,7 @@
     </div>
 
     <div class="mt-8">
-      <span class="block font-bold text-gray-600">Payee:</span> {{ $payment->user->fullname }}
+      <span class="block font-bold text-gray-600">payer:</span> {{ $payment->getPayerName() }}
     </div>
 
     <div class="mt-8">

@@ -61,7 +61,7 @@ class Payment extends Model
 
     public function user()
     {
-        return $this->belongsTo(config('laravel-multipay.user_model_fqcn'));
+        return $this->belongsTo(config('laravel-multipay.user_model_fqcn'), 'user_id', config('laravel-multipay.user_model_owner_key'));
     }
 
     public function scopeSuccessful($query)
@@ -90,5 +90,47 @@ class Payment extends Model
         }
 
         return $this->processor_returned_amount;
+    }
+
+    public function getPayerName(): string
+    {
+        if ($this->user) {
+            $nameProperty = config('laravel-multipay.user_model_properties.name');
+            return $this->user->$nameProperty;
+        }
+
+        if (!isset($this->metadata['payer_name'])) {
+            throw new \Exception("payer name not found in metadata and no user is associated with this payment");
+        }
+
+        return $this->metadata['payer_name'];
+    }
+
+    public function getPayerEmail(): string
+    {
+        if ($this->user) {
+            $emailProperty = config('laravel-multipay.user_model_properties.email');
+            return $this->user->$emailProperty;
+        }
+
+        if (!isset($this->metadata['payer_email'])) {
+            throw new \Exception("payer email not found in metadata and no user is associated with this payment");
+        }
+
+        return $this->metadata['payer_email'];
+    }
+
+    public function getPayerPhone(): string
+    {
+        if ($this->user) {
+            $phoneProperty = config('laravel-multipay.user_model_properties.phone');
+            return $this->user->$phoneProperty;
+        }
+
+        if (!isset($this->metadata['payer_phone'])) {
+            throw new \Exception("payer phone not found in metadata and no user is associated with this payment");
+        }
+
+        return $this->metadata['payer_phone'];
     }
 }

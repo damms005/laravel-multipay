@@ -10,7 +10,6 @@ use Damms005\LaravelMultipay\Services\PaymentService;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Http\Requests\InitiatePaymentRequest;
 use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
-use Illuminate\Foundation\Auth\User;
 
 class PaymentController extends Controller
 {
@@ -29,17 +28,18 @@ class PaymentController extends Controller
         $description = $initiatePaymentRequest->transaction_description;
         $currency = $initiatePaymentRequest->currency;
         $transaction_reference = $initiatePaymentRequest->transaction_reference ?: strtoupper(Str::random(10));
+        $metadata = $this->getMetadata($initiatePaymentRequest);
 
         $view = $initiatePaymentRequest->filled('preferred_view') ? $initiatePaymentRequest->preferred_view : null;
 
         return $paymentService->storePaymentAndShowUserBeforeProcessing(
-            $initiatePaymentRequest->user_id,
+            $initiatePaymentRequest->input('user_id'),
             $amount,
             $description,
             $currency,
             $transaction_reference,
             $view,
-            $initiatePaymentRequest->metadata
+            $metadata,
         );
     }
 
@@ -50,7 +50,7 @@ class PaymentController extends Controller
         ]);
 
         /** @var Payment */
-        $payment = Payment::with('user')->where('transaction_reference', $request->transaction_reference)->firstOrFail();
+        $payment = Payment::where('transaction_reference', $request->transaction_reference)->firstOrFail();
 
         //prevent duplicated transactions
         if ($payment->processor_returned_response_description) {
@@ -61,33 +61,9 @@ class PaymentController extends Controller
         }
 
         /** @var PaymentHandlerInterface */
-        $handler = app()->make(PaymentHandlerInterface::class, [$payment]);
+        $handler = app()->make(PaymentHandlerInterface::class);
 
         return $handler->proceedToPaymentGateway($payment, route('payment.finished.callback_url'), true);
-    }
-
-    /**
-     *
-     * @param int $amountInLowestDenomination e.g. To pay NGN 500, pass 50000 (which is kobo - the lowest denomination for NGN)
-     * @param User $user
-     * @param PaymentHandlerInterface $payment_processor
-     * @param string $transaction_description
-     *
-     * @return \Illuminate\Contracts\View\View|\Illuminate\Contracts\View\Factory
-     */
-    public static function makeAutoSubmittedFormRedirect(int $amountInLowestDenomination, User $user, PaymentHandlerInterface $payment_processor, string $transaction_description)
-    {
-        return view('laravel-multipay::auto-submit-form', [
-            "amount" => $amountInLowestDenomination,
-            "user_id" => $user->id,
-            "payment_processor" => $payment_processor::getUniquePaymentHandlerName(),
-            "transaction_description" => $transaction_description,
-
-            // should a model be updated when transaction is successful? Provide details to such model:
-            // "update_model_success"             => ModelRequest::class,
-            // "update_model_unique_column"       => "id",
-            // "update_model_unique_column_value" => $model_request->id,
-        ]);
     }
 
     public function handlePaymentGatewayResponse(Request $request)
@@ -96,5 +72,43 @@ class PaymentController extends Controller
         $handler = app()->make(BasePaymentHandler::class);
 
         return $handler::handleServerResponseForTransactionAndDisplayOutcome($request);
+    }
+
+    protected function getMetadata(InitiatePaymentRequest $initiatePaymentRequest): array|null
+    {
+        $metadata = $this->formatMetadata($initiatePaymentRequest->input('metadata'));
+
+        if ($initiatePaymentRequest->filled('payer_name')) {
+            $metadata['payer_name'] = $initiatePaymentRequest->payer_name;
+        }
+        if ($initiatePaymentRequest->filled('payer_email')) {
+            $metadata['payer_email'] = $initiatePaymentRequest->payer_email;
+        }
+        if ($initiatePaymentRequest->filled('payer_phone')) {
+            $metadata['payer_phone'] = $initiatePaymentRequest->payer_phone;
+        }
+
+        return $metadata;
+    }
+
+    /**
+     * The metadata column is cast as AsArrayObject. Hence, we need to ensure that any
+     * value saved is not a string, else we risk getting a doubly-encoded string in db
+     * as an effect of the AsArrayObject db casting
+     *
+     * @param mixed $metadata
+     *
+     */
+    protected function formatMetadata(mixed $metadata): array|null
+    {
+        if (empty($metadata)) {
+            return null;
+        }
+
+        if (!is_string($metadata)) {
+            return null;
+        }
+
+        return json_decode($metadata, true);
     }
 }

@@ -71,9 +71,9 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
             "serviceTypeId" => $serviceTypeId,
             "amount" => $totalAmount,
             "orderId" => $orderId,
-            "payerName" => $payment->user->name,
-            "payerEmail" => $payment->user->email,
-            "payerPhone" => $payment->user->phone,
+            "payerName" => $payment->getPayerName(),
+            "payerEmail" => $payment->getPayerEmail(),
+            "payerPhone" => $payment->getPayerPhone(),
             "description" => $payment->transaction_description,
         ];
 

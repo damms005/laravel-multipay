@@ -26,12 +26,28 @@ class InitiatePaymentRequest extends FormRequest
     public function rules()
     {
         return [
-            //in ISO-4217 format
+            // in ISO-4217 format
             'currency' => ['required', 'string'],
 
             'amount' => ['required', 'numeric'],
 
-            'user_id' => ['required', 'numeric'],
+            'user_id' => [
+                'required_without_all:payer_name,payer_email,payer_phone',
+                'numeric',
+            ],
+            'payer_name' => [
+                'required_with:payer_email,payer_phone',
+                'required_without:user_id'
+            ],
+            'payer_email' => [
+                'required_with:payer_name,payer_phone',
+                'required_without:user_id',
+                'email',
+            ],
+            'payer_phone' => [
+                'required_with:payer_name,payer_email',
+                'required_without:user_id',
+            ],
 
             'transaction_description' => ['required', 'string'],
 
