@@ -26,11 +26,7 @@ it('renders auto-submitted payment form', function () {
     $mock->makePartial();
     $mock->shouldAllowMockingProtectedMethods();
 
-    $mock->expect(
-        getRrrToInitiatePayment: function () {
-            return 'abc-123';
-        },
-    );
+    $mock->expects('getRrrToInitiatePayment');
 
     $autoForm = $mock->proceedToPaymentGateway($this->payment, 'foo');
 
@@ -44,6 +40,7 @@ it('can handle Remita payment webhook ingress', function () {
 
     $request = new Request(json_decode('{
 				"rrr":"110002071256",
+				"status":"DUMMY-DATA",
 				"channnel":"CARDPAYMENT",
 				"billerName":"SYSTEMSPECS",
 				"channel":"CARDPAYMENT",
@@ -84,36 +81,46 @@ it('can handle Remita payment webhook ingress', function () {
     $mock = mock(Remita::class);
     $mock->shouldAllowMockingProtectedMethods();
     $mock->makePartial();
-    $mock->expect(
-        queryRrr: function () {
-            $response = new stdClass();
-            $response->status = '00';
-            $response->email = 'example@mail.com';
-            $response->description = 'sample description';
-            $response->amount = 12345;
+    $mock->expects('queryRrr')
+        ->andReturnUsing(
+            function () {
+                $response = new stdClass();
+                $response->status = '00';
+                $response->email = 'example@mail.com';
+                $response->description = 'sample description';
+                $response->amount = 12345;
 
-            return $response;
-        },
-        getPaymentByRrr: function ($rrr) {
-            return new Payment([
-                'user_id' => 1,
-                'original_amount_displayed_to_user' => 2,
-                'transaction_currency' => 2,
-                'transaction_description' => 'foo-bar',
-                'transaction_reference' => 'foo-bar',
-                'payment_processor_name' => 'foo-bar',
-            ]);
-        },
-        getUserByEmail: function ($email) {
-            $user = new User();
-            $user->id = 1;
+                return $response;
+            }
+        );
 
-            return $user;
-        },
-    );
+    $mock->expects('getPaymentByRrr')
+        ->andReturnUsing(
+            function () {
+                return new Payment([
+                    'user_id' => 1,
+                    'original_amount_displayed_to_user' => 2,
+                    'transaction_currency' => 2,
+                    'transaction_description' => 'magic-foo-bar',
+                    'transaction_reference' => 'foo-bar',
+                    'payment_processor_name' => 'foo-bar',
+                ]);
+            }
+        );
+
+    $mock->expects('getUserByEmail')
+        ->andReturnUsing(
+            function () {
+                $user = new User();
+                $user->id = 1;
+
+                return $user;
+            },
+        );
 
     //Act & Assert
-    expect(get_class($mock->handleExternalWebhookRequest($request)))->toEqual(Payment::class);
+    expect($mock->handleExternalWebhookRequest($request))
+        ->transaction_description->toEqual('magic-foo-bar');
 });
 
 it('can read user-defined service type id in request', function () {

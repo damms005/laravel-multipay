@@ -34,12 +34,13 @@ it('fires event for successful payment', function () {
     $mock = mock(PaymentService::class);
     $mock->makePartial();
 
-    $mock->expect(
-        handleGatewayResponse: function (Request $paymentGatewayServerResponse, string $paymentHandlerName): Payment {
-            $this->payment->is_success = true;
-            return $this->payment;
-        },
-    );
+    $mock->expects('handleGatewayResponse')
+        ->andReturnUsing(
+            function () {
+                $this->payment->update(['is_success' => true]);
+                return $this->payment->fresh();
+            }
+        );
 
     app()->bind(PaymentService::class, function () use ($mock) {
         return $mock;
@@ -60,7 +61,7 @@ it('fires event for successful payment', function () {
     Event::assertDispatched(SuccessfulLaravelMultipayPaymentEvent::class);
 });
 
-it('unsuccessful payment does not cause event to be fired', function () {
+test('unsuccessful payment does not cause event to be fired', function () {
     $paymentProviderFqcn = Remita::class;
 
     config()->set('laravel-multipay.default_payment_handler_fqcn', $paymentProviderFqcn);
@@ -75,16 +76,15 @@ it('unsuccessful payment does not cause event to be fired', function () {
     $mock = mock(PaymentService::class);
     $mock->makePartial();
 
-    $mock->expect(
-        handleGatewayResponse: function (Request $paymentGatewayServerResponse, string $paymentHandlerName): ?Payment {
-            $this->payment->is_success = false;
-            return $this->payment;
-        },
-    );
+    $mock->expects('handleGatewayResponse')
+        ->andReturnUsing(
+            function () {
+                $this->payment->update(['is_success' => false]);
+                return $this->payment->fresh();
+            }
+        );
 
-    app()->bind(PaymentService::class, function ($app) use ($mock) {
-        return $mock;
-    });
+    app()->bind(PaymentService::class, fn () => $mock);
 
     Event::fake();
 

@@ -28,11 +28,7 @@ it('can confirm payment and send user to payment gateway', function () {
         $mock = mock(BasePaymentHandler::class);
         $mock->makePartial();
 
-        $mock->expect(
-            proceedToPaymentGateway: function ($args) {
-                return redirect()->away('nowhere');
-            },
-        );
+        $mock->expects('proceedToPaymentGateway')->andReturnUsing(fn () => redirect()->away('nowhere'));
 
         return $mock;
     });
@@ -54,12 +50,13 @@ it('can confirm payment and send user to payment gateway', function () {
     $mock = mock(PaymentService::class);
     $mock->makePartial();
 
-    $mock->expect(
-        handleGatewayResponse: function (Request $paymentGatewayServerResponse, string $paymentHandlerName) use ($payment): ?Payment {
-            $payment->is_success = true;
-            return $payment;
-        },
-    );
+    $mock->expects('handleGatewayResponse')
+        ->andReturnUsing(
+            function () use ($payment) {
+                $payment->update(['is_success' => true]);
+                return $payment->fresh();
+            }
+        );
 
     app()->bind(PaymentService::class, function ($app) use ($mock) {
         return $mock;

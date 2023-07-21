@@ -29,11 +29,7 @@ it('calls payment handler for payment re-query', function () {
         $mock = mock(Remita::class);
         $mock->makePartial();
 
-        $mock->expect(
-            reQuery: function ($args) {
-                return new Payment();
-            },
-        );
+        $mock->expects('reQuery')->andReturn(new Payment());
 
         return $mock;
     });
@@ -47,13 +43,7 @@ it('fires success events for re-query of successful payments', function () {
         $mock = mock(Remita::class);
         $mock->makePartial();
 
-        $mock->expect(
-            reQuery: function ($args) {
-                return new Payment([
-                    'is_success' => true
-                ]);
-            },
-        );
+        $mock->expects('reQuery')->andReturn(new Payment(['is_success' => true]));
 
         return $mock;
     });
@@ -73,13 +63,7 @@ it('does not fire success events for re-query of unsuccessful payments', functio
         $mock = mock(Remita::class);
         $mock->makePartial();
 
-        $mock->expect(
-            reQuery: function () {
-                return new Payment([
-                    'is_success' => false,
-                ]);
-            },
-        );
+        $mock->expects('reQuery')->andReturn(new Payment(['is_success' => false,]));
 
         return $mock;
     });
