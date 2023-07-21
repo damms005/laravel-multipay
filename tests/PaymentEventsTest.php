@@ -35,7 +35,7 @@ it('fires event for successful payment', function () {
     $mock->makePartial();
 
     $mock->expect(
-        handlerGatewayResponse: function (Request $paymentGatewayServerResponse, string $paymentHandlerName): Payment {
+        handleGatewayResponse: function (Request $paymentGatewayServerResponse, string $paymentHandlerName): Payment {
             $this->payment->is_success = true;
             return $this->payment;
         },
@@ -76,7 +76,7 @@ it('unsuccessful payment does not cause event to be fired', function () {
     $mock->makePartial();
 
     $mock->expect(
-        handlerGatewayResponse: function (Request $paymentGatewayServerResponse, string $paymentHandlerName): ?Payment {
+        handleGatewayResponse: function (Request $paymentGatewayServerResponse, string $paymentHandlerName): ?Payment {
             $this->payment->is_success = false;
             return $this->payment;
         },

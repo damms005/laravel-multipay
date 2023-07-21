@@ -43,7 +43,7 @@ it('can navigate to custom url upon successful completion', function () {
     $mock->makePartial();
 
     $mock->expect(
-        handlerGatewayResponse: function () use ($payment): ?Payment {
+        handleGatewayResponse: function () use ($payment): ?Payment {
             $payment->is_success = true;
             return $payment;
         },
@@ -106,7 +106,7 @@ test('when no custom successful completion page, display usual response', functi
     $mock->makePartial();
 
     $mock->expect(
-        handlerGatewayResponse: function () use ($payment): ?Payment {
+        handleGatewayResponse: function () use ($payment): ?Payment {
             $payment->is_success = true;
             return $payment;
         },

@@ -55,7 +55,7 @@ it('can confirm payment and send user to payment gateway', function () {
     $mock->makePartial();
 
     $mock->expect(
-        handlerGatewayResponse: function (Request $paymentGatewayServerResponse, string $paymentHandlerName) use ($payment): ?Payment {
+        handleGatewayResponse: function (Request $paymentGatewayServerResponse, string $paymentHandlerName) use ($payment): ?Payment {
             $payment->is_success = true;
             return $payment;
         },

@@ -31,7 +31,7 @@ class PaymentService
         }
     }
 
-    public function handlerGatewayResponse(Request $paymentGatewayServerResponse, string $paymentHandlerName): ?Payment
+    public function handleGatewayResponse(Request $paymentGatewayServerResponse, string $paymentHandlerName): ?Payment
     {
         $paymentHandler = $this->getPaymentHandlerByName($paymentHandlerName);
 

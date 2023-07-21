@@ -12,7 +12,7 @@ use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 use Damms005\LaravelMultipay\Events\SuccessfulLaravelMultipayPaymentEvent;
 
-abstract class BasePaymentHandler implements PaymentHandlerInterface
+abstract class BasePaymentHandler
 {
     public const WEBHOOK_OKAY = 'OK';
 
@@ -175,7 +175,7 @@ abstract class BasePaymentHandler implements PaymentHandlerInterface
 
         collect(self::getNamesOfPaymentHandlers())
             ->each(function (string $paymentHandlerName) use ($paymentGatewayServerResponse, $paymentService, &$payment) {
-                $payment = $paymentService->handlerGatewayResponse($paymentGatewayServerResponse, $paymentHandlerName);
+                $payment = $paymentService->handleGatewayResponse($paymentGatewayServerResponse, $paymentHandlerName);
 
                 if ($payment) {
                     if ($payment->is_success == 1) {
@@ -311,7 +311,7 @@ abstract class BasePaymentHandler implements PaymentHandlerInterface
 
     public function paymentIsUnsettled(Payment $payment): bool
     {
-        throw new \Exception(static::class . " does not support double payment prevention checks");
+        throw new \Exception(static::class . " does not support checking if payment is unsettled");
     }
 
     public function resumeUnsettledPayment(Payment $payment): mixed
