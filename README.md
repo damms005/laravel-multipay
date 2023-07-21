@@ -1,11 +1,9 @@
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/damms005/laravel-multipay)](https://github.com/damms005/laravel-multipay/releases)
-[![GitHub Tests Action Status](https://img.shields.io/github/workflow/status/damms005/laravel-multipay/run-tests?label=tests)](https://github.com/damms005/laravel-multipay/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/workflow/status/damms005/laravel-multipay/Check%20&%20fix%20styling?label=code%20style)](https://github.com/damms005/laravel-multipay/actions?query=workflow%3A"Check+%26+fix+styling"+branch%3Amain)
-[![Total Downloads](https://img.shields.io/packagist/dt/damms005/laravel-multipay.svg?style=flat-square)](https://packagist.org/packages/damms005/laravel-multipay)
-
 # Laravel Multipay 💸
 
 ![Art image for laravel-multipay](https://banners.beyondco.de/Laravel%20Multipay.png?theme=light&packageManager=composer+require&packageName=damms005%2Flaravel-multipay&pattern=glamorous&style=style_1&description=An+opinionated+Laravel+package+for+handling+payments%2C+complete+with+blade+views&md=1&showWatermark=1&fontSize=100px&images=cash&widths=350)
+
+![GitHub tag (with filter)](https://img.shields.io/github/v/tag/damms005/laravel-multipay)
+[![Total Downloads](https://img.shields.io/packagist/dt/damms005/laravel-multipay.svg)](https://packagist.org/packages/damms005/laravel-multipay)
 
 An opinionated Laravel package to handle payments, complete with blade views, routing, and everything in-between.
 
