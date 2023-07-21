@@ -200,7 +200,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
             'NGN',
             $responseBody->description,
             $responseBody->amount,
-            ""
+            []
         );
     }
 

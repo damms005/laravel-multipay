@@ -24,7 +24,7 @@ abstract class BasePaymentHandler
     protected const PAYMENT_PROVIDERS_FQCNs = [
         Paystack::class,
         Remita::class,
-        // Flutterwave::class,
+        Flutterwave::class,
         // Interswitch::class,
         // UnifiedPayments::class,
     ];
