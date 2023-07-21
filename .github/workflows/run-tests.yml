@@ -12,14 +12,20 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest]
         php: [8.2, 8.1, 8.0]
         laravel: [10.*, 9.*]
         include:
           - laravel: 10.*
             testbench: ^8.0
+            pest: ^2.0
+            pest-plugin-laravel: ^2.0
+            pest-plugin-mock: ^2.0
           - laravel: 9.*
             testbench: ^7.0
+            pest: ^1.0
+            pest-plugin-laravel: ^1.0
+            pest-plugin-mock: ^1.0
         exclude:
           - laravel: 10.*
             php: 8.0
@@ -28,7 +34,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -42,7 +48,7 @@ jobs:
 
       - name: Install composer packages
         run: |
-          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
+          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" pestphp/pest:${{matrix.pest}} pestphp/pest-plugin-laravel:${{matrix.pest-plugin-laravel}} pestphp/pest-plugin-mock:${{matrix.pest-plugin-mock}} --no-interaction --no-update
           composer update --prefer-stable --prefer-dist --no-interaction
 
       - name: Execute tests
