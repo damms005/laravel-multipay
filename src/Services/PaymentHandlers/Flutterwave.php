@@ -11,7 +11,6 @@ use Illuminate\Foundation\Auth\User;
 use Damms005\LaravelMultipay\Models\Payment;
 use Damms005\LaravelMultipay\Models\Subscription;
 use KingFlamez\Rave\Facades\Rave as FlutterwaveRave;
-use Damms005\LaravelMultipay\Exceptions\ValueException;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 use Damms005\LaravelMultipay\Models\PaymentPlan as PaymentPlanModel;
@@ -19,6 +18,17 @@ use stdClass;
 
 class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
 {
+    public function __construct()
+    {
+        parent::__construct();
+
+        // Copy config values for use by Rave package
+        config()->set('flutterwave.publicKey', config('laravel-multipay.flutterwave.publicKey'));
+        config()->set('flutterwave.secretKey', config('laravel-multipay.flutterwave.secretKey'));
+        config()->set('flutterwave.secretHash', config('laravel-multipay.flutterwave.secretHash'));
+        config()->set('flutterwave.encryptionKey' . config('laravel-multipay.flutterwave.env', ''));
+    }
+
     public function proceedToPaymentGateway(Payment $payment, $redirect_or_callback_url, $getFormForTesting = true): mixed
     {
         $transaction_reference = $payment->transaction_reference;
