@@ -48,11 +48,11 @@ class SubscriptionService
         );
     }
 
-    public static function hasActiveSubscriptionForPlan(User $user, PaymentPlan $plan): bool
+    public static function getActiveSubscriptionFor(User $user, PaymentPlan $plan): ?Subscription
     {
         return Subscription::where('user_id', $user->id)
             ->where('payment_plan_id', $plan->id)
             ->where('next_payment_due_date', '>', now())
-            ->exists();
+            ->first();
     }
 }
