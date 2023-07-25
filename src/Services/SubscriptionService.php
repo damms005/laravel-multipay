@@ -29,23 +29,22 @@ class SubscriptionService
 
     public static function subscribeToPlan(PaymentHandlerInterface $handler, User $user, PaymentPlan $plan, string $completionUrl)
     {
-        $handler->subscribeToPlan($user, $plan);
-
         $transactionReference = str()->random();
-        $currency = $plan->currency;
-        $transactionDescription = $plan->description;
-        $originalAmountDisplayedToUser = $plan->amount;
+
+        $url = $handler->subscribeToPlan($user, $plan, $transactionReference);
 
         (new CreateNewPayment())->execute(
             $handler->getUniquePaymentHandlerName(),
             $user->id,
             $completionUrl,
             $transactionReference,
-            $currency,
-            $transactionDescription,
-            $originalAmountDisplayedToUser,
+            $plan->currency,
+            $plan->description,
+            $plan->amount,
             ['payment_plan_id' => $plan->id]
         );
+
+        return redirect()->away($url);
     }
 
     public static function getActiveSubscriptionFor(User $user, PaymentPlan $plan): ?Subscription

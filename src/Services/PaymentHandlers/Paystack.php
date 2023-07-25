@@ -200,9 +200,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
             'description' => $description,
             'currency' => $currency, // Allowed values are NGN, GHS, ZAR or USD
         ]);
-    }
 
-    public function subscribeToPlan(User $user, PaymentPlan $subscriptionPlan)
-    {
+        return '';
     }
 }

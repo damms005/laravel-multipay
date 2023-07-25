@@ -150,10 +150,8 @@ class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
         return $response->data->plan_token;
     }
 
-    public function subscribeToPlan(User $user, PaymentPlanModel $plan)
+    public function subscribeToPlan(User $user, PaymentPlanModel $plan, string $transactionReference): string
     {
-        $transactionReference = FlutterwaveRave::generateReference();
-
         $data = [
             'tx_ref' => $transactionReference,
             'amount' => $plan->amount,
@@ -173,14 +171,7 @@ class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
 
         $url = $paymentInitialization['data']['link'];
 
-        $this->redirectToPaymentGateway($url);
-    }
-
-    protected function redirectToPaymentGateway(string $url)
-    {
-        header('Location: ' . $url);
-
-        exit;
+        return $url;
     }
 
     /**

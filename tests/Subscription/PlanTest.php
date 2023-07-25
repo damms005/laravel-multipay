@@ -49,21 +49,14 @@ describe('Flutterwave subscriptions', function () {
             'payment_handler_plan_id' => '123',
         ]);
 
-        $mock = mock(Flutterwave::class);
-        $mock->makePartial();
-        $mock->shouldAllowMockingProtectedMethods();
-        $mock->expects('redirectToPaymentGateway');
-
         $raveMock = mock(FlutterwaveRave::class);
         $raveMock
             ->expects('initializePayment')
             ->andReturn(['status' => 'success', 'data' => ['link' => 'http://localhost']]);
-        $raveMock->expects('generateReference')
-            ->andReturn('abc');
 
         app()->bind('laravelrave', fn ($app) => $raveMock);
 
-        (new SubscriptionService())->subscribeToPlan($mock, new User(), $plan, 'localhost');
+        (new SubscriptionService())->subscribeToPlan(new Flutterwave, new User(), $plan, 'localhost');
 
         $this->assertDatabaseHas('payments', [
             'metadata' => json_encode(['payment_plan_id' => $plan->id]),

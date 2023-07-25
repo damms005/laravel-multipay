@@ -326,7 +326,8 @@ abstract class BasePaymentHandler
         throw new \Exception(static::class . " does not support creating payment plan");
     }
 
-    public function subscribeToPlan(User $user, PaymentPlan $plan){
+    public function subscribeToPlan(User $user, PaymentPlan $plan, string $transactionReference): string
+    {
         throw new \Exception(static::class . " does not support subscribing to payment plan");
     }
 }

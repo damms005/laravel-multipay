@@ -80,5 +80,8 @@ interface PaymentHandlerInterface
      */
     public function createPaymentPlan(string $name, string $amount, string $interval, string $description, string $currency): string;
 
-    public function subscribeToPlan(User $user, PaymentPlan $plan);
+    /**
+     * @return string Url to redirect user to
+     */
+    public function subscribeToPlan(User $user, PaymentPlan $plan, string $transactionReference): string;
 }
