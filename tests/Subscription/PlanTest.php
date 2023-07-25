@@ -11,9 +11,9 @@ use Damms005\LaravelMultipay\Services\PaymentHandlers\Flutterwave;
 describe('Flutterwave subscriptions', function () {
 
     beforeEach(function () {
-        config()->set('FLW_PUBLIC_KEY', 'FLW_PUBLIC_KEY');
-        config()->set('FLW_SECRET_KEY', 'FLW_SECRET_KEY');
-        config()->set('FLW_SECRET_HASH', 'FLW_SECRET_HASH');
+        config()->set('laravel-multipay.flutterwave.publicKey', 'FLW_PUBLIC_KEY');
+        config()->set('laravel-multipay.flutterwave.secretKey', 'FLW_SECRET_KEY');
+        config()->set('laravel-multipay.flutterwave.secretHash', 'FLW_SECRET_HASH');
     });
 
     it('creates Flutterwave plan', function () {
@@ -120,9 +120,6 @@ describe('Flutterwave subscriptions', function () {
 it('can create plan using Paystack', function () {
     Http::fake();
     Http::preventStrayRequests();
-    config()->set('FLW_PUBLIC_KEY', 'FLW_PUBLIC_KEY');
-    config()->set('FLW_SECRET_KEY', 'FLW_SECRET_KEY');
-    config()->set('FLW_SECRET_HASH', 'FLW_SECRET_HASH');
 
     (new SubscriptionService())
         ->createPaymentPlan(new Paystack(), 'plan', '1000', 'monthly', 'description', 'NGN');
