@@ -2,7 +2,6 @@
 
 use Mockery\Mock;
 
-use Illuminate\Http\Request;
 use Damms005\LaravelMultipay\Models\Payment;
 use Damms005\LaravelMultipay\Services\PaymentService;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;

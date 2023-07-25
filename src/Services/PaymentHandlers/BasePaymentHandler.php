@@ -4,7 +4,9 @@ namespace Damms005\LaravelMultipay\Services\PaymentHandlers;
 
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Foundation\Auth\User;
 use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\Models\PaymentPlan;
 use Illuminate\Database\Eloquent\Casts\ArrayObject;
 use Damms005\LaravelMultipay\Services\PaymentService;
 use Damms005\LaravelMultipay\Actions\CreateNewPayment;
@@ -317,5 +319,14 @@ abstract class BasePaymentHandler
     public function resumeUnsettledPayment(Payment $payment): mixed
     {
         throw new \Exception(static::class . " cannot resume previous payment session");
+    }
+
+    public function createPaymentPlan(string $name, string $amount, string $interval, string $description, string $currency): string
+    {
+        throw new \Exception(static::class . " does not support creating payment plan");
+    }
+
+    public function subscribeToPlan(User $user, PaymentPlan $plan){
+        throw new \Exception(static::class . " does not support subscribing to payment plan");
     }
 }

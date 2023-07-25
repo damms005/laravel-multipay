@@ -3,11 +3,19 @@
 namespace Damms005\LaravelMultipay\Services\PaymentHandlers;
 
 use Carbon\Carbon;
+use Flutterwave\Payload;
 use Illuminate\Http\Request;
+use Flutterwave\Helper\Config;
+use Flutterwave\Service\PaymentPlan;
+use Illuminate\Foundation\Auth\User;
 use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\Models\Subscription;
 use KingFlamez\Rave\Facades\Rave as FlutterwaveRave;
+use Damms005\LaravelMultipay\Exceptions\ValueException;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
+use Damms005\LaravelMultipay\Models\PaymentPlan as PaymentPlanModel;
+use stdClass;
 
 class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
 {
@@ -38,7 +46,7 @@ class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
             'amount' => $payment->original_amount_displayed_to_user,
             'email' => $payment->getPayerEmail(),
             'tx_ref' => $flutterwaveReference,
-            'currency' => "USD",
+            'currency' => "NGN",
             'redirect_url' => $redirect_or_callback_url,
             'customer' => [
                 'email' => $payment->getPayerEmail(),
@@ -66,35 +74,13 @@ class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
         exit;
     }
 
-    public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $paymentGatewayServerResponse): ?Payment
+    public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $request): ?Payment
     {
-        if (!$paymentGatewayServerResponse->has('tx_ref')) {
+        if (!$request->has('tx_ref')) {
             return null;
         }
 
-        $flutterwaveReference = $paymentGatewayServerResponse->get('tx_ref');
-        $payment = Payment::where('processor_transaction_reference', $flutterwaveReference)->firstOrFail();
-
-        $status = $paymentGatewayServerResponse->get('status');
-
-        if ($status != 'successful') {
-            $payment->processor_returned_response_description = $status;
-            $payment->save();
-
-            return $payment;
-        }
-
-        $transactionId = $paymentGatewayServerResponse->get('transaction_id');
-        $flutterwavePaymentDetails = FlutterwaveRave::verifyTransaction($transactionId);
-
-        if (!$this->isValidTransaction((array)$flutterwavePaymentDetails, $payment)) {
-            $payment->processor_returned_response_description = "Invalid transaction";
-            $payment->save();
-
-            return $payment;
-        }
-
-        $payment = $this->giveValue($flutterwaveReference, (array)$flutterwavePaymentDetails);
+        $payment = $this->handleExternalWebhookRequest($request);
 
         return $payment;
     }
@@ -104,26 +90,18 @@ class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
         throw new \Exception("Method not yet implemented");
     }
 
-    /**
-     * @see \Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface::handleExternalWebhookRequest
-     */
-    public function handleExternalWebhookRequest(Request $request): Payment
-    {
-        throw new UnknownWebhookException($this, $request);
-    }
-
-    public function isValidTransaction(array $flutterwavePaymentDetails, Payment $payment)
-    {
-        return $flutterwavePaymentDetails['data']['amount'] == $payment->original_amount_displayed_to_user;
-    }
-
-    protected function giveValue($flutterwaveReference, array $flutterwavePaymentDetails): Payment
+    protected function giveValue($flutterwaveReference, array $flutterwavePaymentDetails): ?Payment
     {
         /**
          * @var Payment
          */
         $payment = Payment::where('processor_transaction_reference', $flutterwaveReference)
             ->firstOrFail();
+
+        // Ensure we have not already given value for this transaction
+        if ($payment->is_success) {
+            return null;
+        }
 
         $payment->update([
             "is_success" => 1,
@@ -135,8 +113,142 @@ class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
         return $payment->fresh();
     }
 
-    protected function performSuccess($flutterwaveReference)
+    protected function getConfig(): Config
     {
-        return true;
+        return Config::setUp(
+            config('FLW_SECRET_KEY'),
+            config('FLW_PUBLIC_KEY'),
+            config('FLW_SECRET_HASH'),
+            config('ENV', ''),
+        );
+    }
+
+    public function createPaymentPlan(string $name, string $amount, string $interval, string $description, string $currency): string
+    {
+        $config = $this->getConfig();
+        $plansService = new PaymentPlan($config);
+
+        $payload = new Payload();
+        $payload->set("amount", $amount);
+        $payload->set("name", $name);
+        $payload->set("interval", $interval);
+        $payload->set("currency", $currency);
+        $payload->set("duration", '');
+
+        $response = $plansService->create($payload);
+
+        return $response->data->plan_token;
+    }
+
+    public function subscribeToPlan(User $user, PaymentPlanModel $plan)
+    {
+        $transactionReference = FlutterwaveRave::generateReference();
+
+        $data = [
+            'tx_ref' => $transactionReference,
+            'amount' => $plan->amount,
+            'currency' => $plan->currency,
+            'redirect_url' => route('payment.finished.callback_url'),
+            'payment_options' => 'card',
+            'email' => $user->email,
+            'customer' => [
+                'email' => $user->email,
+            ],
+            'payment_plan' => $plan->payment_handler_plan_id,
+        ];
+
+        $paymentInitialization = FlutterwaveRave::initializePayment($data);
+
+        throw_if($paymentInitialization['status'] !== 'success', "Cannot initialize Flutterwave payment");
+
+        $url = $paymentInitialization['data']['link'];
+
+        $this->redirectToPaymentGateway($url);
+    }
+
+    protected function redirectToPaymentGateway(string $url)
+    {
+        header('Location: ' . $url);
+
+        exit;
+    }
+
+    /**
+     * @see \Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface::handleExternalWebhookRequest
+     */
+    public function handleExternalWebhookRequest(Request $request): Payment
+    {
+        if (!$request->has('tx_ref')) {
+            throw new UnknownWebhookException($this);
+        }
+
+        $flutterwaveReference = $request->get('tx_ref');
+        $payment = Payment::where('processor_transaction_reference', $flutterwaveReference)->firstOrFail();
+
+        $status = $request->get('status');
+
+        if ($status != 'successful') {
+            $payment->processor_returned_response_description = $status;
+            $payment->save();
+
+            return $payment;
+        }
+
+        $transactionId = $request->get('transaction_id');
+        $flutterwavePaymentDetails = FlutterwaveRave::verifyTransaction($transactionId);
+
+        if (!$this->isValidTransaction((array)$flutterwavePaymentDetails, $payment)) {
+            $payment->processor_returned_response_description = "Invalid transaction";
+            $payment->save();
+
+            return $payment;
+        }
+
+        $payment = $this->giveValue($flutterwaveReference, (array)$flutterwavePaymentDetails);
+
+        $this->processPaymentMetadata($payment);
+
+        return $payment;
+    }
+
+    protected function processPaymentMetadata(Payment $payment)
+    {
+        if (!is_iterable($payment->metadata)) {
+            return;
+        }
+
+        $isPaymentForSubscription = array_key_exists('payment_plan_id', (array)$payment->metadata);
+
+        if (!$isPaymentForSubscription) {
+            return;
+        }
+
+        $plan = PaymentPlanModel::findOrFail($payment->metadata['payment_plan_id']);
+
+        $nextPaymentDate = match ($plan->interval) {
+            'monthly' => Carbon::now()->addMonth(),
+            'yearly' => Carbon::now()->addYear(),
+            default => throw new \Exception("Unknown interval {$plan->interval}"),
+        };
+
+        Subscription::create([
+            'user_id' => $payment->user_id,
+            'payment_plan_id' => $payment->metadata['payment_plan_id'],
+            'next_payment_due_date' => $nextPaymentDate,
+        ]);
+    }
+
+    protected function getVerification(string $transactionId): stdClass
+    {
+        $transactionService = (new \Flutterwave\Service\Transactions());
+
+        $res = $transactionService->verify($transactionId);
+
+        return $res;
+    }
+
+    public function isValidTransaction(array $flutterwavePaymentDetails, Payment $payment)
+    {
+        return $flutterwavePaymentDetails['data']['amount'] == $payment->original_amount_displayed_to_user;
     }
 }

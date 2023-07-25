@@ -3,7 +3,9 @@
 namespace Damms005\LaravelMultipay\Contracts;
 
 use Illuminate\Http\Request;
+use Illuminate\Foundation\Auth\User;
 use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\Models\PaymentPlan;
 use Damms005\LaravelMultipay\Exceptions\MissingUserException;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 use Damms005\LaravelMultipay\Exceptions\NonActionableWebhookPaymentException;
@@ -25,11 +27,11 @@ interface PaymentHandlerInterface
      * process it should confirm that the payment_processor_name for the transaction is the
      * same as its own getUniquePaymentHandlerName() value, then handle the response and return the Payment object
      *
-     * @param Request $paymentGatewayServerResponse
+     * @param Request $request
      *
      * @return Payment
      */
-    public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $paymentGatewayServerResponse): ?Payment;
+    public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $request): ?Payment;
 
     public function getHumanReadableTransactionResponse(Payment $payment): string;
 
@@ -72,4 +74,11 @@ interface PaymentHandlerInterface
     public function handleExternalWebhookRequest(Request $paymentNotificationRequest): Payment;
 
     public function getTransactionReferenceName(): string;
+
+    /**
+     * @return string Plan id
+     */
+    public function createPaymentPlan(string $name, string $amount, string $interval, string $description, string $currency): string;
+
+    public function subscribeToPlan(User $user, PaymentPlan $plan);
 }

@@ -2,9 +2,7 @@
 
 use Mockery\Mock;
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
-use Damms005\LaravelMultipay\Models\Payment;
 use Damms005\LaravelMultipay\Services\PaymentService;
 use Damms005\LaravelMultipay\Services\PaymentHandlers\Remita;
 use Damms005\LaravelMultipay\Services\PaymentHandlers\Paystack;

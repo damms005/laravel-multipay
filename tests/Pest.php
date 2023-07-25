@@ -42,7 +42,6 @@ function getSampleInitialPaymentRequest()
     ];
 }
 
-
 function createPayment(): Payment
 {
     return Payment::create([

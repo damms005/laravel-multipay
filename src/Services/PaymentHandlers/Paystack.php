@@ -4,8 +4,10 @@ namespace Damms005\LaravelMultipay\Services\PaymentHandlers;
 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Foundation\Auth\User;
 use Yabacon\Paystack as PaystackHelper;
 use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\Models\PaymentPlan;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 
@@ -37,17 +39,17 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
     /**
      * This is a get request. (https://developers.paystack.co/docs/paystack-standard#section-4-verify-transaction)
      *
-     * @param Request $paymentGatewayServerResponse
+     * @param Request $request
      *
      * @return Payment
      */
-    public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $paymentGatewayServerResponse): ?Payment
+    public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $request): ?Payment
     {
-        if (!$paymentGatewayServerResponse->has('reference')) {
+        if (!$request->has('reference')) {
             return null;
         }
 
-        return $this->processValueForTransaction($paymentGatewayServerResponse->reference);
+        return $this->processValueForTransaction($request->reference);
     }
 
     /**
@@ -94,7 +96,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
      */
     public function handleExternalWebhookRequest(Request $request): Payment
     {
-        throw new UnknownWebhookException($this, $request);
+        throw new UnknownWebhookException($this);
     }
 
     public function getHumanReadableTransactionResponse(Payment $payment): string
@@ -185,5 +187,22 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
         }
 
         return redirect()->away($payment->metadata['paystack_authorization_url']);
+    }
+
+    public function createPaymentPlan(string $name, string $amount, string $interval, string $description, string $currency): string
+    {
+        $paystack = app()->make(PaystackHelper::class, ['secret_key' => $this->secret_key]);
+
+        $paystack->plan->create([
+            'name' => $name,
+            'amount' => $amount, // in lowest denomination. e.g. kobo
+            'interval' => $interval, // hourly, daily, weekly, monthly, quarterly, biannually (every 6 months) and annually
+            'description' => $description,
+            'currency' => $currency, // Allowed values are NGN, GHS, ZAR or USD
+        ]);
+    }
+
+    public function subscribeToPlan(User $user, PaymentPlan $subscriptionPlan)
+    {
     }
 }

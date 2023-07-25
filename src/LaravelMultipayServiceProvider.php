@@ -3,7 +3,6 @@
 namespace Damms005\LaravelMultipay;
 
 use Illuminate\Support\ServiceProvider;
-use Damms005\LaravelMultipay\Models\Payment;
 use Damms005\LaravelMultipay\Services\PaymentService;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;

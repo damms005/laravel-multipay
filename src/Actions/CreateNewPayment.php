@@ -14,7 +14,7 @@ class CreateNewPayment
         ?string $currency,
         ?string $transaction_description,
         ?string $original_amount_displayed_to_user,
-        ?array $metadata
+        ?array $metadata = null,
     ): Payment {
         return Payment::firstOrCreate([
             "user_id" => $user_id,

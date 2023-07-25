@@ -48,7 +48,7 @@ class Interswitch extends BasePaymentHandler implements PaymentHandlerInterface
         ]);
     }
 
-    public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $paymentGatewayServerResponse): ?Payment
+    public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $request): ?Payment
     {
         return null;
     }
@@ -158,7 +158,7 @@ class Interswitch extends BasePaymentHandler implements PaymentHandlerInterface
      */
     public function handleExternalWebhookRequest(Request $request): Payment
     {
-        throw new UnknownWebhookException($this, $request);
+        throw new UnknownWebhookException($this);
     }
 
     protected function getResponseCodesArray()

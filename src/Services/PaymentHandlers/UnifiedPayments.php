@@ -44,17 +44,17 @@ class UnifiedPayments extends BasePaymentHandler implements PaymentHandlerInterf
 
     /**
      *
-     * @param Request $paymentGatewayServerResponse
+     * @param Request $request
      *
      * @return Payment
      */
-    public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $paymentGatewayServerResponse): ?Payment
+    public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $request): ?Payment
     {
-        if (!$paymentGatewayServerResponse->has('trxId')) {
+        if (!$request->has('trxId')) {
             return null;
         }
 
-        $payment = Payment::where('processor_transaction_reference', $paymentGatewayServerResponse->trxId)->first();
+        $payment = Payment::where('processor_transaction_reference', $request->trxId)->first();
 
         if (is_null($payment)) {
             return null;
@@ -95,7 +95,7 @@ class UnifiedPayments extends BasePaymentHandler implements PaymentHandlerInterf
      */
     public function handleExternalWebhookRequest(Request $request): Payment
     {
-        throw new UnknownWebhookException($this, $request);
+        throw new UnknownWebhookException($this);
     }
 
     public function getHumanReadableTransactionResponse(Payment $payment): string
