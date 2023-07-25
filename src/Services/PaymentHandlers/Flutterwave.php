@@ -48,14 +48,14 @@ class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
 
     protected function sendUserToPaymentGateway(string $redirect_or_callback_url, Payment $payment)
     {
-        $flutterwaveReference = FlutterwaveRave::generateReference();
+        $transactionReference = FlutterwaveRave::generateReference();
 
         // Enter the details of the payment
         $data = [
             'payment_options' => 'card',
             'amount' => $payment->original_amount_displayed_to_user,
             'email' => $payment->getPayerEmail(),
-            'tx_ref' => $flutterwaveReference,
+            'tx_ref' => $transactionReference,
             'currency' => "NGN",
             'redirect_url' => $redirect_or_callback_url,
             'customer' => [
@@ -76,7 +76,7 @@ class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
 
         $url = $paymentInitialization['data']['link'];
 
-        $payment->processor_transaction_reference = $flutterwaveReference;
+        $payment->transaction_reference = $transactionReference;
         $payment->save();
 
         header('Location: ' . $url);
@@ -100,12 +100,12 @@ class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
         throw new \Exception("Method not yet implemented");
     }
 
-    protected function giveValue($flutterwaveReference, array $flutterwavePaymentDetails): ?Payment
+    protected function giveValue($transactionReference, array $flutterwavePaymentDetails): ?Payment
     {
         /**
          * @var Payment
          */
-        $payment = Payment::where('processor_transaction_reference', $flutterwaveReference)
+        $payment = Payment::where('transaction_reference', $transactionReference)
             ->firstOrFail();
 
         // Ensure we have not already given value for this transaction
@@ -183,8 +183,8 @@ class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
             throw new UnknownWebhookException($this);
         }
 
-        $flutterwaveReference = $request->get('tx_ref');
-        $payment = Payment::where('processor_transaction_reference', $flutterwaveReference)->firstOrFail();
+        $transactionReference = $request->get('tx_ref');
+        $payment = Payment::where('transaction_reference', $transactionReference)->firstOrFail();
 
         $status = $request->get('status');
 
@@ -205,7 +205,7 @@ class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
             return $payment;
         }
 
-        $payment = $this->giveValue($flutterwaveReference, (array)$flutterwavePaymentDetails);
+        $payment = $this->giveValue($transactionReference, (array)$flutterwavePaymentDetails);
 
         $this->processPaymentMetadata($payment);
 

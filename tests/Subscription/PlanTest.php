@@ -81,7 +81,7 @@ describe('Flutterwave subscriptions', function () {
 
         $payment = createPayment();
         $payment->update([
-            'processor_transaction_reference' => 'abc-d',
+            'transaction_reference' => 'abc-d',
             'metadata' => ['payment_plan_id' => $plan->id]
         ]);
 
