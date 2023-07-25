@@ -48,7 +48,7 @@ class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
 
     protected function sendUserToPaymentGateway(string $redirect_or_callback_url, Payment $payment)
     {
-        $transactionReference = FlutterwaveRave::generateReference();
+        $transactionReference = strtoupper(FlutterwaveRave::generateReference());
 
         // Enter the details of the payment
         $data = [

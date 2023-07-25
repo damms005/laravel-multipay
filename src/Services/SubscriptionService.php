@@ -29,7 +29,7 @@ class SubscriptionService
 
     public static function subscribeToPlan(PaymentHandlerInterface $handler, User $user, PaymentPlan $plan, string $completionUrl)
     {
-        $transactionReference = str()->random();
+        $transactionReference = strtoupper(str()->random());
 
         $url = $handler->subscribeToPlan($user, $plan, $transactionReference);
 
