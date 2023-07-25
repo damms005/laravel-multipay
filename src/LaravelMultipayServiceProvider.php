@@ -54,8 +54,8 @@ class LaravelMultipayServiceProvider extends ServiceProvider
 
     public function bootFlutterwave()
     {
-        config(['flutterwave.publicKey' => env('FLW_PUBLIC_KEY')]);
-        config(['flutterwave.secretKey' => env('FLW_SECRET_KEY')]);
-        config(['flutterwave.secretHash' => env('FLW_SECRET_HASH')]);
+        config(['laravel-multipay.flutterwave.publicKey' => env('FLW_PUBLIC_KEY')]);
+        config(['laravel-multipay.flutterwave.secretKey' => env('FLW_SECRET_KEY')]);
+        config(['laravel-multipay.flutterwave.secretHash' => env('FLW_SECRET_HASH')]);
     }
 }

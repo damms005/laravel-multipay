@@ -116,8 +116,8 @@ class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
     protected function getConfig(): Config
     {
         return Config::setUp(
-            config('FLW_SECRET_KEY'),
-            config('FLW_PUBLIC_KEY'),
+            config('laravel-multipay.flutterwave.secretKey'),
+            config('laravel-multipay.flutterwave.publicKey'),
             config('FLW_SECRET_HASH'),
             config('ENV', ''),
         );
