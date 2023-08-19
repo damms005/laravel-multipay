@@ -13,7 +13,7 @@ use Damms005\LaravelMultipay\Webhooks\Contracts\WebhookHandler;
  */
 class InvoicePaymentFailed implements WebhookHandler
 {
-    public function isHandlerFor(Request $webhookRequest)
+    public function isHandlerFor(Request $webhookRequest): bool
     {
         // TODO: Implement isHandlerFor() method.
         return false;

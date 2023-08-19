@@ -4,12 +4,12 @@ namespace Damms005\LaravelMultipay\Services\PaymentHandlers;
 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Foundation\Auth\User;
 use Yabacon\Paystack as PaystackHelper;
 use Damms005\LaravelMultipay\Models\Payment;
-use Damms005\LaravelMultipay\Models\PaymentPlan;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
+use Damms005\LaravelMultipay\Webhooks\Contracts\WebhookHandler;
+use Damms005\LaravelMultipay\Webhooks\Paystack\ChargeSuccess;
 
 class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
 {
@@ -96,7 +96,24 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
      */
     public function handleExternalWebhookRequest(Request $request): Payment
     {
+        $webhookEvents = [
+            ChargeSuccess::class,
+        ];
+
+        foreach ($webhookEvents as $webhookEvent) {
+            $handler = new $webhookEvent();
+
+            if ($this->canHandleWebhook($handler, $request)) {
+                return $handler->handle($request);
+            }
+        }
+
         throw new UnknownWebhookException($this);
+    }
+
+    protected function canHandleWebhook(WebhookHandler $handler, Request $request): bool
+    {
+        return $handler->isHandlerFor($request);
     }
 
     public function getHumanReadableTransactionResponse(Payment $payment): string
