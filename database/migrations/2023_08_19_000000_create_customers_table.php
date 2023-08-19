@@ -14,6 +14,7 @@ return new class () extends Migration {
     {
         Schema::create('payment_customers', function (Blueprint $table) {
             $table->id();
+            $table->bigInteger('user_id');
             $table->string('customer_id');
             $table->json('metadata')->nullable();
             $table->timestamps();
