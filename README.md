@@ -145,7 +145,7 @@ $outcome = LaravelMultipay::reQueryUnsuccessfulPayment( $payment )
 The payment will be re-resolved and the payment will be updated in the database. If the payment is successful, the `SuccessfulLaravelMultipayPaymentEvent` event will be fired, availing you the opportunity to run any domain/application-specific procedures.
 
 ## Payment Notifications (WebHooks)
-Some payment handlers provide a means for sending details of successful notifications. Usually, you will need to provide the payment handler with a URL to which the details of such notification will be sent. Should you need this feature, the notification URL is `/payment/completed/notify`.
+Some payment handlers provide a means for sending details of successful notifications. Usually, you will need to provide the payment handler with a URL to which the details of such notification will be sent. Should you need this feature, the notification URL is handled by `route('payment.external-webhook-endpoint')`.
 
 > If you use this payment notification URL feature, ensure that in your handler for `SuccessfulLaravelMultipayPaymentEvent`, check that you have not previously handled the event for that same payment.
 

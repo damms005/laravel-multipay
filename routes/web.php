@@ -28,13 +28,14 @@ Route::group(['prefix' => config('laravel-multipay.payment_route_path', 'payment
     });
 
     // Use 'api' route for payment completion callback because some payment providers do POST rather than GET
-    Route::group(['middleware' => 'api'], function () {
+    Route::middleware('api')
+        ->group(function () {
 
-        // Route that users get redirected to when done with payment
-        Route::match(['get', 'post'], '/completed', [PaymentController::class, 'handlePaymentGatewayResponse'])
-            ->name('payment.finished.callback_url');
+            // Route that users get redirected to when done with payment
+            Route::match(['get', 'post'], '/completed', [PaymentController::class, 'handlePaymentGatewayResponse'])
+                ->name('payment.finished.callback_url');
 
-        Route::match(['get', 'post'], '/completed/notify', PaymentWebhookController::class)
-            ->name('payment.external-webhook-endpoint');
-    });
+            Route::match(['get', 'post'], '/completed/notify', PaymentWebhookController::class)
+                ->name('payment.external-webhook-endpoint');
+        });
 });
