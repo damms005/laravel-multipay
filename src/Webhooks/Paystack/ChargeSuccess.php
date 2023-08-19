@@ -3,6 +3,7 @@
 namespace Damms005\LaravelMultipay\Webhooks\Paystack;
 
 use Illuminate\Http\Request;
+use Damms005\LaravelMultipay\Models\Payment;
 use Damms005\LaravelMultipay\Webhooks\Contracts\WebhookHandler;
 
 /**
@@ -13,8 +14,12 @@ use Damms005\LaravelMultipay\Webhooks\Contracts\WebhookHandler;
  */
 class ChargeSuccess implements WebhookHandler
 {
-    public function isHandlerFor(Request $webhookRequest)
+    public function isHandlerFor(Request $webhookRequest): bool
     {
         return $webhookRequest->input('event') === 'charge.success';
+    }
+
+    public function handle(Request $webhookRequest): Payment
+    {
     }
 }
