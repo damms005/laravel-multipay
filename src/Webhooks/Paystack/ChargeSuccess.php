@@ -2,7 +2,10 @@
 
 namespace Damms005\LaravelMultipay\Webhooks\Paystack;
 
+use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
+use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\Services\PaymentHandlers\Paystack;
 use Damms005\LaravelMultipay\Webhooks\Contracts\WebhookHandler;
 
 /**
@@ -13,8 +16,22 @@ use Damms005\LaravelMultipay\Webhooks\Contracts\WebhookHandler;
  */
 class ChargeSuccess implements WebhookHandler
 {
-    public function isHandlerFor(Request $webhookRequest)
+    public function isHandlerFor(Request $webhookRequest): bool
     {
         return $webhookRequest->input('event') === 'charge.success';
+    }
+
+    public function handle(Request $webhookRequest): Payment
+    {
+        $payment = Payment::where('transaction_reference', $webhookRequest->input('data.reference'))
+            ->firstOrFail();
+
+        $metadata = [...$payment->metadata ?: []];
+        $metadata = Arr::set($metadata, 'events', $metadata['events'] ?: []);
+        $metadata['events']['charge.success'] = json_encode($webhookRequest->all());
+
+        $payment->update(['metadata' => $metadata]);
+
+        return (new Paystack())->processValueForTransaction($webhookRequest->input('data.reference'));
     }
 }
