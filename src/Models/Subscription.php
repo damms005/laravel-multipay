@@ -4,6 +4,7 @@ namespace Damms005\LaravelMultipay\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 
 class Subscription extends Model
 {
@@ -15,6 +16,7 @@ class Subscription extends Model
 
     protected $casts = [
         'next_payment_due_date' => 'datetime',
+        'metadata' => AsArrayObject::class,
     ];
 
     public function getTable(): string
