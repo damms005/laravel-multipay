@@ -15,6 +15,7 @@ class Subscription extends Model
 
     protected $casts = [
         'next_payment_due_date' => 'datetime',
+        'metadata' => AsArrayObject::class,
     ];
 
     public function getTable(): string
