@@ -76,7 +76,7 @@ For [Paystack](https://paystack.com), ensure to set `paystack_secret_key` key in
 ```
     content: [
         ...,
-        './vendor/damms005/laravel-multipay/views'
+        './vendor/damms005/laravel-multipay/views/**/*.blade.php',
     ],
     ...
 ```

@@ -72,7 +72,7 @@ class Terminal
             ->json();
 
         if (!Arr::get($response, 'data.online', false) || Arr::get($response, 'data.available', false)) {
-            throw new \Exception("Terminal is not ready. " . json_encode($response));
+            throw new \Exception("Terminal hardware error: " . json_encode($response));
         }
     }
 
