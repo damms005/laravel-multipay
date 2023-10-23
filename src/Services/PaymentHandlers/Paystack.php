@@ -2,14 +2,15 @@
 
 namespace Damms005\LaravelMultipay\Services\PaymentHandlers;
 
+use stdClass;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Yabacon\Paystack as PaystackHelper;
 use Damms005\LaravelMultipay\Models\Payment;
-use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
-use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
-use Damms005\LaravelMultipay\Webhooks\Contracts\WebhookHandler;
 use Damms005\LaravelMultipay\Webhooks\Paystack\ChargeSuccess;
+use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
+use Damms005\LaravelMultipay\Webhooks\Contracts\WebhookHandler;
+use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 
 class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
 {
@@ -66,14 +67,14 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
             exit($trx->message);
         }
 
-        $payment = Payment::where('processor_transaction_reference', $transactionReferenceIdNumber)->firstOrFail();
+        $payment = $this->resolveLocalPayment($transactionReferenceIdNumber, $trx);
 
         if ('success' == $trx->data->status) {
             if ($payment->payment_processor_name != $this->getUniquePaymentHandlerName()) {
                 return null;
             }
 
-            $this->giveValue($transactionReferenceIdNumber, $trx);
+            $this->giveValue($payment->transaction_reference, $trx);
 
             $payment->refresh();
         } else {
@@ -127,7 +128,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
         return "";
     }
 
-    protected function getPaystackTransaction($paystackReference)
+    protected function getPaystackTransaction($paystackReference): stdClass
     {
         // Confirm that reference has not already gotten value
         // This would have happened most times if you handle the charge.success event.
@@ -181,9 +182,9 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
         return redirect()->away($trx->data->authorization_url);
     }
 
-    protected function giveValue($paystackReference, $paystackResponse)
+    protected function giveValue(string $transactionReference, stdClass $paystackResponse)
     {
-        Payment::where('processor_transaction_reference', $paystackReference)
+        Payment::where('transaction_reference', $transactionReference)
             ->firstOrFail()
             ->update([
                 "is_success" => 1,
@@ -220,5 +221,20 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
         ]);
 
         return '';
+    }
+
+    protected function resolveLocalPayment(string $transactionReferenceIdNumber, stdClass $trx): Payment
+    {
+        return Payment::query()
+            /**
+             * normal transactions
+             */
+            ->where('processor_transaction_reference', $transactionReferenceIdNumber)
+
+            /**
+             * terminal POS transactions
+             */
+            ->orWhere('metadata->response->data->metadata->reference', $trx->data->metadata->reference)
+            ->firstOrFail();
     }
 }

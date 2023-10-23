@@ -24,6 +24,7 @@ class Terminal
     public function createPaymentRequest(string $model, int $modelId, string $email, string $description, int $amount): Payment
     {
         $customer = Customer::where('model', $model)->where('model_id', $modelId)->first();
+        $ref = Str::uuid()->toString();
 
         if (!$customer) {
             $customer = $this->createCustomer($model, $modelId, $email);
@@ -35,6 +36,9 @@ class Terminal
             'line_items' => [
                 ['name' => $description, 'amount' => $amount, 'quantity' => 1],
             ],
+            'metadata' => [
+                'reference' => $ref,
+            ]
         ];
 
         $response = Http::acceptJson()
@@ -52,14 +56,14 @@ class Terminal
 
         $metadata = [
             'customer_id' => $customer->id,
-            json_encode($response)
+            'response' => $response,
         ];
 
         $payment = Payment::create([
             'original_amount_displayed_to_user' => $amount,
             'transaction_currency' => $response['data']['currency'],
             'transaction_description' => $description,
-            'transaction_reference' => Str::random(),
+            'transaction_reference' => $ref,
             'payment_processor_name' => Paystack::getUniquePaymentHandlerName(),
             'metadata' => $metadata,
         ]);
@@ -95,8 +99,8 @@ class Terminal
                 'type' => 'invoice',
                 'action' => 'process',
                 'data' => [
-                    'id' => $payment->metadata['data']['id'],
-                    'reference' => $payment->metadata['data']['offline_reference'],
+                    'id' => $payment->metadata['response']['data']['id'],
+                    'reference' => $payment->metadata['response']['data']['offline_reference'],
                 ],
             ])
             ->json();
