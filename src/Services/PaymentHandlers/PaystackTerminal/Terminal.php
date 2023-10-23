@@ -14,18 +14,19 @@ class Terminal
     /**
      * Create a payment request.
      *
-     * @param  integer $user The user id
+     * @param string $model The name of the model that has the email address
+     * @param  integer $modelId The model id
      * @param  string  $description
      * @param  integer $amount Amount in kobo
      *
      * @return Payment
      */
-    public function createPaymentRequest(int $user, string $email, string $description, int $amount): Payment
+    public function createPaymentRequest(string $model, int $modelId, string $email, string $description, int $amount): Payment
     {
-        $customer = Customer::where('user_id', $user)->first();
+        $customer = Customer::where('model', $model)->where('model_id', $modelId)->first();
 
         if (!$customer) {
-            $customer = $this->createCustomer($user, $email);
+            $customer = $this->createCustomer($model, $modelId, $email);
         }
 
         $payload = [
@@ -49,14 +50,18 @@ class Terminal
             throw new \Exception("Could not create payment request. Response id and offline reference are both needed. Received: " . json_encode($response));
         }
 
+        $metadata = [
+            'customer_id' => $customer->id,
+            json_encode($response)
+        ];
+
         $payment = Payment::create([
-            'user_id' => $user,
             'original_amount_displayed_to_user' => $amount,
             'transaction_currency' => $response['data']['currency'],
             'transaction_description' => $description,
             'transaction_reference' => Str::random(),
             'payment_processor_name' => Paystack::getUniquePaymentHandlerName(),
-            'metadata' => json_encode($response),
+            'metadata' => $metadata,
         ]);
 
         return $payment;
@@ -126,11 +131,11 @@ class Terminal
     /**
      * Create a customer.
      *
-     * @param  integer $user The user id
+     * @param  integer $modelId The user id
      *
      * @return array
      */
-    protected function createCustomer(int $user, string $email): Customer
+    protected function createCustomer(string $model, int $modelId, string $email): Customer
     {
         $response = Http::acceptJson()
             ->withToken(config("laravel-multipay.paystack_secret_key"))
@@ -142,7 +147,8 @@ class Terminal
         }
 
         $customer = Customer::create([
-            'user_id' => $user,
+            'model' => $model,
+            'model_id' => $modelId,
             'customer_id' => $response['data']['customer_code'],
         ]);
 
