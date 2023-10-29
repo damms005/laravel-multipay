@@ -75,13 +75,17 @@ class Terminal
     {
         $terminalId = config("laravel-multipay.paystack_terminal_id");
 
+        if (!$terminalId) {
+            throw new \Exception("Terminal id is not set in the config file");
+        }
+
         $response = Http::acceptJson()
             ->withToken(config("laravel-multipay.paystack_secret_key"))
             ->get("https://api.paystack.co/terminal/{$terminalId}/presence");
 
         $responseJson = $response->json();
 
-        if (!Arr::get($responseJson, 'data.online', false) || Arr::get($responseJson, 'data.available', false)) {
+        if (!Arr::get($responseJson, 'data.online', false) || !Arr::get($responseJson, 'data.available', false)) {
             throw new \Exception("Terminal hardware error: " . $response->body());
         }
     }
