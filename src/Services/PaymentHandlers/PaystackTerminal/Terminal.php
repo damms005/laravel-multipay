@@ -47,7 +47,7 @@ class Terminal
             ->json();
 
         if (!$response['status']) {
-            throw new \Exception("Could not create payment request. " . json_encode($response));
+            throw new \Exception("Could not create payment request [customer id: {$customer->customer_id}]. " . json_encode($response));
         }
 
         if (!Arr::get($response, 'data.id', false) || !Arr::get($response, 'data.offline_reference', false)) {
