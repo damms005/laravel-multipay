@@ -85,7 +85,7 @@ class Terminal
 
         $responseJson = $response->json();
 
-        if (!Arr::get($responseJson, 'data.online', false) || !Arr::get($responseJson, 'data.available', false)) {
+        if (Arr::get($responseJson, 'data.online', false) === false) {
             throw new \Exception("Terminal hardware error: " . $response->body());
         }
     }
