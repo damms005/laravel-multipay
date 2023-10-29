@@ -102,14 +102,19 @@ class Terminal
                     'id' => $payment->metadata['response']['data']['id'],
                     'reference' => $payment->metadata['response']['data']['offline_reference'],
                 ],
-            ])
-            ->json();
+            ]);
 
-        if (!$response['status']) {
-            throw new \Exception("Could not push to terminal. " . json_encode($response));
+        $responseJson = $response->json();
+
+        if (is_null($responseJson)) {
+            throw new \Exception("Could not push to terminal. " . $response->body());
         }
 
-        return $response['data']['id'];
+        if (!$responseJson['status']) {
+            throw new \Exception("Could not push to terminal. " . json_encode($responseJson));
+        }
+
+        return $responseJson['data']['id'];
     }
 
     /**
