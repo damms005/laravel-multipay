@@ -88,6 +88,8 @@ class Terminal
         if (Arr::get($responseJson, 'data.online', false) === false) {
             throw new \Exception("Terminal hardware error: " . $response->body());
         }
+
+        return "Terminal hardware status: " . $response->body();
     }
 
     /**
