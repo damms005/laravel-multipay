@@ -13,7 +13,7 @@ return new class () extends Migration {
     public function up()
     {
         Schema::table('customers', function (Blueprint $table) {
-            $table->string('model')->after('id');
+            $table->string('model')->nullable(false)->default()->after('id');
         });
 
         Schema::table('customers', function (Blueprint $table) {

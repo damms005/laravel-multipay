@@ -234,7 +234,9 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
             /**
              * terminal POS transactions
              */
-            ->orWhere('metadata->response->data->metadata->reference', $trx->data->metadata->reference)
+            ->when(is_object($trx->data->metadata), function ($query) use ($trx) {
+                return $query->orWhere('metadata->response->data->metadata->reference', $trx->data->metadata->reference);
+            })
             ->firstOrFail();
     }
 }
