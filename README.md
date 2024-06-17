@@ -61,8 +61,6 @@ php artisan vendor:publish --tag=laravel-multipay-config
 php artisan migrate
 ```
 
-## Usage
-
 ### Demo Repo
 I published an open source app that uses this payment package. It is also an excellent example of a Laravel app that uses [Laravel Vite](https://laravel.com/docs/9.x/vite#main-content) and leverages on [Laravel Echo](https://laravel.com/docs/9.x/broadcasting#client-side-installation) to provide realtime experience via public and private channels using [Laravel Websocket](https://beyondco.de/docs/laravel-websockets), powered by [Livewire](https://laravel-livewire.com/docs). The app is called [NFT Marketplace. Click here to check it out ✌🏼](https://github.com/damms005/nft-marketplace-l9)
 
@@ -81,7 +79,7 @@ For [Paystack](https://paystack.com), ensure to set `paystack_secret_key` key in
     ...
 ```
 
-#### Needed Third-party Integrations:
+### Needed Third-party Integrations:
 
 -   Flutterwave: If you want to use Flutterwave, ensure to get your API details [from the dashboard](https://dashboard.flutterwave.com/dashboard/settings/apis), and use it to set the following environmental variables:
 
@@ -105,6 +103,8 @@ REMITA_API_KEY=xxxxxxxxxxxxxxxxxxxxx-X
 ```
 
 > For most of the above environmental variables, you should rather use the (published) config file to set the corresponding values.
+
+## Usage
 
 ### Typical process-flow
 
