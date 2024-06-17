@@ -16,7 +16,7 @@ Whether you want to quickly bootstrap payment processing for your Laravel applic
 
 ## Requirements:
 This package is [tested against:](https://github.com/damms005/laravel-multipay/blob/68731735d50a18f6b8531cb107e63fed5151d0b8/.github/workflows/run-tests.yml#L16-L17)
-- Laravel 8/9
+- Laravel 8/9/10
 - PHP 8.0, 8.1
 
 ## Currently supported payment handlers
