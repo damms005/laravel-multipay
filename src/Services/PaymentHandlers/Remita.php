@@ -290,7 +290,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
         $availableServiceTypes = config("laravel-multipay.remita_service_types");
 
-        $serviceTypeConfigKey = $this->getRemitaServiceTypeConfigKey($payment->transaction_description);
+        $serviceTypeConfigKey = Str::snake($payment->transaction_description);
 
         throw_if(!is_array($availableServiceTypes), "Remita service types not well defined. Reason: unsupported data type; array data type expected");
 
@@ -300,11 +300,6 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         );
 
         return $availableServiceTypes[$serviceTypeConfigKey];
-    }
-
-    public function getRemitaServiceTypeConfigKey(string $paymentDescription)
-    {
-        return Str::snake($paymentDescription);
     }
 
     public function getBaseUrl()

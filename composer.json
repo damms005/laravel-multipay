@@ -20,7 +20,7 @@
         }
     ],
     "require": {
-        "php": "^8.0|^8.1",
+        "php": "^8.0",
         "damms005/laravel-flutterwave": "^1.0",
         "flutterwavedev/flutterwave-v3": "^1.0",
         "guzzlehttp/guzzle": "^7.3",
