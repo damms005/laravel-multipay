@@ -24,7 +24,7 @@
         "damms005/laravel-flutterwave": "^1.0",
         "flutterwavedev/flutterwave-v3": "^1.0",
         "guzzlehttp/guzzle": "^7.3",
-        "illuminate/support": "^7.0|^8.0|^9.0|^10.0",
+        "illuminate/support": "^7.0|^8.0|^9.0|^10.0|^11.0",
         "yabacon/paystack-php": "^2.2"
     },
     "require-dev": {
