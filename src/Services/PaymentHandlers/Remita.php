@@ -286,20 +286,9 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         // Prioritize user-defined service id
         if (Arr::has($payment->metadata, 'remita_service_id')) {
             return Arr::get($payment->metadata, 'remita_service_id');
+        } else {
+            throw new \Exception('Missing Remita service id. Please specify the Remita service id in the payment metadata json.');
         }
-
-        $availableServiceTypes = config("laravel-multipay.remita_service_types");
-
-        $serviceTypeConfigKey = Str::snake($payment->transaction_description);
-
-        throw_if(!is_array($availableServiceTypes), "Remita service types not well defined. Reason: unsupported data type; array data type expected");
-
-        throw_if(
-            !array_key_exists($serviceTypeConfigKey, $availableServiceTypes),
-            "Remita service types configuration does not have definition for '{$serviceTypeConfigKey}'"
-        );
-
-        return $availableServiceTypes[$serviceTypeConfigKey];
     }
 
     public function getBaseUrl()
