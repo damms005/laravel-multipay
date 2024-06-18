@@ -37,4 +37,9 @@ class PaymentService
 
         return $paymentHandler->confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome($paymentGatewayServerResponse);
     }
+
+    public static function redirectWithError(Payment $payment, array $error)
+    {
+        return redirect($payment->metadata['completion_url'] ?? '/')->with($error);
+    }
 }

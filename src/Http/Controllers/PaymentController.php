@@ -52,12 +52,9 @@ class PaymentController extends Controller
         /** @var Payment */
         $payment = Payment::where('transaction_reference', $request->transaction_reference)->firstOrFail();
 
-        //prevent duplicated transactions
+        // prevent duplicated transactions
         if ($payment->processor_returned_response_description) {
-            return redirect()
-                ->back()
-                ->withErrors("Multiple transaction prevention system: The transaction with reference number {$request->transaction_reference} is already completed.")
-                ->withInput();
+            return PaymentService::redirectWithError($payment, ["Multiple transactions detected: The transaction with reference number {$request->transaction_reference} is already completed."]);
         }
 
         /** @var PaymentHandlerInterface */

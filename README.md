@@ -129,7 +129,7 @@ back to `/payment/completed` (`route('payment.finished.callback_url')`) .
 
 > If there are additional steps you want to take upon successful payment, listen for `SuccessfulLaravelMultipayPaymentEvent`. It will be fired whenever a successful payment occurs, with its corresponding `Payment` model.
 
-> If the `Payment` has [`metadata`](#step-1) (supplied with the payment initiation request), with a key named `completion_url`, the user will be redirected to that URL upon successful payment.
+> If the `Payment` has [`metadata`](#step-1) (supplied with the payment initiation request), with a key named `completion_url`, the user will be redirected to that URL on successful payment or failure.
 
 ## Payment Conflict Resolution (PCR)
 

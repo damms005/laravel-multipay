@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\Services\PaymentService;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 
@@ -29,9 +30,7 @@ class UnifiedPayments extends BasePaymentHandler implements PaymentHandlerInterf
             ]);
 
         if (!$response->successful()) {
-            return redirect()
-                ->back()
-                ->withErrors("Unified Payments could not process your transaction at the moment. Please try again later. " . $response->body())->withInput();
+            return PaymentService::redirectWithError($payment, ["Unified Payments could not process your transaction at the moment. Please try again later. " . $response->body()]);
         }
 
         $transactionId = $response->body();

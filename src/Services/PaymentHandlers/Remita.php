@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Http;
 use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\Services\PaymentService;
 use Damms005\LaravelMultipay\Actions\CreateNewPayment;
 use Damms005\LaravelMultipay\Exceptions\MissingUserException;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
@@ -52,7 +53,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
             return $this->sendUserToPaymentGateway($rrr);
         } catch (\Throwable $th) {
-            return redirect()->back()->withErrors($th->getMessage());
+            return PaymentService::redirectWithError($payment, [$th->getMessage()]);
         }
     }
 
