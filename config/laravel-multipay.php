@@ -67,6 +67,5 @@ return [
     'enable_payment_confirmation_page_print' => env('ENABLE_PAYMENT_CONFIRMATION_PAGE_PRINT', true),
 
     'middleware' => [
-        'web',
     ],
 ];
