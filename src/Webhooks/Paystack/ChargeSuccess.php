@@ -5,8 +5,10 @@ namespace Damms005\LaravelMultipay\Webhooks\Paystack;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Services\PaymentHandlers\Paystack;
 use Damms005\LaravelMultipay\Webhooks\Contracts\WebhookHandler;
+use Damms005\LaravelMultipay\Exceptions\PaymentNotFoundException;
 
 /**
  * Event name: charge.success
@@ -25,7 +27,11 @@ class ChargeSuccess implements WebhookHandler
     {
         $payment = Payment::where('transaction_reference', $webhookRequest->input('data.reference'))
             ->orWhere('transaction_reference', $webhookRequest->input('data.metadata.reference'))
-            ->firstOrFail();
+            ->first();
+
+        if (!$payment) {
+            throw new PaymentNotFoundException(app(PaymentHandlerInterface::class), 'Paystack payment not found while responding to a charge.success event. Payload: ' . json_encode($webhookRequest->all()));
+        }
 
         $metadata = [...$payment->metadata ?? []];
         $metadata = Arr::set($metadata, 'events', $metadata['events'] ?? []);
