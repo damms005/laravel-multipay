@@ -30,7 +30,7 @@ class ChargeSuccess implements WebhookHandler
             ->first();
 
         if (!$payment) {
-            throw new PaymentNotFoundException(app(PaymentHandlerInterface::class), 'Paystack payment not found while responding to a charge.success event. Payload: ' . json_encode($webhookRequest->all()));
+            throw new PaymentNotFoundException(get_class(app(PaymentHandlerInterface::class)), 'Paystack payment not found while responding to a charge.success event. Payload: ' . json_encode($webhookRequest->all()));
         }
 
         $metadata = [...$payment->metadata ?? []];
