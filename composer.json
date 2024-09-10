@@ -33,7 +33,6 @@
         "orchestra/testbench": "^8.0",
         "pestphp/pest": "^2.0",
         "pestphp/pest-plugin-laravel": "^2.0",
-        "pestphp/pest-plugin-watch": "^2.1",
         "vimeo/psalm": "^5.0"
     },
     "autoload": {
