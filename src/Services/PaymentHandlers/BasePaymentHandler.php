@@ -136,8 +136,8 @@ abstract class BasePaymentHandler
         [$paymentDescription, $isJsonDescription] = self::getPaymentDescription($payment);
 
         if ($payment->is_success) {
-            if (self::paymentHasCustomTransactionCompletionPage($payment)) {
-                return self::redirectToCustomCompletionPage($payment);
+            if (self::paymentHasCustomSuccessPage($payment)) {
+                return self::redirectToCustomSuccessPage($payment);
             }
         }
 
@@ -148,7 +148,7 @@ abstract class BasePaymentHandler
         ]);
     }
 
-    protected static function paymentHasCustomTransactionCompletionPage(Payment $payment)
+    protected static function paymentHasCustomSuccessPage(Payment $payment)
     {
         /** @var ArrayObject */
         $metadata = $payment->metadata;
@@ -163,9 +163,11 @@ abstract class BasePaymentHandler
             && trim($metadata['completion_url']);
     }
 
-    protected static function redirectToCustomCompletionPage(Payment $payment)
+    protected static function redirectToCustomSuccessPage(Payment $payment)
     {
-        return redirect()->away($payment->metadata['completion_url']);
+        $url = $payment->metadata['completion_url'] . "?transaction_reference=". $payment->transaction_reference;
+
+        return redirect()->away($url);
     }
 
     protected static function sendNotificationForSuccessFulPayment(Request $paymentGatewayServerResponse): ?Payment
