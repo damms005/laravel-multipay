@@ -157,7 +157,10 @@ abstract class BasePaymentHandler
             return;
         }
 
-        return array_key_exists('completion_url', $metadata->toArray());
+        $metadata = $metadata->toArray();
+
+        return array_key_exists('completion_url', $metadata)
+            && trim($metadata['completion_url']);
     }
 
     protected static function redirectToCustomCompletionPage(Payment $payment)

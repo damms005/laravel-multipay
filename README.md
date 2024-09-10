@@ -66,7 +66,7 @@ I published an open source app that uses this payment package. It is also an exc
 
 ### Test drive 🚀
 
-Want to take things for a spin? Visit `/payment/test-drive` (`route('payment.test-drive')`) .
+Want to take things for a spin? Visit `/payment/test-drive` (`route('payment.test-drive')` provided by this package) .
 For [Paystack](https://paystack.com), ensure to set `paystack_secret_key` key in the `laravel-multipay.php` config file that you published previously at installation. You can get your key from your [settings page](https://dashboard.paystack.co/#/settings/developer).
 
 > **Warning** <br />
@@ -110,7 +110,7 @@ REMITA_API_KEY=xxxxxxxxxxxxxxxxxxxxx-X
 
 #### Step 1
 
-Send a `POST` request to `/payment/details/confirm` (`route('payment.show_transaction_details_for_user_confirmation')`).
+Send a `POST` request to `/payment/details/confirm` (`route('payment.show_transaction_details_for_user_confirmation')` provided by this package).
 
 Check the [InitiatePaymentRequest](src/Http/Requests/InitiatePaymentRequest.php#L28) form request class to know the values you are to post to this endpoint. (tip: you can also check [test-drive/pay.blade.php](views/test-drive/pay.blade.php)).
 
@@ -125,11 +125,11 @@ Upon user confirmation of transaction, user is redirected to the appropriate pay
 #### Step 3
 
 When user is done with the transaction on the payment handler's end (either successfully paid, or declined transaction), user is redirected
-back to `/payment/completed` (`route('payment.finished.callback_url')`) .
+back to `/payment/completed` (`route('payment.finished.callback_url')` provided by this package) .
+
+> If the `Payment` has [`metadata`](#step-1) (supplied with the payment initiation request), with a key named `completion_url`, the user will be redirected to that URL instead on successful payment.
 
 > If there are additional steps you want to take upon successful payment, listen for `SuccessfulLaravelMultipayPaymentEvent`. It will be fired whenever a successful payment occurs, with its corresponding `Payment` model.
-
-> If the `Payment` has [`metadata`](#step-1) (supplied with the payment initiation request), with a key named `completion_url`, the user will be redirected to that URL on successful payment or failure.
 
 ## Payment Conflict Resolution (PCR)
 
@@ -145,7 +145,7 @@ $outcome = LaravelMultipay::reQueryUnsuccessfulPayment( $payment )
 The payment will be re-resolved and the payment will be updated in the database. If the payment is successful, the `SuccessfulLaravelMultipayPaymentEvent` event will be fired, availing you the opportunity to run any domain/application-specific procedures.
 
 ## Payment Notifications (WebHooks)
-Some payment handlers provide a means for sending details of successful notifications. Usually, you will need to provide the payment handler with a URL to which the details of such notification will be sent. Should you need this feature, the notification URL is handled by `route('payment.external-webhook-endpoint')`.
+Some payment handlers provide a means for sending details of successful notifications. Usually, you will need to provide the payment handler with a URL to which the details of such notification will be sent. Should you need this feature, the notification URL is handled by `route('payment.external-webhook-endpoint' provided by this package)`.
 
 > If you use this payment notification URL feature, ensure that in your handler for `SuccessfulLaravelMultipayPaymentEvent`, check that you have not previously handled the event for that same payment.
 
