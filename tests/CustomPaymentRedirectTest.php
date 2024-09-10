@@ -58,7 +58,7 @@ it('can navigate to custom url upon successful completion', function () {
             ->put('RRR', 12345)
             ->toArray()
     )
-        ->assertRedirect('https://foo.bar');
+        ->assertRedirect('https://foo.bar?transaction_reference=' . $payment->transaction_reference);
 });
 
 it('redirects to default page when payment completion endpoint is not set', function () {
