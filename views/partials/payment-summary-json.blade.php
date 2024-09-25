@@ -4,6 +4,12 @@
 		{{$paymentDescriptionName}}:
 	</span>
 
-	{{$paymentDescriptionItem}}
+    @if(is_array($paymentDescriptionItem))
+        @foreach ($paymentDescriptionItem as $key => $value)
+            {{$value}}
+        @endforeach
+    @else
+    	{{$paymentDescriptionItem}}
+    @endif
 </div>
 @endforeach
