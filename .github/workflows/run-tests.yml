@@ -17,10 +17,10 @@ jobs:
         laravel: [11.*, 10.*]
         include:
           - laravel: 11.*
-            testbench: ^8.0
+            testbench: ^9.0
             pest: ^2.0
-            pest-plugin-laravel: ^2.0
-            pest-plugin-mock: ^2.0
+            pest-plugin-laravel: ^3.0
+            pest-plugin-mock: ^3.0
           - laravel: 10.*
             testbench: ^8.0
             pest: ^2.0
