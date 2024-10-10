@@ -54,11 +54,11 @@ abstract class BasePaymentHandler
     public static function getNamesOfPaymentHandlers()
     {
         return collect(self::PAYMENT_PROVIDERS_FQCNs)
-            ->map(function (string $paymentHandlerFqcn) {
+            ->mapWithKeys(function (string $paymentHandlerFqcn) {
                 /** @var PaymentHandlerInterface */
                 $paymentHandler = new $paymentHandlerFqcn();
 
-                return $paymentHandler->getUniquePaymentHandlerName();
+                return [$paymentHandlerFqcn => $paymentHandler->getUniquePaymentHandlerName()];
             });
     }
 
@@ -165,7 +165,7 @@ abstract class BasePaymentHandler
 
     protected static function redirectToCustomSuccessPage(Payment $payment)
     {
-        $url = $payment->metadata['completion_url'] . "?transaction_reference=". $payment->transaction_reference;
+        $url = $payment->metadata['completion_url'] . "?transaction_reference=" . $payment->transaction_reference;
 
         return redirect()->away($url);
     }

@@ -40,6 +40,7 @@ class PaymentController extends Controller
             $transaction_reference,
             $view,
             $metadata,
+            $initiatePaymentRequest->input('payment_processor'),
         );
     }
 
