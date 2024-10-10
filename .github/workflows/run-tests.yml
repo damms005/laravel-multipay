@@ -21,13 +21,11 @@ jobs:
             pest: ^3.0
             pest-plugin-laravel: ^3.0
             pest-plugin-watch: ^3.0
-            pest-plugin-mock: ^2.0
           - laravel: 10.*
             testbench: ^8.0
             pest: ^2.0
             pest-plugin-laravel: ^2.0
             pest-plugin-watch: ^2.0
-            pest-plugin-mock: ^2.0
         exclude:
           - laravel: 11.*
             php: 8.1
@@ -50,7 +48,7 @@ jobs:
 
       - name: Install composer packages
         run: |
-          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" pestphp/pest:${{matrix.pest}} pestphp/pest-plugin-laravel:${{matrix.pest-plugin-laravel}} pestphp/pest-plugin-mock:${{matrix.pest-plugin-mock}} pestphp/pest-plugin-watch:${{matrix.pest-plugin-watch}} --no-interaction --no-update --dev
+          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" pestphp/pest:${{matrix.pest}} pestphp/pest-plugin-laravel:${{matrix.pest-plugin-laravel}} pestphp/pest-plugin-watch:${{matrix.pest-plugin-watch}} --no-interaction --no-update --dev
           composer update --prefer-stable --prefer-dist --no-interaction
 
       - name: Execute tests
