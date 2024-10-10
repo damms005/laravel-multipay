@@ -13,9 +13,14 @@ jobs:
       fail-fast: true
       matrix:
         os: [ubuntu-latest]
-        php: [8.2, 8.1, 8.0]
-        laravel: [10.*, 9.*]
+        php: [8.3, 8.2, 8.1]
+        laravel: [11.*, 10.*, 9.*]
         include:
+          - laravel: 11.*
+            testbench: ^8.0
+            pest: ^2.0
+            pest-plugin-laravel: ^2.0
+            pest-plugin-mock: ^2.0
           - laravel: 10.*
             testbench: ^8.0
             pest: ^2.0
@@ -26,9 +31,6 @@ jobs:
             pest: ^1.0
             pest-plugin-laravel: ^1.0
             pest-plugin-mock: ^1.0
-        exclude:
-          - laravel: 10.*
-            php: 8.0
 
     name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }} (${{ matrix.os }})
 
