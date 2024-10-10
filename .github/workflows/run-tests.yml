@@ -48,7 +48,7 @@ jobs:
 
       - name: Install composer packages
         run: |
-          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" pestphp/pest:${{matrix.pest}} pestphp/pest-plugin-laravel:${{matrix.pest-plugin-laravel}} pestphp/pest-plugin-mock:${{matrix.pest-plugin-mock}} --no-interaction --no-update
+          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" pestphp/pest:${{matrix.pest}} pestphp/pest-plugin-laravel:${{matrix.pest-plugin-laravel}} pestphp/pest-plugin-mock:${{matrix.pest-plugin-mock}} --no-interaction --no-update --dev
           composer update --prefer-stable --prefer-dist --no-interaction
 
       - name: Execute tests
