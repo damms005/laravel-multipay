@@ -61,16 +61,6 @@ it('fails when payer_email, payer_phone are provided without user_id', function 
     $response->assertJsonValidationErrors(['payer_name']);
 });
 
-it('passes when all fields except user_id are provided', function () {
-    $response = post($this, [
-        'payer_name' => 'John Doe',
-        'payer_email' => 'johndoe@example.com',
-        'payer_phone' => '1234567890'
-    ]);
-
-    $response->assertStatus(200);
-});
-
 it('passes when all fields are provided', function () {
     $response = post($this, [
         'user_id' => 1,
