@@ -15,9 +15,9 @@ Whether you want to quickly bootstrap payment processing for your Laravel applic
 > `@extend()`ing whatever view you specify in `config('laravel-multipay.extended_layout')` (defaults to `layout.app`). This provides a smooth Plug-and-play&trade; experience.
 
 ## Requirements:
-This package is [tested against:](https://github.com/damms005/laravel-multipay/blob/68731735d50a18f6b8531cb107e63fed5151d0b8/.github/workflows/run-tests.yml#L16-L17)
-- Laravel 8/9/10
-- PHP 8.0, 8.1
+This package is [tested against:](https://github.com/damms005/laravel-multipay/blob/d1a15bf762ba2adabc97714f1565c6c0f0fcd58d/.github/workflows/run-tests.yml#L16-17)
+- PHP ^8.1
+- Laravel 10/11
 
 ## Currently supported payment handlers
 
