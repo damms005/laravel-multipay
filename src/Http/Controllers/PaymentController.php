@@ -59,9 +59,9 @@ class PaymentController extends Controller
         }
 
         /** @var PaymentHandlerInterface */
-        $handler = app()->make(PaymentHandlerInterface::class);
+        $basePaymentHandler = PaymentService::getHandlerFqcn($payment->payment_processor_name);
 
-        return $handler->proceedToPaymentGateway($payment, route('payment.finished.callback_url'), true);
+        return $basePaymentHandler->proceedToPaymentGateway($payment, route('payment.finished.callback_url'), true);
     }
 
     public function handlePaymentGatewayResponse(Request $request)

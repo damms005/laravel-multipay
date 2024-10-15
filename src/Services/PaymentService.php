@@ -19,9 +19,9 @@ class PaymentService
         return $basePaymentHandler->storePaymentAndShowUserBeforeProcessing($user_id, $amount, $description, $currency, $transaction_reference, null, null, $view, $metadata);
     }
 
-    private static function getHandlerFqcn(string $uniqueName): BasePaymentHandler
+    public static function getHandlerFqcn(string $uniqueName): BasePaymentHandler
     {
-        $handler = BasePaymentHandler::getNamesOfPaymentHandlers()->filter(fn($name) => $name === $uniqueName);
+        $handler = BasePaymentHandler::getNamesOfPaymentHandlers()->filter(fn ($name) => $name === $uniqueName);
 
         if ($handler->isEmpty()) {
             throw new \Exception("No handler found with name '{$uniqueName}'");
@@ -32,7 +32,7 @@ class PaymentService
         }
 
         return $handler
-            ->map(fn($name, $key) => new $key)
+            ->map(fn ($name, $key) => new $key())
             ->sole();
     }
 
