@@ -11,6 +11,7 @@ use Damms005\LaravelMultipay\Webhooks\Paystack\ChargeSuccess;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Webhooks\Contracts\WebhookHandler;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
+use Illuminate\Support\Arr;
 
 class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
 {
@@ -149,16 +150,20 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
     protected function sendUserToPaymentGateway(string $redirect_or_callback_url, Payment $payment)
     {
         $paystack = app()->make(PaystackHelper::class, ['secret_key' => $this->secret_key]);
+        $payload = [
+            'email' => $payment->getPayerEmail(),
+            'amount' => $this->convertAmountToValueRequiredByPaystack($payment->original_amount_displayed_to_user),
+            'callback_url' => $redirect_or_callback_url,
+        ];
+
+        $splitCode = Arr::get($payment->metadata, 'split_code');
+        if (boolval(trim($splitCode))) {
+            $payload['split_code'] = $splitCode;
+        }
 
         // the code below throws an exception if there was a problem completing the request,
         // else returns an object created from the json response
-        $trx = $paystack->transaction->initialize(
-            [
-                'email' => $payment->getPayerEmail(),
-                'amount' => $this->convertAmountToValueRequiredByPaystack($payment->original_amount_displayed_to_user),
-                'callback_url' => $redirect_or_callback_url,
-            ]
-        );
+        $trx = $paystack->transaction->initialize($payload);
 
         // status should be true if there was a successful call
         if (!$trx->status) {

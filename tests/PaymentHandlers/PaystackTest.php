@@ -38,7 +38,7 @@ it('resumes unsettled payments', function () {
 
     $paystackHelperMock->transaction = $transactionMock;
 
-    app()->bind(PaystackHelper::class, fn () => $paystackHelperMock);
+    app()->bind(PaystackHelper::class, fn() => $paystackHelperMock);
 
     (new Paystack())->proceedToPaymentGateway($this->payment, 'nowhere');
 
@@ -49,3 +49,41 @@ it('resumes unsettled payments', function () {
 
     expect($response->getTargetUrl())->toBe('someplace-on-the-internet');
 });
+
+it('uses split code specified in metadata', function () {
+    /**
+     * @var Mock<TObject>
+     */
+    $paystackHelperMock = mock(PaystackHelper::class);
+
+    /**
+     * @var Mock<TObject>
+     */
+    $transactionMock = mock('null');
+
+    $transactionMock
+        ->expects('initialize')
+        ->with([
+            'email' => 'user@gmail.com',
+            'amount' => 50000,
+            'callback_url' => 'far-away-land',
+            'split_code' => 'spl_xxx-123',
+        ])
+        ->andReturn((object)[
+            'status' => true,
+            'data' => (object)[
+                'reference' => 'reference',
+                'authorization_url' => 'someplace-on-the-internet',
+            ],
+        ]);
+
+    $paystackHelperMock->transaction = $transactionMock;
+
+    app()->bind(PaystackHelper::class, fn() => $paystackHelperMock);
+
+    $this->payment->update([
+        'metadata' => ['split_code' => 'spl_xxx-123'],
+    ]);
+
+    (new Paystack())->proceedToPaymentGateway($this->payment, 'far-away-land');
+})->only();

@@ -24,9 +24,9 @@ uses(TestCase::class)
 
 function doAuth()
 {
-    DB::statement('CREATE TABLE users ( id )');
+    DB::statement('CREATE TABLE users ( id, email )');
 
-    DB::table('users')->insert(['id' => 1]);
+    DB::table('users')->insert(['id' => 1, 'email' => 'user@gmail.com']);
 
     Auth::loginUsingId(1);
 }

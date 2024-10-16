@@ -6,6 +6,7 @@ use Damms005\LaravelMultipay\Models\Payment;
 use Damms005\LaravelMultipay\Services\PaymentService;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
+use Damms005\LaravelMultipay\Services\PaymentHandlers\Paystack;
 
 it('can confirm payment and send user to payment gateway', function () {
     $sampleInitialPayment = getSampleInitialPaymentRequest();
@@ -27,7 +28,7 @@ it('can confirm payment and send user to payment gateway', function () {
         $mock = mock(BasePaymentHandler::class);
         $mock->makePartial();
 
-        $mock->expects('proceedToPaymentGateway')->andReturnUsing(fn () => redirect()->away('nowhere'));
+        $mock->expects('proceedToPaymentGateway')->andReturnUsing(fn() => redirect()->away('nowhere'));
 
         return $mock;
     });
@@ -70,4 +71,25 @@ it('can confirm payment and send user to payment gateway', function () {
         ->assertSee('was successful')
         ->assertSee($payment->transaction_reference)
         ->assertStatus(200);
+});
+
+it('can use payment handler specified in the payload metadata', function () {
+    $payload1 = getSampleInitialPaymentRequest();
+
+    $this->post(route('payment.show_transaction_details_for_user_confirmation'), $payload1)
+        ->assertStatus(200);
+
+    $payload2 = [
+        ...$payload1,
+        'payment_processor' => Paystack::getUniquePaymentHandlerName(),
+    ];
+
+    $this->post(route('payment.show_transaction_details_for_user_confirmation'), $payload2)
+        ->assertStatus(200);
+
+    $payments = Payment::all();
+
+    expect($payments->count())->toEqual(2);
+    expect($payments->get(0)->payment_processor_name)->toEqual('Remita');
+    expect($payments->get(1)->payment_processor_name)->toEqual('Paystack');
 });
