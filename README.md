@@ -114,7 +114,8 @@ Check the [InitiatePaymentRequest](src/Http/Requests/InitiatePaymentRequest.php#
 
 This `POST` request will typically be made by submitting a form from your frontend to the route described above.
 
-> [!NOTE] if you need to store additional/contextual data with this payment, you can include such data in the request, in a field named `metadata`. The value must be a valid JSON string.
+> [!NOTE]
+> if you need to store additional/contextual data with this payment, you can include such data in the request, in a field named `metadata`. The value must be a valid JSON string.
 
 #### Step 2
 
@@ -125,13 +126,17 @@ Upon user confirmation of transaction, user is redirected to the appropriate pay
 When user is done with the transaction on the payment handler's end (either successfully paid, or declined transaction), user is redirected
 back to `/payment/completed` (`route('payment.finished.callback_url')` provided by this package) .
 
-> [!NOTE] If the `Payment` has [`metadata`](#step-1) (supplied with the payment initiation request), with a key named `completion_url`, the user will be redirected to that URL instead on successful payment, with the transaction reference included as `transaction_reference` in the URL query string.
+> [!NOTE]
+> If the `Payment` has [`metadata`](#step-1) (supplied with the payment initiation request), with a key named `completion_url`, the user will be redirected to that URL instead on successful payment, with the transaction reference included as `transaction_reference` in the URL query string.
 
-> [!NOTE] If the `Payment` has [`metadata`](#step-1) (supplied with the payment initiation request), and it contains a key named `payment_processor`, it will be used to dynamically set the payment handler for that particular transaction. Valid value is any of [the providers listed above](#currently-supported-payment-handlers)
+> [!NOTE]
+> If the `Payment` has [`metadata`](#step-1) (supplied with the payment initiation request), and it contains a key named `payment_processor`, it will be used to dynamically set the payment handler for that particular transaction. Valid value is any of [the providers listed above](#currently-supported-payment-handlers)
 
-> [!NOTE] If the `Payment` has [`metadata`](#step-1) (supplied with the payment initiation request), with a key named `split_code`, for Paystack transactions, it will be processed as [Paystack Multi-split Transaction](https://paystack.com/docs/payments/multi-split-payments).
+> [!NOTE]
+> If the `Payment` has [`metadata`](#step-1) (supplied with the payment initiation request), with a key named `split_code`, for Paystack transactions, it will be processed as [Paystack Multi-split Transaction](https://paystack.com/docs/payments/multi-split-payments).
 
-> [!NOTE] If there are additional steps you want to take upon successful payment, listen for `SuccessfulLaravelMultipayPaymentEvent`. It will be fired whenever a successful payment occurs, with its corresponding `Payment` model.
+> [!NOTE]
+> If there are additional steps you want to take upon successful payment, listen for `SuccessfulLaravelMultipayPaymentEvent`. It will be fired whenever a successful payment occurs, with its corresponding `Payment` model.
 
 ## Payment Conflict Resolution (PCR)
 
