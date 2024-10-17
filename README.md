@@ -9,10 +9,10 @@
 
 An opinionated Laravel package to handle payments, complete with blade views, routing, and everything in-between.
 
-Whether you want to quickly bootstrap payment processing for your Laravel applications, or you want a way to test supported payment processors, this package's got you covered.
+Whether you want to quickly bootstrap payment processing for your Laravel applications, or you want a way to test supported payment processors, this package's got you!
 
 > Although opinionated, this package allows you to "theme" the views. It achieves this theming by
-> `@extend()`ing whatever view you specify in `config('laravel-multipay.extended_layout')` (defaults to `layout.app`). This provides a smooth Plug-and-play&trade; experience.
+> `@extend()`ing whatever view you specify in `config('laravel-multipay.extended_layout')` (defaults to `layout.app`).
 
 ## Requirements:
 This package is [tested against:](https://github.com/damms005/laravel-multipay/blob/d1a15bf762ba2adabc97714f1565c6c0f0fcd58d/.github/workflows/run-tests.yml#L16-17)
@@ -37,25 +37,23 @@ _key_:
 > Adding a new payment handler is straight-forward. Simply add a class that extends `Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler`  and implement `Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface`
 
 > **Note** <br />
-> Payment providers that you so register as described above are resolved from the [Laravel Container](https://laravel.com/docs/9.x/container) to improve the flexibility of this package and improve DX.
+> Payment providers that you so register as described above are resolvable from the [Laravel Container](https://laravel.com/docs/9.x/container) to improve the flexibility of this package and improve DX.
 
 ## Installation
 
-You need to do just 3 things:
-
-- Install via composer.
+1. Install via composer.
 
 ```bash
 composer require damms005/laravel-multipay
 ```
 
-- Publish the config file.
+1. Publish the config file.
 
 ```bash
 php artisan vendor:publish --tag=laravel-multipay-config
 ```
 
-- Run migrations.
+1. Run migrations.
 
 ```
 php artisan migrate
@@ -81,7 +79,7 @@ For [Paystack](https://paystack.com), ensure to set `paystack_secret_key` key in
 
 ### Needed Third-party Integrations:
 
--   Flutterwave: If you want to use Flutterwave, ensure to get your API details [from the dashboard](https://dashboard.flutterwave.com/dashboard/settings/apis), and use it to set the following environmental variables:
+-   Flutterwave: If you want to use Flutterwave, ensure to get your API details [from the dashboard](https://dashboard.flutterwave.com/dashboard/settings/apis), and use it to set the following variables in your `.env` file:
 
 ```
 FLW_PUBLIC_KEY=FLWPUBK-xxxxxxxxxxxxxxxxxxxxx-X
@@ -89,20 +87,20 @@ FLW_SECRET_KEY=FLWSECK-xxxxxxxxxxxxxxxxxxxxx-X
 FLW_SECRET_HASH='My_lovelysite123'
 ```
 
--   Paystack: Paystack requires a secret key. Go to [the Paystack dashboard](https://dashboard.paystack.co/#/settings/developer) to obtain one, and use it to set the following environmental variable:
+-   Paystack: Paystack requires a secret key. Go to [the Paystack dashboard](https://dashboard.paystack.co/#/settings/developer) to obtain one, and use it to set the following variable:
 
 ```
 PAYSTACK_SECRET_KEY=FLWPUBK-xxxxxxxxxxxxxxxxxxxxx-X
 ```
 
--   Remita: Ensure to set the following environmental variables:
+-   Remita: Ensure to set the following environment variables:
 
 ```
 REMITA_MERCHANT_ID=xxxxxxxxxxxxxxxxxxxxx-X
 REMITA_API_KEY=xxxxxxxxxxxxxxxxxxxxx-X
 ```
 
-> For most of the above environmental variables, you should rather use the (published) config file to set the corresponding values.
+> For most of the above environment variables, you should rather use the (published) config file to set the corresponding values.
 
 ## Usage
 
@@ -114,9 +112,9 @@ Send a `POST` request to `/payment/details/confirm` (`route('payment.show_transa
 
 Check the [InitiatePaymentRequest](src/Http/Requests/InitiatePaymentRequest.php#L28) form request class to know the values you are to post to this endpoint. (tip: you can also check [test-drive/pay.blade.php](views/test-drive/pay.blade.php)).
 
-This `POST` request will typically simply be made by submitting a form from your frontend.
+This `POST` request will typically be made by submitting a form from your frontend to the route described above.
 
-> Tip: if you need to store additional/contextual data with this payment, you can include such data in the request, in a field named `metadata`. The value must be a valid JSON string.
+> [!NOTE] if you need to store additional/contextual data with this payment, you can include such data in the request, in a field named `metadata`. The value must be a valid JSON string.
 
 #### Step 2
 
@@ -129,9 +127,9 @@ back to `/payment/completed` (`route('payment.finished.callback_url')` provided 
 
 > [!NOTE] If the `Payment` has [`metadata`](#step-1) (supplied with the payment initiation request), with a key named `completion_url`, the user will be redirected to that URL instead on successful payment, with the transaction reference included as `transaction_reference` in the URL query string.
 
-> [!NOTE] If the `Payment` has [`metadata`](#step-1) (supplied with the payment initiation request), with a key named `payment_processor`, you can use that to dynamically set the payment handler for that particular transaction. Valid value is any of [the providers listed above](#currently-supported-payment-handlers)
+> [!NOTE] If the `Payment` has [`metadata`](#step-1) (supplied with the payment initiation request), and it contains a key named `payment_processor`, it will be used to dynamically set the payment handler for that particular transaction. Valid value is any of [the providers listed above](#currently-supported-payment-handlers)
 
-> [!NOTE] If the `Payment` has [`metadata`](#step-1) (supplied with the payment initiation request), with a key named `split_code`, for Paystack transactions, it will be process as [Paystack Multi-split Transaction](https://paystack.com/docs/payments/multi-split-payments).
+> [!NOTE] If the `Payment` has [`metadata`](#step-1) (supplied with the payment initiation request), with a key named `split_code`, for Paystack transactions, it will be processed as [Paystack Multi-split Transaction](https://paystack.com/docs/payments/multi-split-payments).
 
 > [!NOTE] If there are additional steps you want to take upon successful payment, listen for `SuccessfulLaravelMultipayPaymentEvent`. It will be fired whenever a successful payment occurs, with its corresponding `Payment` model.
 
@@ -146,12 +144,12 @@ If for any reason, your user/customer claims that the payment they made was succ
 $outcome = LaravelMultipay::reQueryUnsuccessfulPayment( $payment )
 ```
 
-The payment will be re-resolved and the payment will be updated in the database. If the payment is successful, the `SuccessfulLaravelMultipayPaymentEvent` event will be fired, availing you the opportunity to run any domain/application-specific procedures.
+The payment will be re-resolved and the payment will be updated in the database. If the payment is successful, the `SuccessfulLaravelMultipayPaymentEvent` event will be fired, so you can run any domain/application-specific procedures.
 
 ## Payment Notifications (WebHooks)
 Some payment handlers provide a means for sending details of successful notifications. Usually, you will need to provide the payment handler with a URL to which the details of such notification will be sent. Should you need this feature, the notification URL is handled by `route('payment.external-webhook-endpoint' provided by this package)`.
 
-> If you use this payment notification URL feature, ensure that in your handler for `SuccessfulLaravelMultipayPaymentEvent`, check that you have not previously handled the event for that same payment.
+> If you use this payment notification URL feature, ensure that in the handler for `SuccessfulLaravelMultipayPaymentEvent`, you have not previously handled the event for that same payment.
 
 ## Testing
 
