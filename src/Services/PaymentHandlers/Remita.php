@@ -91,13 +91,13 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         return $responseJson['RRR'];
     }
 
-    public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $request): ?Payment
+    public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $paymentGatewayServerResponse): ?Payment
     {
-        if (!$request->has('RRR')) {
+        if (!$paymentGatewayServerResponse->has('RRR')) {
             return null;
         }
 
-        $rrr = $request->RRR;
+        $rrr = $paymentGatewayServerResponse->RRR;
 
         $payment = Payment::where('processor_transaction_reference', $rrr)
             ->first();

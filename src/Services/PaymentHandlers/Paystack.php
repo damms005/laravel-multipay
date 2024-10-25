@@ -44,34 +44,34 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
     /**
      * This is a get request. (https://developers.paystack.co/docs/paystack-standard#section-4-verify-transaction)
      *
-     * @param Request $request
+     * @param Request $paymentGatewayServerResponse
      *
      * @return Payment
      */
-    public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $request): ?Payment
+    public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $paymentGatewayServerResponse): ?Payment
     {
-        if (!$request->has('reference')) {
+        if (!$paymentGatewayServerResponse->has('reference')) {
             return null;
         }
 
-        return $this->processValueForTransaction($request->reference);
+        return $this->processValueForTransaction($paymentGatewayServerResponse->reference);
     }
 
     /**
      * For Paystack, this is a get request. (https://developers.paystack.co/docs/paystack-standard#section-4-verify-transaction)
      */
-    public function processValueForTransaction(string $transactionReferenceIdNumber): ?Payment
+    public function processValueForTransaction(string $paystackReference): ?Payment
     {
-        throw_if(empty($transactionReferenceIdNumber));
+        throw_if(empty($paystackReference));
 
-        $verificationResponse = $this->verifyPaystackTransaction($transactionReferenceIdNumber);
+        $verificationResponse = $this->verifyPaystackTransaction($paystackReference);
 
         // status should be true if there was a successful call
         if (!$verificationResponse->status) {
             throw new \Exception($verificationResponse->message);
         }
 
-        $payment = $this->resolveLocalPayment($transactionReferenceIdNumber, $verificationResponse);
+        $payment = $this->resolveLocalPayment($paystackReference, $verificationResponse);
 
         if ('success' === $verificationResponse->data['status']) {
             if ($payment->payment_processor_name != $this->getUniquePaymentHandlerName()) {
@@ -104,7 +104,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
             throw new \Exception($verificationResponse->message);
         }
 
-        $payment = $this->resolveLocalPayment($existingPayment->transaction_reference, $verificationResponse);
+        $payment = $this->resolveLocalPayment($existingPayment->processor_transaction_reference, $verificationResponse);
 
         if ('success' === $verificationResponse->data['status']) {
             if ($payment->payment_processor_name != $this->getUniquePaymentHandlerName()) {
@@ -266,13 +266,13 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
         return '';
     }
 
-    protected function resolveLocalPayment(string $transactionReferenceIdNumber, PaystackVerificationResponse $verificationResponse): Payment
+    protected function resolveLocalPayment(string $paystackReferenceNumber, PaystackVerificationResponse $verificationResponse): Payment
     {
         return Payment::query()
             /**
              * normal transactions
              */
-            ->where('processor_transaction_reference', $transactionReferenceIdNumber)
+            ->where('processor_transaction_reference', $paystackReferenceNumber)
 
             /**
              * terminal POS transactions

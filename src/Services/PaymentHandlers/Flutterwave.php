@@ -85,13 +85,13 @@ class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
         exit;
     }
 
-    public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $request): ?Payment
+    public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $paymentGatewayServerResponse): ?Payment
     {
-        if (!$request->has('tx_ref')) {
+        if (!$paymentGatewayServerResponse->has('tx_ref')) {
             return null;
         }
 
-        $payment = $this->handleExternalWebhookRequest($request);
+        $payment = $this->handleExternalWebhookRequest($paymentGatewayServerResponse);
 
         return $payment;
     }

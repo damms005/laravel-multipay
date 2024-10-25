@@ -49,7 +49,7 @@ class Interswitch extends BasePaymentHandler implements PaymentHandlerInterface
         ]);
     }
 
-    public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $request): ?Payment
+    public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $paymentGatewayServerResponse): ?Payment
     {
         return null;
     }
