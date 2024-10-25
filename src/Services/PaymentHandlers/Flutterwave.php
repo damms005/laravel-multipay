@@ -81,8 +81,6 @@ class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
         $payment->save();
 
         header('Location: ' . $url);
-
-        exit;
     }
 
     public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $paymentGatewayServerResponse): ?Payment
