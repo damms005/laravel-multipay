@@ -1,11 +1,11 @@
 <?php
 
 describe('architecture tests', function () {
-    arch(null)
+    arch('dev debug calls')
         ->expect('Damms005\LaravelMultipay')
         ->not->toUse(['die', 'dd', 'dump']);
 
-    arch(null)->preset()->php();
-    arch(null)->preset()->laravel()->ignoring('Damms005\LaravelMultipay\LaravelMultipayServiceProvider');
-    arch(null)->preset()->security()->ignoring('md5');
+    arch('php preset')->preset()->php();
+    arch('laravel preset')->preset()->laravel()->ignoring('Damms005\LaravelMultipay\LaravelMultipayServiceProvider');
+    arch('security preset')->preset()->security()->ignoring('md5');
 });
