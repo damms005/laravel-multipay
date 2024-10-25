@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\User;
 use Damms005\LaravelMultipay\Models\Payment;
 use Damms005\LaravelMultipay\Models\PaymentPlan;
+use Damms005\LaravelMultipay\ValueObjects\ReQuery;
 use Illuminate\Database\Eloquent\Casts\ArrayObject;
 use Damms005\LaravelMultipay\Services\PaymentService;
 use Damms005\LaravelMultipay\Actions\CreateNewPayment;
@@ -228,7 +229,7 @@ abstract class BasePaymentHandler
     /**
      * @see \Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface::reQuery()
      */
-    public function reQueryUnsuccessfulPayment(Payment $unsuccessfulPayment)
+    public function reQueryUnsuccessfulPayment(Payment $unsuccessfulPayment): ?ReQuery
     {
         /** @var PaymentHandlerInterface **/
         $handler = app()->make(PaymentHandlerInterface::class, [$unsuccessfulPayment]);
@@ -236,16 +237,16 @@ abstract class BasePaymentHandler
         $reQueryResponse = $handler->reQuery($unsuccessfulPayment);
 
         if ($reQueryResponse == null) {
-            return false;
+            return null;
         }
 
-        $isSuccessFulPayment = boolval($reQueryResponse->payment->refresh()->is_success);
+        $isSuccessful = boolval($reQueryResponse->payment->refresh()->is_success);
 
-        if ($isSuccessFulPayment) {
+        if ($isSuccessful) {
             event(new SuccessfulLaravelMultipayPaymentEvent($reQueryResponse->payment));
         }
 
-        return $isSuccessFulPayment;
+        return $reQueryResponse;
     }
 
     public function paymentCompletionWebhookHandler(Request $request)
