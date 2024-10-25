@@ -18,9 +18,9 @@ class RemitaResponse
     public static function from(\stdClass $rrrQueryResponse)
     {
         return new self(
-            paymentDate: $rrrQueryResponse->paymentDate,
-            status: $rrrQueryResponse->status,
-            amount: $rrrQueryResponse->amount,
+            paymentDate: $rrrQueryResponse->paymentDate ?? null,
+            status: $rrrQueryResponse->status ?? null,
+            amount: $rrrQueryResponse->amount ?? null,
         );
     }
 }
