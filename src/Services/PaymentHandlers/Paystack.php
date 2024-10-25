@@ -96,7 +96,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
         try {
             $verificationResponse = $this->verifyPaystackTransaction($existingPayment->processor_transaction_reference);
         } catch (\Throwable $th) {
-            return new ReQuery($existingPayment, $th->getMessage());
+            return new ReQuery($existingPayment, ['error' => $th->getMessage()]);
         }
 
         // status should be true if there was a successful call
@@ -124,7 +124,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
 
         return new ReQuery(
             payment: $payment,
-            responseDescription: 'Response from gateway server: ' . json_encode((array)$verificationResponse),
+            responseDetails: (array)$verificationResponse,
         );
     }
 

@@ -158,7 +158,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
         return new ReQuery(
             payment: $payment,
-            responseDescription: 'Response from gateway server: ' . json_encode((array)$rrrQueryResponse),
+            responseDetails: (array)$rrrQueryResponse,
         );
     }
 

@@ -8,6 +8,10 @@ class ReQuery
 {
     public function __construct(
         public Payment $payment,
-        public string $responseDescription,
+
+        /**
+         * An array of arbitrary shape based on the specific payment handler.
+         */
+        public array $responseDetails,
     ) {}
 }

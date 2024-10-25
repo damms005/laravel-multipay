@@ -33,7 +33,7 @@ it('calls payment handler for payment re-query', function () {
         $mock->expects('reQuery')->andReturn(
             new ReQuery(
                 payment: new Payment(),
-                responseDescription: 'Successful',
+                responseDetails: ['status' => 'Successful'],
             ),
         );
 
@@ -52,7 +52,7 @@ it('fires success events for re-query of successful payments', function () {
         $mock->expects('reQuery')->andReturn(
             new ReQuery(
                 payment: new Payment(['is_success' => true]),
-                responseDescription: 'Successful',
+                responseDetails: ['status' => 'Successful'],
             ),
         );
 
@@ -76,7 +76,7 @@ it('does not fire success events for re-query of unsuccessful payments', functio
         $mock->expects('reQuery')->andReturn(
             new ReQuery(
                 payment: new Payment(['is_success' => false]),
-                responseDescription: 'Went South!',
+                responseDetails: ['status' => 'Went South!'],
             ),
         );
 
