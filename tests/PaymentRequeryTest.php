@@ -1,13 +1,14 @@
 <?php
 
 use Mockery\Mock;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Event;
 use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\ValueObjects\ReQuery;
 use Damms005\LaravelMultipay\Services\PaymentHandlers\Remita;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
 use Damms005\LaravelMultipay\Events\SuccessfulLaravelMultipayPaymentEvent;
-use Damms005\LaravelMultipay\ValueObjects\ReQuery;
 
 beforeEach(function () {
     $payment = createPayment();
@@ -40,18 +41,24 @@ it('calls payment handler for payment re-query', function () {
         return $mock;
     });
 
-    app()->make(BasePaymentHandler::class)->reQueryUnsuccessfulPayment(new Payment());
+    app()->make(BasePaymentHandler::class)->reQueryUnsuccessfulPayment(
+        Payment::factory()->create(['payment_processor_name' => Remita::getUniquePaymentHandlerName()])
+    );
 });
 
 it('fires success events for re-query of successful payments', function () {
-    app()->bind(PaymentHandlerInterface::class, function () {
+    app()->bind(Remita::class, function () {
         /** @var Mock<TObject> */
         $mock = mock(Remita::class);
         $mock->makePartial();
 
         $mock->expects('reQuery')->andReturn(
             new ReQuery(
-                payment: new Payment(['is_success' => true]),
+                payment: Payment::factory()->create([
+                    'is_success' => true,
+                    'transaction_reference' => Str::random(),
+                    'payment_processor_name' => Remita::getUniquePaymentHandlerName(),
+                ]),
                 responseDetails: ['status' => 'Successful'],
             ),
         );
@@ -60,7 +67,12 @@ it('fires success events for re-query of successful payments', function () {
     });
 
     Event::fake();
-    app()->make(BasePaymentHandler::class)->reQueryUnsuccessfulPayment(new Payment());
+
+    app()
+        ->make(BasePaymentHandler::class)
+        ->reQueryUnsuccessfulPayment(
+            Payment::factory()->create(['payment_processor_name' => Remita::getUniquePaymentHandlerName()])
+        );
 
     Event::assertDispatched(SuccessfulLaravelMultipayPaymentEvent::class);
 });
@@ -85,7 +97,9 @@ it('does not fire success events for re-query of unsuccessful payments', functio
 
     Event::fake();
 
-    app()->make(BasePaymentHandler::class)->reQueryUnsuccessfulPayment(new Payment());
+    app()->make(BasePaymentHandler::class)->reQueryUnsuccessfulPayment(
+        Payment::factory()->create(['payment_processor_name' => Remita::getUniquePaymentHandlerName()])
+    );
 
     Event::assertNotDispatched(SuccessfulLaravelMultipayPaymentEvent::class);
 });

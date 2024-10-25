@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
  * @property int $id
@@ -38,6 +39,7 @@ use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
 class Payment extends Model
 {
     use SoftDeletes;
+    use HasFactory;
 
     protected $guarded = ['id'];
 
