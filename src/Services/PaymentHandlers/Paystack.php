@@ -13,6 +13,8 @@ use Damms005\LaravelMultipay\Webhooks\Paystack\ChargeSuccess;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Webhooks\Contracts\WebhookHandler;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
+use Damms005\LaravelMultipay\ValueObjects\PaystackVerificationResponse;
+use Exception;
 
 class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
 {
@@ -62,27 +64,27 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
     {
         throw_if(empty($transactionReferenceIdNumber));
 
-        $trx = $this->getPaystackTransaction($transactionReferenceIdNumber);
+        $verificationResponse = $this->verifyPaystackTransaction($transactionReferenceIdNumber);
 
         // status should be true if there was a successful call
-        if (!$trx->status) {
-            exit($trx->message);
+        if (!$verificationResponse->status) {
+            throw new \Exception($verificationResponse->message);
         }
 
-        $payment = $this->resolveLocalPayment($transactionReferenceIdNumber, $trx);
+        $payment = $this->resolveLocalPayment($transactionReferenceIdNumber, $verificationResponse);
 
-        if ('success' == $trx->data->status) {
+        if ('success' === $verificationResponse->data['status']) {
             if ($payment->payment_processor_name != $this->getUniquePaymentHandlerName()) {
                 return null;
             }
 
-            $this->giveValue($payment->transaction_reference, $trx);
+            $this->giveValue($payment->transaction_reference, $verificationResponse);
 
             $payment->refresh();
         } else {
             $payment->update([
                 'is_success' => 0,
-                'processor_returned_response_description' => $trx->data->gateway_response,
+                'processor_returned_response_description' => $verificationResponse->data['gateway_response'],
             ]);
         }
 
@@ -91,7 +93,35 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
 
     public function reQuery(Payment $existingPayment): ?ReQuery
     {
-        throw new \Exception("No requery implementation for Paystack");
+        $verificationResponse = $this->verifyPaystackTransaction($existingPayment->transaction_reference);
+
+        // status should be true if there was a successful call
+        if (!$verificationResponse->status) {
+            throw new \Exception($verificationResponse->message);
+        }
+
+        $payment = $this->resolveLocalPayment($existingPayment->transaction_reference, $verificationResponse);
+
+        if ('success' === $verificationResponse->data['status']) {
+            if ($payment->payment_processor_name != $this->getUniquePaymentHandlerName()) {
+                return null;
+            }
+
+            $this->giveValue($payment->transaction_reference, $verificationResponse);
+        } else {
+            $canStillBeSuccessful = in_array($verificationResponse->data['status'], ['ongoing', 'pending', 'processing', 'queued']);
+            $payment->update([
+                'is_success' => $canStillBeSuccessful
+                    ? null // so can still be selected for requery
+                    : false,
+                'processor_returned_response_description' => $verificationResponse->data['gateway_response'],
+            ]);
+        }
+
+        return new ReQuery(
+            payment: $payment,
+            responseDescription: 'Response from gateway server: ' . json_encode((array)$verificationResponse),
+        );
     }
 
     /**
@@ -130,7 +160,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
         return "";
     }
 
-    protected function getPaystackTransaction($paystackReference): stdClass
+    protected function verifyPaystackTransaction($paystackReference): PaystackVerificationResponse
     {
         // Confirm that reference has not already gotten value
         // This would have happened most times if you handle the charge.success event.
@@ -140,7 +170,9 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
         // else returns an object created from the json response
         // (full sample verify response is here: https://developers.paystack.co/docs/verifying-transactions)
 
-        return $paystack->transaction->verify(['reference' => $paystackReference]);
+        return PaystackVerificationResponse::from(
+            $paystack->transaction->verify(['reference' => $paystackReference])
+        );
     }
 
     protected function convertAmountToValueRequiredByPaystack($original_amount_displayed_to_user)
@@ -151,6 +183,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
     protected function sendUserToPaymentGateway(string $redirect_or_callback_url, Payment $payment)
     {
         $paystack = app()->make(PaystackHelper::class, ['secret_key' => $this->secret_key]);
+
         $payload = [
             'email' => $payment->getPayerEmail(),
             'amount' => $this->convertAmountToValueRequiredByPaystack($payment->original_amount_displayed_to_user),
@@ -168,7 +201,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
 
         // status should be true if there was a successful call
         if (!$trx->status) {
-            exit($trx->message);
+            throw new Exception($trx->message);
         }
 
         $payment = Payment::where('transaction_reference', $payment->transaction_reference)
@@ -188,15 +221,15 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
         return redirect()->away($trx->data->authorization_url);
     }
 
-    protected function giveValue(string $transactionReference, stdClass $paystackResponse)
+    protected function giveValue(string $transactionReference, PaystackVerificationResponse $paystackResponse)
     {
         Payment::where('transaction_reference', $transactionReference)
             ->firstOrFail()
             ->update([
                 "is_success" => 1,
-                "processor_returned_amount" => $paystackResponse->data->amount,
-                "processor_returned_transaction_date" => new Carbon($paystackResponse->data->created_at),
-                'processor_returned_response_description' => $paystackResponse->data->gateway_response,
+                "processor_returned_amount" => $paystackResponse->data['amount'],
+                "processor_returned_transaction_date" => new Carbon($paystackResponse->data['created_at']),
+                'processor_returned_response_description' => $paystackResponse->data['gateway_response'],
             ]);
     }
 
@@ -229,7 +262,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
         return '';
     }
 
-    protected function resolveLocalPayment(string $transactionReferenceIdNumber, stdClass $trx): Payment
+    protected function resolveLocalPayment(string $transactionReferenceIdNumber, PaystackVerificationResponse $verificationResponse): Payment
     {
         return Payment::query()
             /**
@@ -240,8 +273,8 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
             /**
              * terminal POS transactions
              */
-            ->when(is_object($trx->data->metadata), function ($query) use ($trx) {
-                return $query->orWhere('metadata->response->data->metadata->reference', $trx->data->metadata->reference);
+            ->when(is_object($verificationResponse->data['metadata']), function ($query) use ($verificationResponse) {
+                return $query->orWhere('metadata->response->data->metadata->reference', $verificationResponse->data['metadata']['reference']);
             })
             ->firstOrFail();
     }

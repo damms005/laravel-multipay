@@ -239,7 +239,7 @@ abstract class BasePaymentHandler
             return false;
         }
 
-        $isSuccessFulPayment = $reQueryResponse->payment->is_success == 1;
+        $isSuccessFulPayment = boolval($reQueryResponse->payment->refresh()->is_success);
 
         if ($isSuccessFulPayment) {
             event(new SuccessfulLaravelMultipayPaymentEvent($reQueryResponse->payment));
