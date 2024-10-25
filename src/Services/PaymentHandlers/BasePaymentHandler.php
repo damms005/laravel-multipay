@@ -232,7 +232,7 @@ abstract class BasePaymentHandler
     public function reQueryUnsuccessfulPayment(Payment $unsuccessfulPayment): ?ReQuery
     {
         /** @var PaymentHandlerInterface **/
-        $handler = app()->make(PaymentHandlerInterface::class, [$unsuccessfulPayment]);
+        $handler = new (PaymentService::getHandlerFqcn($unsuccessfulPayment->payment_processor_name));
 
         $reQueryResponse = $handler->reQuery($unsuccessfulPayment);
 
