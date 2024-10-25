@@ -2,7 +2,6 @@
 
 namespace Damms005\LaravelMultipay\Services\PaymentHandlers;
 
-use stdClass;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
@@ -14,7 +13,6 @@ use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Webhooks\Contracts\WebhookHandler;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 use Damms005\LaravelMultipay\ValueObjects\PaystackVerificationResponse;
-use Exception;
 
 class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
 {
@@ -205,7 +203,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
 
         // status should be true if there was a successful call
         if (!$trx->status) {
-            throw new Exception($trx->message);
+            throw new \Exception($trx->message);
         }
 
         $payment = Payment::where('transaction_reference', $payment->transaction_reference)
