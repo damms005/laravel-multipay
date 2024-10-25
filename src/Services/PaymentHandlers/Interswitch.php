@@ -3,9 +3,10 @@
 namespace Damms005\LaravelMultipay\Services\PaymentHandlers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Log;
 use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\ValueObjects\ReQuery;
 use Illuminate\Contracts\View\Factory as ViewFactory;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
@@ -148,7 +149,7 @@ class Interswitch extends BasePaymentHandler implements PaymentHandlerInterface
         return $human_readable;
     }
 
-    public function reQuery(Payment $existingPayment): ?Payment
+    public function reQuery(Payment $existingPayment): ?ReQuery
     {
         throw new \Exception("Method not yet implemented");
     }

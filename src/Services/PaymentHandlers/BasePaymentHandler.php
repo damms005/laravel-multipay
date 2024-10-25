@@ -226,23 +226,23 @@ abstract class BasePaymentHandler
     }
 
     /**
-     * @see PaymentHandlerInterface::reQuery()
+     * @see \Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface::reQuery()
      */
     public function reQueryUnsuccessfulPayment(Payment $unsuccessfulPayment)
     {
         /** @var PaymentHandlerInterface **/
         $handler = app()->make(PaymentHandlerInterface::class, [$unsuccessfulPayment]);
 
-        $payment = $handler->reQuery($unsuccessfulPayment);
+        $reQueryResponse = $handler->reQuery($unsuccessfulPayment);
 
-        if ($payment == null) {
+        if ($reQueryResponse == null) {
             return false;
         }
 
-        $isSuccessFulPayment = $payment->is_success == 1;
+        $isSuccessFulPayment = $reQueryResponse->payment->is_success == 1;
 
         if ($isSuccessFulPayment) {
-            event(new SuccessfulLaravelMultipayPaymentEvent($payment));
+            event(new SuccessfulLaravelMultipayPaymentEvent($reQueryResponse->payment));
         }
 
         return $isSuccessFulPayment;

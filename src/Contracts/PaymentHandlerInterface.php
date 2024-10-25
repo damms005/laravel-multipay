@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\User;
 use Damms005\LaravelMultipay\Models\Payment;
 use Damms005\LaravelMultipay\Models\PaymentPlan;
+use Damms005\LaravelMultipay\ValueObjects\ReQuery;
 use Damms005\LaravelMultipay\Exceptions\MissingUserException;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 use Damms005\LaravelMultipay\Exceptions\NonActionableWebhookPaymentException;
@@ -43,7 +44,7 @@ interface PaymentHandlerInterface
      * this method so as to support re-querying such transaction. In such implementation, payment handler should ensure to set the
      * payment as successful and ensure that all relevant/handler-specific properties of the transaction is set and saved to db
      */
-    public function reQuery(Payment $existingPayment): ?Payment;
+    public function reQuery(Payment $existingPayment): ?ReQuery;
 
     /**
      * This check can be helpful in preventing double-payment.

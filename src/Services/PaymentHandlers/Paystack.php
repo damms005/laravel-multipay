@@ -4,14 +4,15 @@ namespace Damms005\LaravelMultipay\Services\PaymentHandlers;
 
 use stdClass;
 use Carbon\Carbon;
+use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use Yabacon\Paystack as PaystackHelper;
 use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\ValueObjects\ReQuery;
 use Damms005\LaravelMultipay\Webhooks\Paystack\ChargeSuccess;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Webhooks\Contracts\WebhookHandler;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
-use Illuminate\Support\Arr;
 
 class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
 {
@@ -88,7 +89,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
         return $payment;
     }
 
-    public function reQuery(Payment $existingPayment): ?Payment
+    public function reQuery(Payment $existingPayment): ?ReQuery
     {
         throw new \Exception("No requery implementation for Paystack");
     }

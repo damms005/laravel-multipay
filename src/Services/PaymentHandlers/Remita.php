@@ -9,8 +9,10 @@ use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Http;
 use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\ValueObjects\ReQuery;
 use Damms005\LaravelMultipay\Services\PaymentService;
 use Damms005\LaravelMultipay\Actions\CreateNewPayment;
+use Damms005\LaravelMultipay\ValueObjects\RemitaResponse;
 use Damms005\LaravelMultipay\Exceptions\MissingUserException;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
@@ -110,7 +112,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
         $rrrQueryResponse = $this->queryRrr($rrr);
 
-        return $this->useResponseToUpdatePayment($payment, $rrrQueryResponse);
+        return $this->useResponseToUpdatePayment($payment, RemitaResponse::from($rrrQueryResponse));
     }
 
     protected function queryRrr($rrr): \stdClass
@@ -133,7 +135,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
         return json_decode($response->body());
     }
 
-    public function reQuery(Payment $existingPayment): ?Payment
+    public function reQuery(Payment $existingPayment): ?ReQuery
     {
         if ($existingPayment->payment_processor_name != $this->getUniquePaymentHandlerName()) {
             throw new WrongPaymentHandlerException($this, $existingPayment);
@@ -152,9 +154,12 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
         $rrrQueryResponse = $this->queryRrr($rrr);
 
-        $payment = $this->useResponseToUpdatePayment($payment, $rrrQueryResponse);
+        $payment = $this->useResponseToUpdatePayment($payment, RemitaResponse::from($rrrQueryResponse));
 
-        return $payment;
+        return new ReQuery(
+            payment: $payment,
+            responseDescription: 'Response from gateway server: ' . json_encode((array)$rrrQueryResponse),
+        );
     }
 
     /**
@@ -186,7 +191,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
             throw new MissingUserException($this, "Cannot get user by email. Email was {$rrrQueryResponse->email}");
         }
 
-        $payment = $this->useResponseToUpdatePayment($payment, $rrrQueryResponse);
+        $payment = $this->useResponseToUpdatePayment($payment, RemitaResponse::from($rrrQueryResponse));
 
         return $payment;
     }
@@ -216,7 +221,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
             ->first();
     }
 
-    protected function useResponseToUpdatePayment(Payment $payment, \stdClass $rrrQueryResponse): Payment
+    protected function useResponseToUpdatePayment(Payment $payment, RemitaResponse $rrrQueryResponse): Payment
     {
         $payment->processor_returned_response_description = json_encode($rrrQueryResponse);
 

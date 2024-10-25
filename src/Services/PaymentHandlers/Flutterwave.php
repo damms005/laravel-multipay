@@ -2,6 +2,7 @@
 
 namespace Damms005\LaravelMultipay\Services\PaymentHandlers;
 
+use stdClass;
 use Carbon\Carbon;
 use Flutterwave\Payload;
 use Illuminate\Http\Request;
@@ -10,11 +11,11 @@ use Flutterwave\Service\PaymentPlan;
 use Illuminate\Foundation\Auth\User;
 use Damms005\LaravelMultipay\Models\Payment;
 use Damms005\LaravelMultipay\Models\Subscription;
+use Damms005\LaravelMultipay\ValueObjects\ReQuery;
 use KingFlamez\Rave\Facades\Rave as FlutterwaveRave;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 use Damms005\LaravelMultipay\Models\PaymentPlan as PaymentPlanModel;
-use stdClass;
 
 class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
 {
@@ -95,7 +96,7 @@ class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
         return $payment;
     }
 
-    public function reQuery(Payment $existingPayment): ?Payment
+    public function reQuery(Payment $existingPayment): ?ReQuery
     {
         throw new \Exception("Method not yet implemented");
     }
