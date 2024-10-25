@@ -16,21 +16,9 @@ parameters:
             path: src/Services/PaymentHandlers/Paystack.php
         -
             messages:
-                - '#^Access to an undefined property Illuminate\\Foundation\\Auth\\User\:\:\$name\.$#'
-                - '#^Access to an undefined property Illuminate\\Foundation\\Auth\\User\:\:\$email\.$#'
-                - '#^Access to an undefined property Illuminate\\Foundation\\Auth\\User\:\:\$phone\.$#'
-            paths:
-                - src/Services/PaymentHandlers/Remita.php
-        -
-            messages:
-                - '#^Access to an undefined property Illuminate\\Foundation\\Auth\\User\:\:\$name\.$#'
                 - '#^Access to an undefined property Illuminate\\Foundation\\Auth\\User\:\:\$email\.$#'
             paths:
                 - src/Services/PaymentHandlers/Flutterwave.php
-        -
-            messages:
-                - '#^Relation ''user'' is not found in Damms005\\LaravelMultipay\\Models\\Payment model\.$#'
-            path: src/Http/Controllers/PaymentController.php
 
     excludePaths:
         - ./*/*/FileToBeExcluded.php

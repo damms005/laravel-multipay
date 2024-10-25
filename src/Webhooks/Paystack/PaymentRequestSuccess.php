@@ -3,6 +3,7 @@
 namespace Damms005\LaravelMultipay\Webhooks\Paystack;
 
 use Illuminate\Http\Request;
+use Damms005\LaravelMultipay\Models\Payment;
 use Damms005\LaravelMultipay\Webhooks\Contracts\WebhookHandler;
 
 /**
@@ -17,5 +18,10 @@ class PaymentRequestSuccess implements WebhookHandler
     {
         // TODO: Implement isHandlerFor() method.
         return false;
+    }
+
+    public function handle(Request $webhookRequest): Payment
+    {
+        throw new \Exception('Method not implemented');
     }
 }

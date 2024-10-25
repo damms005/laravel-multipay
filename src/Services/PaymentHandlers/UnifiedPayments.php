@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\ValueObjects\ReQuery;
 use Damms005\LaravelMultipay\Services\PaymentService;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
@@ -84,7 +85,7 @@ class UnifiedPayments extends BasePaymentHandler implements PaymentHandlerInterf
         return $payment;
     }
 
-    public function reQuery(Payment $existingPayment): ?Payment
+    public function reQuery(Payment $existingPayment): ?ReQuery
     {
         throw new \Exception("Method not yet implemented");
     }

@@ -86,4 +86,4 @@ it('uses split code specified in metadata', function () {
     ]);
 
     (new Paystack())->proceedToPaymentGateway($this->payment, 'far-away-land');
-})->only();
+});

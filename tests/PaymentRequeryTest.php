@@ -7,6 +7,7 @@ use Damms005\LaravelMultipay\Services\PaymentHandlers\Remita;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
 use Damms005\LaravelMultipay\Events\SuccessfulLaravelMultipayPaymentEvent;
+use Damms005\LaravelMultipay\ValueObjects\ReQuery;
 
 beforeEach(function () {
     $payment = createPayment();
@@ -29,7 +30,12 @@ it('calls payment handler for payment re-query', function () {
         $mock = mock(Remita::class);
         $mock->makePartial();
 
-        $mock->expects('reQuery')->andReturn(new Payment());
+        $mock->expects('reQuery')->andReturn(
+            new ReQuery(
+                payment: new Payment(),
+                responseDescription: 'Successful',
+            ),
+        );
 
         return $mock;
     });
@@ -43,7 +49,12 @@ it('fires success events for re-query of successful payments', function () {
         $mock = mock(Remita::class);
         $mock->makePartial();
 
-        $mock->expects('reQuery')->andReturn(new Payment(['is_success' => true]));
+        $mock->expects('reQuery')->andReturn(
+            new ReQuery(
+                payment: new Payment(['is_success' => true]),
+                responseDescription: 'Successful',
+            ),
+        );
 
         return $mock;
     });
@@ -54,7 +65,6 @@ it('fires success events for re-query of successful payments', function () {
     Event::assertDispatched(SuccessfulLaravelMultipayPaymentEvent::class);
 });
 
-
 it('does not fire success events for re-query of unsuccessful payments', function () {
     app()->bind(PaymentHandlerInterface::class, function ($app) {
         /**
@@ -63,7 +73,12 @@ it('does not fire success events for re-query of unsuccessful payments', functio
         $mock = mock(Remita::class);
         $mock->makePartial();
 
-        $mock->expects('reQuery')->andReturn(new Payment(['is_success' => false,]));
+        $mock->expects('reQuery')->andReturn(
+            new ReQuery(
+                payment: new Payment(['is_success' => false]),
+                responseDescription: 'Went South!',
+            ),
+        );
 
         return $mock;
     });

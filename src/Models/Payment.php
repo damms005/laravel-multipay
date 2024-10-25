@@ -32,7 +32,7 @@ use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
  * @property string $completion_url
  * @property ?array $metadata
 
- * @property User $user
+ * @property ?User $user
  *
  */
 class Payment extends Model

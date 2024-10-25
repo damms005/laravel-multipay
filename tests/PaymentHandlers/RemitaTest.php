@@ -86,6 +86,7 @@ it('can handle Remita payment webhook ingress', function () {
             function () {
                 $response = new stdClass();
                 $response->status = '00';
+                $response->paymentDate = now()->format('c');
                 $response->email = 'example@mail.com';
                 $response->description = 'sample description';
                 $response->amount = 12345;
