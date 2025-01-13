@@ -21,18 +21,18 @@ class PaymentService
 
     public static function getHandlerFqcn(string $uniqueName): BasePaymentHandler
     {
-        $handler = BasePaymentHandler::getNamesOfPaymentHandlers()->filter(fn ($name) => $name === $uniqueName);
+        $handlers = BasePaymentHandler::getNamesOfPaymentHandlers()->filter(fn($name) => $name === $uniqueName);
 
-        if ($handler->isEmpty()) {
+        if ($handlers->isEmpty()) {
             throw new \Exception("No handler found with name '{$uniqueName}'");
         }
 
-        if ($handler->count() !== 1) {
+        if ($handlers->count() !== 1) {
             throw new \Exception("Multiple handler found with name '{$uniqueName}'");
         }
 
-        return $handler
-            ->map(fn ($name, $key) => new $key())
+        return $handlers
+            ->map(fn($name, $key) => new $key())
             ->sole();
     }
 
