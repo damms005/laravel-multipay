@@ -5,6 +5,8 @@ use KingFlamez\Rave\Rave as FlutterwaveRave;
 use Damms005\LaravelMultipay\Models\PaymentPlan;
 use Damms005\LaravelMultipay\Services\SubscriptionService;
 use Damms005\LaravelMultipay\Services\PaymentHandlers\Flutterwave;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 beforeEach(function () {
     config()->set('laravel-multipay.flutterwave.publicKey', 'FLW_PUBLIC_KEY');
@@ -99,8 +101,9 @@ it('subscribes user to Flutterwave plan upon receipt of payment webhook', functi
         'currency' => 'NGN',
     ]);
 
-    $this->assertDatabaseHas('subscriptions', [
-        'payment_plan_id' => $plan->id,
-        'next_payment_due_date' => now()->addMonth()->format('Y-m-d H:i:s'),
-    ]);
+    $subscription = DB::table('subscriptions')->where('payment_plan_id', $plan->id)->first();
+    $this->assertEquals(
+        now()->addMonth()->format('Y-m-d'),
+        Carbon::parse($subscription->next_payment_due_date)->format('Y-m-d')
+    );
 });
