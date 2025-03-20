@@ -266,6 +266,9 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
 
     protected function resolveLocalPayment(string $paystackReferenceNumber, PaystackVerificationResponse $verificationResponse): Payment
     {
+        $isPosTerminalTransaction = is_object($verificationResponse->data['metadata']) &&
+        ($verificationResponse->data['metadata']->reference ?? false);
+
         return Payment::query()
             /**
              * normal transactions
@@ -275,8 +278,11 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
             /**
              * terminal POS transactions
              */
-            ->when(is_object($verificationResponse->data['metadata']), function ($query) use ($verificationResponse) {
-                return $query->orWhere('metadata->response->data->metadata->reference', $verificationResponse->data['metadata']['reference']);
+            ->when($isPosTerminalTransaction, function ($query) use ($verificationResponse) {
+                return $query->orWhere(
+                    'metadata->response->data->metadata->reference',
+                    $verificationResponse->data['metadata']->reference,
+                );
             })
             ->firstOrFail();
     }
