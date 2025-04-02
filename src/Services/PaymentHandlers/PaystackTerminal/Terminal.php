@@ -73,7 +73,7 @@ class Terminal
 
     public function waitForTerminalHardware()
     {
-        $terminalId = session('multipay::paystack_terminal_id', config('laravel-multipay.paystack_terminal_id'));
+        $terminalId = $this->getTerminalId();
 
         if (!$terminalId) {
             throw new \Exception("Terminal id is not set in the config file");
@@ -99,7 +99,8 @@ class Terminal
      */
     public function pushToTerminal(Payment $payment): string
     {
-        $terminalId = config("laravel-multipay.paystack_terminal_id");
+        $terminalId = $this->getTerminalId();
+
         $response = Http::acceptJson()
             ->withToken(config("laravel-multipay.paystack_secret_key"))
             ->post("https://api.paystack.co/terminal/{$terminalId}/event", [
@@ -131,7 +132,8 @@ class Terminal
      */
     public function terminalReceivedPaymentRequest(string $paymentEventId): bool
     {
-        $terminalId = config("laravel-multipay.paystack_terminal_id");
+        $terminalId = $this->getTerminalId();
+
         $response = Http::acceptJson()
             ->withToken(config("laravel-multipay.paystack_secret_key"))
             ->get("curl https://api.paystack.co/terminal/{$terminalId}/event/{$paymentEventId}")
@@ -142,6 +144,10 @@ class Terminal
         }
 
         return $response['data']['id'];
+    }
+
+    private function getTerminalId() {
+        return session('multipay::paystack_terminal_id', config('laravel-multipay.paystack_terminal_id'));
     }
 
     /**
