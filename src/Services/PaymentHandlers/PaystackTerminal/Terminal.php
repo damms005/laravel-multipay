@@ -73,7 +73,7 @@ class Terminal
 
     public function waitForTerminalHardware()
     {
-        $terminalId = config("laravel-multipay.paystack_terminal_id");
+        $terminalId = session('multipay::paystack_terminal_id', config('laravel-multipay.paystack_terminal_id'));
 
         if (!$terminalId) {
             throw new \Exception("Terminal id is not set in the config file");
