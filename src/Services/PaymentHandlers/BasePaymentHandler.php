@@ -76,7 +76,7 @@ abstract class BasePaymentHandler
      * This method should also create a record for this transaction in the database payments table.
      *
      */
-    public function storePaymentAndShowUserBeforeProcessing(?int $user_id, $original_amount_displayed_to_user, string $transaction_description, $currency, string $transaction_reference, string $completion_url = null, Request $optionalRequestForEloquentModelLinkage = null, $preferredView = null, ?array $metadata = null)
+    public function storePaymentAndShowUserBeforeProcessing(?int $user_id, $original_amount_displayed_to_user, string $transaction_description, $currency, string $transaction_reference, ?string $completion_url = null, ?Request $optionalRequestForEloquentModelLinkage = null, $preferredView = null, ?array $metadata = null)
     {
         $payment = (new CreateNewPayment())->execute(
             $this->getUniquePaymentHandlerName(),
