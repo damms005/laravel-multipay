@@ -44,25 +44,23 @@ Currently, this package supports the following online payment processors/handler
 
 ## Installation
 
-1. Install via composer.
-
 ```bash
 composer require damms005/laravel-multipay
 ```
 
-1. Publish the config file.
+### Publish the config file.
 
 ```bash
 php artisan vendor:publish --tag=laravel-multipay-config
 ```
 
-1. Run migrations.
+### Run migrations.
 
-```
+```bash
 php artisan migrate
 ```
 
-### Demo Repo
+#### Demo Repo
 I [published an open source app](https://github.com/damms005/nft-marketplace) that uses this payment package. It is also an excellent example of a Laravel app that uses [Laravel Vite](https://laravel.com/docs/9.x/vite#main-content) and leverages on [Laravel Echo](https://laravel.com/docs/9.x/broadcasting#client-side-installation) to provide realtime experience via public and private channels using [Laravel Websocket](https://beyondco.de/docs/laravel-websockets), powered by [Livewire](https://laravel-livewire.com/docs).
 
 ### Test drive 🚀
