@@ -24,6 +24,11 @@ jobs:
             testbench: ^9.0
             pest: ^3.0
             pest-plugin-laravel: ^3.0
+        exclude:
+          # Pest 4 and pestphp/pest-plugin-laravel 4 min php is 8.3  https://github.com/pestphp/pest/blob/4.x/composer.json#L20
+          # Else causes run error: https://github.com/damms005/laravel-multipay/actions/runs/17175415472/job/48730646390
+          - laravel: 12.*
+            php: 8.2
 
     name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }} (${{ matrix.os }})
 
