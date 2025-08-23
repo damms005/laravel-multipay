@@ -154,8 +154,8 @@ If for any reason, your user/customer claims that the payment they made was succ
 
 ```php
 /**
-* @var bool $outcome // --> true if payment was successful, false otherwise
-**/
+ * @var bool $outcome // --> true if payment was successful, false otherwise
+ */
 $outcome = LaravelMultipay::reQueryUnsuccessfulPayment($payment)
 ```
 
