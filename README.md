@@ -70,7 +70,7 @@ For [Paystack](https://paystack.com), ensure to set `paystack_secret_key` key in
 
 > **Warning** <br />
 > Ensure you have [TailwindCSS installed](https://tailwindcss.com/docs/installation), then add this package's views to the `content` key of your `tailwind.config.js` configuration file, like below:
-```
+```js
     content: [
         ...,
         './vendor/damms005/laravel-multipay/views/**/*.blade.php',
@@ -82,21 +82,21 @@ For [Paystack](https://paystack.com), ensure to set `paystack_secret_key` key in
 
 -   Flutterwave: If you want to use Flutterwave, ensure to get your API details [from the dashboard](https://dashboard.flutterwave.com/dashboard/settings/apis), and use it to set the following variables in your `.env` file:
 
-```
+```env
 FLW_PUBLIC_KEY=FLWPUBK-xxxxxxxxxxxxxxxxxxxxx-X
 FLW_SECRET_KEY=FLWSECK-xxxxxxxxxxxxxxxxxxxxx-X
-FLW_SECRET_HASH='My_lovelysite123'
+FLW_SECRET_HASH=hash-123xxxxxxxxxxxxxxxxxxx-X
 ```
 
 -   Paystack: Paystack requires a secret key. Go to [the Paystack dashboard](https://dashboard.paystack.co/#/settings/developer) to obtain one, and use it to set the following variable:
 
-```
+```env
 PAYSTACK_SECRET_KEY=sk_test_xxxxxxxxxxxxxxxxxxxxx
 ```
 
 -   Remita: Ensure to set the following environment variables:
 
-```
+```env
 REMITA_MERCHANT_ID=xxxxxxxxxxxxxxxxxxxxx
 REMITA_API_KEY=xxxxxxxxxxxxxxxxxxxxx
 ```
@@ -152,9 +152,9 @@ The metadata should be a valid JSON string containing key-value pairs that modif
 
 If for any reason, your user/customer claims that the payment they made was successful but that your platform did not reflect such successful payment, this PCR feature enables you to resolve such claims by simply calling:
 
-```
+```php
 /**
-* @var bool //true if payment was successful, false otherwise
+* @var bool $outcome // --> true if payment was successful, false otherwise
 **/
 $outcome = LaravelMultipay::reQueryUnsuccessfulPayment($payment)
 ```
