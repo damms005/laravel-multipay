@@ -92,7 +92,10 @@ FLW_SECRET_HASH=hash-123xxxxxxxxxxxxxxxxxxx-X
 
 ```env
 PAYSTACK_SECRET_KEY=sk_test_xxxxxxxxxxxxxxxxxxxxx
+PAYSTACK_TERMINAL_ID=xxxxxxxxxxxxxxxxxxxxx
 ```
+
+> The `PAYSTACK_TERMINAL_ID` is only required if you intend to use [Paystack Terminal](https://paystack.com/terminal/) for payment processing.
 
 -   Remita: Ensure to set the following environment variables:
 
@@ -173,6 +176,105 @@ If you need webhook notifications from payment providers, use the webhook endpoi
 ### SuccessfulLaravelMultipayPaymentEvent
 
 If there are additional steps you want to take upon successful payment, listen for `SuccessfulLaravelMultipayPaymentEvent`. This event will be fired whenever a successful payment occurs, with its corresponding `Payment` model.
+
+## Paystack Terminal
+
+[Paystack Terminal](https://paystack.com/terminal/) allows you to process payments on physical payment terminals. This feature is useful for point-of-sale (POS) systems and retail environments.
+
+### Prerequisites
+
+1. Ensure you have `PAYSTACK_SECRET_KEY` configured in your `.env` file
+2. Obtain your Terminal ID from [Paystack Dashboard](https://dashboard.paystack.co/#/settings/terminals)
+3. Set the `PAYSTACK_TERMINAL_ID` in your `.env` file:
+
+```env
+PAYSTACK_SECRET_KEY=sk_test_xxxxxxxxxxxxxxxxxxxxx
+PAYSTACK_TERMINAL_ID=xxxxxxxxxxxxxxxxxxxxx
+```
+
+Alternatively, you can set the Terminal ID dynamically in your session:
+
+```php
+session(['multipay::paystack_terminal_id' => 'your_terminal_id']);
+```
+
+### Usage
+
+The Paystack Terminal functionality is provided via the `Terminal` class:
+
+```php
+use Damms005\LaravelMultipay\Services\PaymentHandlers\PaystackTerminal\Terminal;
+
+$terminal = app(Terminal::class);
+```
+
+### Creating a Payment Request
+
+Create a payment request that can be pushed to a terminal:
+
+```php
+$payment = $terminal->createPaymentRequest(
+    model: 'App\Models\User',
+    modelId: 123,
+    email: 'customer@example.com',
+    description: 'Product purchase',
+    amount: 50000  // Amount in kobo (50,000 kobo = 500 NGN)
+);
+```
+
+This creates a payment record and returns a `Payment` model instance with the payment details stored in metadata.
+
+### Checking Terminal Status
+
+Verify that the terminal hardware is online and ready before pushing payments:
+
+```php
+try {
+    $status = $terminal->waitForTerminalHardware();
+    // Terminal is online
+} catch (\Exception $e) {
+    // Terminal is offline or not configured
+}
+```
+
+### Pushing Payment to Terminal
+
+Send a payment request to the terminal for processing:
+
+```php
+try {
+    $eventId = $terminal->pushToTerminal($payment);
+    // Payment has been pushed to terminal
+} catch (\Exception $e) {
+    // Failed to push to terminal
+}
+```
+
+The returned `$eventId` can be used to track the payment request delivery status.
+
+### Verifying Terminal Receipt
+
+Confirm that the terminal received the payment request (within 48 hours of creation):
+
+```php
+try {
+    $result = $terminal->terminalReceivedPaymentRequest($eventId);
+    // Terminal has received the payment request
+} catch (\Exception $e) {
+    // Could not verify receipt
+}
+```
+
+### Error Handling
+
+The Terminal class throws `\Exception` on failures. Common scenarios include:
+
+- Terminal ID not configured
+- Terminal hardware offline
+- Invalid payment request data
+- Network errors communicating with Paystack API
+
+Always wrap Terminal method calls in try-catch blocks for proper error handling.
 
 ## Testing
 
