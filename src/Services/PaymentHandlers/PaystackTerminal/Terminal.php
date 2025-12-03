@@ -122,13 +122,6 @@ class Terminal
             throw new \Exception("Could not push to terminal. " . json_encode($responseJson));
         }
 
-        $payment->update([
-            'metadata' => [
-                'terminal-response' => $responseJson,
-                ...$payment->metadata,
-            ],
-        ]);
-
         return $responseJson['data']['id'];
     }
 
