@@ -104,7 +104,7 @@ class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
         /**
          * @var Payment
          */
-        $payment = Payment::where('transaction_reference', $transactionReference)
+        $payment = Payment::withTrashed()->where('transaction_reference', $transactionReference)
             ->firstOrFail();
 
         // Ensure we have not already given value for this transaction
@@ -183,7 +183,7 @@ class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
         }
 
         $transactionReference = $request->get('tx_ref');
-        $payment = Payment::where('transaction_reference', $transactionReference)->firstOrFail();
+        $payment = Payment::withTrashed()->where('transaction_reference', $transactionReference)->firstOrFail();
 
         $status = $request->get('status');
 

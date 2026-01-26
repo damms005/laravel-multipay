@@ -285,7 +285,7 @@ abstract class BasePaymentHandler
 
     public function getPayment(string $transaction_reference): Payment
     {
-        return Payment::where('transaction_reference', $transaction_reference)->firstOrFail();
+        return Payment::withTrashed()->where('transaction_reference', $transaction_reference)->firstOrFail();
     }
 
     public function getTransactedUser(string $transaction_reference)

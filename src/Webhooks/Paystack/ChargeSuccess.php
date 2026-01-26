@@ -25,7 +25,7 @@ class ChargeSuccess implements WebhookHandler
 
     public function handle(Request $webhookRequest): Payment
     {
-        $payment = Payment::where('transaction_reference', $webhookRequest->input('data.reference'))
+        $payment = Payment::withTrashed()->where('transaction_reference', $webhookRequest->input('data.reference'))
             ->orWhere('transaction_reference', $webhookRequest->input('data.metadata.reference'))
             ->first();
 

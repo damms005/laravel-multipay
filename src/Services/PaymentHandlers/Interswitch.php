@@ -66,7 +66,7 @@ class Interswitch extends BasePaymentHandler implements PaymentHandlerInterface
 
         if (json_last_error() === JSON_ERROR_NONE) {
             Log::debug($transaction_status_string);
-            $payment = Payment::where('transaction_reference', $this->txn_ref)->firstOrFail();
+            $payment = Payment::withTrashed()->where('transaction_reference', $this->txn_ref)->firstOrFail();
             $payment->is_success = $transactionStatus->ResponseCode == '00' ? true : false;
             $payment->processor_returned_amount = $transactionStatus->Amount;
             $payment->processor_returned_card_number = $transactionStatus->CardNumber ?? null;

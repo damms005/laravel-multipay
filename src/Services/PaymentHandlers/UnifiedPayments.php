@@ -54,7 +54,7 @@ class UnifiedPayments extends BasePaymentHandler implements PaymentHandlerInterf
             return null;
         }
 
-        $payment = Payment::where('processor_transaction_reference', $paymentGatewayServerResponse->trxId)->first();
+        $payment = Payment::withTrashed()->where('processor_transaction_reference', $paymentGatewayServerResponse->trxId)->first();
 
         if (is_null($payment)) {
             return null;

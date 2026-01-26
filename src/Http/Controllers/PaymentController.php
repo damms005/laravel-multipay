@@ -51,7 +51,7 @@ class PaymentController extends Controller
         ]);
 
         /** @var Payment */
-        $payment = Payment::where('transaction_reference', $request->transaction_reference)->firstOrFail();
+        $payment = Payment::withTrashed()->where('transaction_reference', $request->transaction_reference)->firstOrFail();
 
         // prevent duplicated transactions
         if ($payment->processor_returned_response_description) {

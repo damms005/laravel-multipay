@@ -206,7 +206,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
             throw new \Exception($trx->message);
         }
 
-        $payment = Payment::where('transaction_reference', $payment->transaction_reference)
+        $payment = Payment::withTrashed()->where('transaction_reference', $payment->transaction_reference)
             ->firstOrFail();
 
         $metadata = is_null($payment->metadata) ? [] : (array)$payment->metadata;
@@ -225,7 +225,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
 
     protected function giveValue(string $transactionReference, PaystackVerificationResponse $paystackResponse)
     {
-        Payment::where('transaction_reference', $transactionReference)
+        Payment::withTrashed()->where('transaction_reference', $transactionReference)
             ->firstOrFail()
             ->update([
                 "is_success" => 1,
@@ -269,7 +269,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
         $isPosTerminalTransaction = is_object($verificationResponse->data['metadata']) &&
         ($verificationResponse->data['metadata']->reference ?? false);
 
-        return Payment::query()
+        return Payment::withTrashed()
             /**
              * normal transactions
              */

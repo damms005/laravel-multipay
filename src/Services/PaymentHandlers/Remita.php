@@ -99,7 +99,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
         $rrr = $paymentGatewayServerResponse->RRR;
 
-        $payment = Payment::where('processor_transaction_reference', $rrr)
+        $payment = Payment::withTrashed()->where('processor_transaction_reference', $rrr)
             ->first();
 
         if (is_null($payment)) {
@@ -147,7 +147,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
         $rrr = $existingPayment->processor_transaction_reference;
 
-        $payment = Payment::where('processor_transaction_reference', $rrr)
+        $payment = Payment::withTrashed()->where('processor_transaction_reference', $rrr)
             ->first();
 
         throw_if(is_null($payment), "Could not reconcile Remita RRR with provided transaction");
@@ -217,7 +217,7 @@ class Remita extends BasePaymentHandler implements PaymentHandlerInterface
 
     protected function getPaymentByRrr($rrr)
     {
-        return Payment::where('processor_transaction_reference', $rrr)
+        return Payment::withTrashed()->where('processor_transaction_reference', $rrr)
             ->first();
     }
 
