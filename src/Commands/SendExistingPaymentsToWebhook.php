@@ -11,7 +11,8 @@ class SendExistingPaymentsToWebhook extends Command
     protected $signature = 'multipay:send-payments-webhook
         {--from= : Start date (Y-m-d)}
         {--to= : End date (Y-m-d)}
-        {--chunk=100 : Number of payments per batch}';
+        {--chunk=100 : Number of payments per batch}
+        {--limit= : Maximum number of payments to send}';
 
     protected $description = 'Send existing successful payments to the configured webhook endpoint';
 
@@ -53,7 +54,9 @@ class SendExistingPaymentsToWebhook extends Command
             $query->where('created_at', '<=', $to . ' 23:59:59');
         }
 
-        $totalCount = $query->count();
+        $maxLimit = $this->option('limit') ? (int) $this->option('limit') : null;
+
+        $totalCount = min($query->count(), $maxLimit ?? PHP_INT_MAX);
 
         if ($totalCount === 0) {
             $this->info('No successful payments found.');
@@ -64,7 +67,15 @@ class SendExistingPaymentsToWebhook extends Command
         $progressBar = $this->output->createProgressBar($totalCount);
         $chunkSize = (int) $this->option('chunk');
 
-        $query->chunk($chunkSize, function ($payments) use ($webhookUrl, $signingSecret, $progressBar) {
+        $query->chunk($chunkSize, function ($payments) use ($webhookUrl, $signingSecret, $progressBar, $maxLimit) {
+            if ($maxLimit && $this->sentCount + $this->failedCount >= $maxLimit) {
+                return false;
+            }
+
+            if ($maxLimit) {
+                $remaining = $maxLimit - $this->sentCount - $this->failedCount;
+                $payments = $payments->take($remaining);
+            }
             $batchPayload = $payments->map(
                 fn (Payment $payment) => SendPaymentWebhookListener::buildPayload($payment)
             )->values()->all();
