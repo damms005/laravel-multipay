@@ -29,6 +29,8 @@ class SendPaymentWebhookListener
             ->payload($payload)
             ->useSecret(config('laravel-multipay.webhook.signing_secret'))
             ->dispatch();
+
+        $event->payment->update(['webhook_dispatched_at' => now()]);
     }
 
     public static function buildPayload(Payment $payment): ?array

@@ -43,7 +43,7 @@ class SendExistingPaymentsToWebhook extends Command
             return self::FAILURE;
         }
 
-        $query = Payment::successful();
+        $query = Payment::successful()->whereNull('webhook_dispatched_at');
 
         if ($from = $this->option('from')) {
             $query->where('created_at', '>=', $from);
@@ -76,6 +76,7 @@ class SendExistingPaymentsToWebhook extends Command
                     ->useSecret($signingSecret)
                     ->dispatch();
 
+                Payment::whereIn('id', $payments->pluck('id'))->update(['webhook_dispatched_at' => now()]);
                 $this->sentCount += $payments->count();
                 $this->consecutiveFailures = 0;
             } catch (\Exception $e) {

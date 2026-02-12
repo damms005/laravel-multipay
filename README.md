@@ -276,6 +276,71 @@ The Terminal class throws `\Exception` on failures. Common scenarios include:
 
 Always wrap Terminal method calls in try-catch blocks for proper error handling.
 
+## Webhook Push Notifications
+
+When a payment succeeds, this package can automatically send a webhook to an external system (e.g. a financial tracking service). This uses [spatie/laravel-webhook-server](https://github.com/spatie/laravel-webhook-server) under the hood.
+
+### Setup
+
+1. Install the webhook server package:
+
+```bash
+composer require spatie/laravel-webhook-server
+```
+
+2. Set the webhook URL and signing secret in your `.env`:
+
+```env
+LARAVEL_MULTIPAY_WEBHOOK_URL=https://your-receiving-app.com/api/webhooks/payments
+LARAVEL_MULTIPAY_WEBHOOK_SIGNING_SECRET=your-shared-secret
+```
+
+3. Create a class that implements `Damms005\LaravelMultipay\Contracts\WebhookPayloadPackager`:
+
+```php
+use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\Contracts\WebhookPayloadPackager;
+
+class MyWebhookPayloadPackager implements WebhookPayloadPackager
+{
+    public function getWebhookPayload(Payment $payment): array
+    {
+        return [
+            'transaction_reference' => $payment->transaction_reference,
+            'amount_paid' => $payment->original_amount_displayed_to_user,
+            'payment_processor_name' => $payment->payment_processor_name,
+            // ...add any app-specific data you need
+        ];
+    }
+}
+```
+
+4. Register your packager in a service provider:
+
+```php
+config()->set(
+    'laravel-multipay.webhook.payload_packager',
+    \App\Services\MyWebhookPayloadPackager::class,
+);
+```
+
+Once configured, every `SuccessfulLaravelMultipayPaymentEvent` will trigger a signed webhook POST to the configured URL with the payload returned by your packager.
+
+### Backfilling Existing Payments
+
+To send existing successful payments to the webhook endpoint:
+
+```bash
+php artisan multipay:send-payments-webhook
+```
+
+Options:
+- `--from=YYYY-MM-DD` — only payments created on or after this date
+- `--to=YYYY-MM-DD` — only payments created on or before this date
+- `--chunk=100` — number of payments per batch (default: 100)
+
+The command fail-fast aborts after 3 consecutive batch failures.
+
 ## Testing
 
 ```bash
