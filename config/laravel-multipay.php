@@ -66,6 +66,12 @@ return [
 
     'enable_payment_confirmation_page_print' => env('ENABLE_PAYMENT_CONFIRMATION_PAGE_PRINT', true),
 
+    'flutterwave' => [
+        'publicKey'  => env('FLW_PUBLIC_KEY'),
+        'secretKey'  => env('FLW_SECRET_KEY'),
+        'secretHash' => env('FLW_SECRET_HASH'),
+    ],
+
     'middleware' => [
     ],
 ];

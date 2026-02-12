@@ -17,8 +17,6 @@ class LaravelMultipayServiceProvider extends ServiceProvider
 
         $this->publishes([__DIR__ . '/../config/laravel-multipay.php' => config_path('laravel-multipay.php')], 'laravel-multipay-config');
 
-        $this->bootFlutterwave();
-
         $this->app->bind(BasePaymentHandler::class, function ($app) {
             $defaultPaymentHandler = config('laravel-multipay.default_payment_handler_fqcn');
 
@@ -52,10 +50,4 @@ class LaravelMultipayServiceProvider extends ServiceProvider
         );
     }
 
-    public function bootFlutterwave()
-    {
-        config(['laravel-multipay.flutterwave.publicKey' => env('FLW_PUBLIC_KEY')]);
-        config(['laravel-multipay.flutterwave.secretKey' => env('FLW_SECRET_KEY')]);
-        config(['laravel-multipay.flutterwave.secretHash' => env('FLW_SECRET_HASH')]);
-    }
 }
