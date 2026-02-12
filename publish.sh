@@ -37,6 +37,6 @@ fi
 
 # Tag the new version and push to remote
 git tag $NEW_VERSION
-git push origin $NEW_VERSION
+git push origin main --tags
 
 echo "Tagged and pushed version $NEW_VERSION"
