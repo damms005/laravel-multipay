@@ -2,15 +2,24 @@
 
 namespace Damms005\LaravelMultipay;
 
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Damms005\LaravelMultipay\Services\PaymentService;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
+use Damms005\LaravelMultipay\Events\SuccessfulLaravelMultipayPaymentEvent;
+use Damms005\LaravelMultipay\Listeners\SendPaymentWebhookListener;
 use Damms005\LaravelMultipay\Services\PaymentHandlers\BasePaymentHandler;
 
 class LaravelMultipayServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
+        Event::listen(SuccessfulLaravelMultipayPaymentEvent::class, SendPaymentWebhookListener::class);
+
+        $this->commands([
+            Commands\SendExistingPaymentsToWebhook::class,
+        ]);
+
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
         $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
         $this->loadViewsFrom(__DIR__ . '/../views', 'laravel-multipay');

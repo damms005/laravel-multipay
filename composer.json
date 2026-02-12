@@ -35,6 +35,9 @@
         "pestphp/pest": "^4.0",
         "pestphp/pest-plugin-laravel": "^4.0"
     },
+    "suggest": {
+        "spatie/laravel-webhook-server": "Required for sending payment webhooks"
+    },
     "autoload": {
         "psr-4": {
             "Damms005\\LaravelMultipay\\": "src",
