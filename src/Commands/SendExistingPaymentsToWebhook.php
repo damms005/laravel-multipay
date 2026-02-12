@@ -38,6 +38,11 @@ class SendExistingPaymentsToWebhook extends Command
             return self::FAILURE;
         }
 
+        if (! SendPaymentWebhookListener::resolvePackager()) {
+            $this->error('No webhook payload packager configured. Set webhook.payload_packager in laravel-multipay config.');
+            return self::FAILURE;
+        }
+
         $query = Payment::successful();
 
         if ($from = $this->option('from')) {
@@ -60,20 +65,6 @@ class SendExistingPaymentsToWebhook extends Command
         $chunkSize = (int) $this->option('chunk');
 
         $query->chunk($chunkSize, function ($payments) use ($webhookUrl, $signingSecret, $progressBar) {
-            $paymentsWithoutFeeHead = $payments->filter(
-                fn (Payment $payment) => ! isset($payment->metadata['fee_head_id'])
-            );
-
-            if ($paymentsWithoutFeeHead->isNotEmpty()) {
-                $this->newLine();
-                $this->error('Payments missing fee_head_id in metadata:');
-                $paymentsWithoutFeeHead->each(function (Payment $payment) {
-                    $this->error("  - ID: {$payment->id}, Ref: {$payment->transaction_reference}");
-                });
-                $this->error('Aborting. Please run the fee head backfill command first.');
-                return false;
-            }
-
             $batchPayload = $payments->map(
                 fn (Payment $payment) => SendPaymentWebhookListener::buildPayload($payment)
             )->values()->all();

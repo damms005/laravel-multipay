@@ -78,5 +78,6 @@ return [
     'webhook' => [
         'url' => env('LARAVEL_MULTIPAY_WEBHOOK_URL'),
         'signing_secret' => env('LARAVEL_MULTIPAY_WEBHOOK_SIGNING_SECRET'),
+        'payload_packager' => null,
     ],
 ];
