@@ -67,7 +67,7 @@ class SendExistingPaymentsToWebhook extends Command
         $progressBar = $this->output->createProgressBar($totalCount);
         $chunkSize = (int) $this->option('chunk');
 
-        $query->chunk($chunkSize, function ($payments) use ($webhookUrl, $signingSecret, $progressBar, $maxLimit) {
+        $query->chunkById($chunkSize, function ($payments) use ($webhookUrl, $signingSecret, $progressBar, $maxLimit) {
             if ($maxLimit && $this->sentCount + $this->failedCount >= $maxLimit) {
                 return false;
             }
