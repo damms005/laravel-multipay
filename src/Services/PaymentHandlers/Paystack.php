@@ -197,6 +197,11 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
             $payload['split_code'] = $splitCode;
         }
 
+        $additionalPayload = Arr::get($payment->metadata, 'additional_payment_payload');
+        if (is_array($additionalPayload) && array_key_exists('channels', $additionalPayload)) {
+            $payload['channels'] = $additionalPayload['channels'];
+        }
+
         // the code below throws an exception if there was a problem completing the request,
         // else returns an object created from the json response
         $trx = $paystack->transaction->initialize($payload);

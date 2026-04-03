@@ -15,7 +15,9 @@ Whether you want to quickly bootstrap payment processing for your Laravel applic
 > `@extend()`ing whatever view you specify in `config('laravel-multipay.extended_layout')` (defaults to `layout.app`).
 
 ## Requirements:
+
 This package is [tested against:](https://github.com/damms005/laravel-multipay/blob/d1a15bf762ba2adabc97714f1565c6c0f0fcd58d/.github/workflows/run-tests.yml#L16-17)
+
 - PHP ^8.2
 - Laravel 11/12
 
@@ -23,15 +25,15 @@ This package is [tested against:](https://github.com/damms005/laravel-multipay/b
 
 Currently, this package supports the following online payment processors/handlers
 
--   [Paystack](https://paystack.com)
--   [Remita](http://remita.net)
--   [Flutterwave](https://flutterwave.com)**
--   [Interswitch](https://www.interswitchgroup.com)**
--   [UnifiedPayments](https://unifiedpayments.com)**
+- [Paystack](https://paystack.com)
+- [Remita](http://remita.net)
+- [Flutterwave](https://flutterwave.com)\*\*
+- [Interswitch](https://www.interswitchgroup.com)\*\*
+- [UnifiedPayments](https://unifiedpayments.com)\*\*
 
 > [!NOTE]
 > _key_:
-> ** for the indicated providers, a few features may be missing. PRs welcomed if you cannot afford the wait 😉
+> \*\* for the indicated providers, a few features may be missing. PRs welcomed if you cannot afford the wait 😉
 
 > [!TIP]
 > Your preferred payment handler is not yet supported? Please consider [opening the appropriate issue type](https://github.com/damms005/laravel-multipay/issues/new?assignees=&labels=&template=addition-of-new-payment-handler.md&title=Addition+of+new+payment+handler+-+%5Bpayment+handler+name+here%5D).
@@ -61,6 +63,7 @@ php artisan migrate
 ```
 
 #### Demo Repo
+
 I [published an open source app](https://github.com/damms005/nft-marketplace) that uses this payment package. It is also an excellent example of a Laravel app that uses [Laravel Vite](https://laravel.com/docs/9.x/vite#main-content) and leverages on [Laravel Echo](https://laravel.com/docs/9.x/broadcasting#client-side-installation) to provide realtime experience via public and private channels using [Laravel Websocket](https://beyondco.de/docs/laravel-websockets), powered by [Livewire](https://laravel-livewire.com/docs).
 
 ### Test drive 🚀
@@ -70,6 +73,7 @@ For [Paystack](https://paystack.com), ensure to set `paystack_secret_key` key in
 
 > **Warning** <br />
 > Ensure you have [TailwindCSS installed](https://tailwindcss.com/docs/installation), then add this package's views to the `content` key of your `tailwind.config.js` configuration file, like below:
+
 ```js
     content: [
         ...,
@@ -80,7 +84,7 @@ For [Paystack](https://paystack.com), ensure to set `paystack_secret_key` key in
 
 ### Needed Third-party Integrations:
 
--   Flutterwave: If you want to use Flutterwave, ensure to get your API details [from the dashboard](https://dashboard.flutterwave.com/dashboard/settings/apis), and use it to set the following variables in your `.env` file:
+- Flutterwave: If you want to use Flutterwave, ensure to get your API details [from the dashboard](https://dashboard.flutterwave.com/dashboard/settings/apis), and use it to set the following variables in your `.env` file:
 
 ```env
 FLW_PUBLIC_KEY=FLWPUBK-xxxxxxxxxxxxxxxxxxxxx-X
@@ -88,7 +92,7 @@ FLW_SECRET_KEY=FLWSECK-xxxxxxxxxxxxxxxxxxxxx-X
 FLW_SECRET_HASH=hash-123xxxxxxxxxxxxxxxxxxx-X
 ```
 
--   Paystack: Paystack requires a secret key. Go to [the Paystack dashboard](https://dashboard.paystack.co/#/settings/developer) to obtain one, and use it to set the following variable:
+- Paystack: Paystack requires a secret key. Go to [the Paystack dashboard](https://dashboard.paystack.co/#/settings/developer) to obtain one, and use it to set the following variable:
 
 ```env
 PAYSTACK_SECRET_KEY=sk_test_xxxxxxxxxxxxxxxxxxxxx
@@ -97,7 +101,7 @@ PAYSTACK_TERMINAL_ID=xxxxxxxxxxxxxxxxxxxxx
 
 > The `PAYSTACK_TERMINAL_ID` is only required if you intend to use [Paystack Terminal](https://paystack.com/terminal/) for payment processing.
 
--   Remita: Ensure to set the following environment variables:
+- Remita: Ensure to set the following environment variables:
 
 ```env
 REMITA_MERCHANT_ID=xxxxxxxxxxxxxxxxxxxxx
@@ -139,16 +143,25 @@ The metadata should be a valid JSON string containing key-value pairs that modif
 #### Available Metadata Keys
 
 **`completion_url`**
+
 - After successful payment, the user will be redirected to the URL specified by this key instead of the default payment completion page
 - When user is redirected to the specified URL, the transaction reference will be included as `transaction_reference` in the URL query string
 
 **`payment_processor`**
+
 - Use this key to dynamically set the payment handler for the specific transaction
 - Valid values are any of [the providers listed above](#currently-supported-payment-handlers)
 - This will override the default payment processor configuration
 
 **`split_code`** (Paystack only)
+
 - When using Paystack, you can use this key to specify a split code to process the transaction as a [Paystack Multi-split Transaction](https://paystack.com/docs/payments/multi-split-payments)
+- This feature is only available when using Paystack as the payment handler
+
+**`additional_payment_payload`** (Paystack only)
+
+- When using Paystack, you can use this key to specify additional parameters for transaction initialization. For example, you can set `channels` to restrict payment methods: `{ "channels": ["card", "bank", "ussd", "qr", "mobile_money"] }`
+- See [Paystack transaction initialization documentation](https://paystack.com/docs/api/transaction/#initialize) for all available parameters
 - This feature is only available when using Paystack as the payment handler
 
 ## Payment Conflict Resolution (PCR)
@@ -165,6 +178,7 @@ $outcome = LaravelMultipay::reQueryUnsuccessfulPayment($payment)
 The payment will be re-resolved and the payment will be updated in the database. If the payment is successful, the `SuccessfulLaravelMultipayPaymentEvent` event will be fired, so you can run any domain/application-specific procedures.
 
 ## WebHooks Payment Notifications (optional)
+
 One of the benefits of this package is to remove the need for you to have to deal with payment webhooks. Depending on your needs, the event handling may suffice for your use case.
 
 If you need webhook notifications from payment providers, use the webhook endpoint provided by this package: `route('payment.external-webhook-endpoint')`.
@@ -335,6 +349,7 @@ php artisan multipay:send-payments-webhook
 ```
 
 Options:
+
 - `--from=YYYY-MM-DD` — only payments created on or after this date
 - `--to=YYYY-MM-DD` — only payments created on or before this date
 - `--chunk=100` — number of payments per batch (default: 100)
@@ -351,8 +366,8 @@ composer test
 
 This package is made possible by the nice works done by the following awesome projects:
 
--   [yabacon/paystack-php](https://github.com/yabacon/paystack-php)
--   [kingflamez/laravelrave](https://github.com/kingflamez/laravelrave)
+- [yabacon/paystack-php](https://github.com/yabacon/paystack-php)
+- [kingflamez/laravelrave](https://github.com/kingflamez/laravelrave)
 
 ## License
 

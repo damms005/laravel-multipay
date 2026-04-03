@@ -87,3 +87,45 @@ it('uses split code specified in metadata', function () {
 
     (new Paystack())->proceedToPaymentGateway($this->payment, 'far-away-land');
 });
+
+it('uses channels specified in additional_payment_payload metadata', function () {
+    /**
+     * @var Mock<TObject>
+     */
+    $paystackHelperMock = mock(PaystackHelper::class);
+
+    /**
+     * @var Mock<TObject>
+     */
+    $transactionMock = mock('null');
+
+    $transactionMock
+        ->expects('initialize')
+        ->with([
+            'email' => 'user@gmail.com',
+            'amount' => 50000,
+            'callback_url' => 'far-away-land',
+            'channels' => ['card', 'bank'],
+        ])
+        ->andReturn((object)[
+            'status' => true,
+            'data' => (object)[
+                'reference' => 'reference',
+                'authorization_url' => 'someplace-on-the-internet',
+            ],
+        ]);
+
+    $paystackHelperMock->transaction = $transactionMock;
+
+    app()->bind(PaystackHelper::class, fn() => $paystackHelperMock);
+
+    $this->payment->update([
+        'metadata' => [
+            'additional_payment_payload' => [
+                'channels' => ['card', 'bank']
+            ]
+        ],
+    ]);
+
+    (new Paystack())->proceedToPaymentGateway($this->payment, 'far-away-land');
+});
