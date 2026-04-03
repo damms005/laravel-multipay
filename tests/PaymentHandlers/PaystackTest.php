@@ -121,9 +121,7 @@ it('uses channels specified in additional_payment_payload metadata', function ()
 
     $this->payment->update([
         'metadata' => [
-            'additional_payment_payload' => [
-                'channels' => ['card', 'bank']
-            ]
+            'channels' => ['card', 'bank']
         ],
     ]);
 
