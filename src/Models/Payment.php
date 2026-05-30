@@ -96,43 +96,45 @@ class Payment extends Model
 
     public function getPayerName(): string
     {
-        if ($this->user) {
-            $nameProperty = config('laravel-multipay.user_model_properties.name');
-            return $this->user->$nameProperty;
-        }
-
-        if (!isset($this->metadata['payer_name'])) {
-            throw new \Exception("payer name not found in metadata and no user is associated with this payment");
-        }
-
-        return $this->metadata['payer_name'];
+        return $this->resolvePayerDetail('name');
     }
 
     public function getPayerEmail(): string
     {
-        if ($this->user) {
-            $emailProperty = config('laravel-multipay.user_model_properties.email');
-            return $this->user->$emailProperty;
-        }
-
-        if (!isset($this->metadata['payer_email'])) {
-            throw new \Exception("payer email not found in metadata and no user is associated with this payment");
-        }
-
-        return $this->metadata['payer_email'];
+        return $this->resolvePayerDetail('email');
     }
 
     public function getPayerPhone(): string
     {
+        return $this->resolvePayerDetail('phone');
+    }
+
+    /**
+     * Resolves a payer detail by checking the user model first, then falling
+     * back to the payment metadata. Throws if neither source has a value.
+     */
+    protected function resolvePayerDetail(string $detail): string
+    {
         if ($this->user) {
-            $phoneProperty = config('laravel-multipay.user_model_properties.phone');
-            return $this->user->$phoneProperty;
+            $property = config("laravel-multipay.user_model_properties.{$detail}");
+            $value = $this->user->$property;
+
+            if (!empty($value)) {
+                return $value;
+            }
         }
 
-        if (!isset($this->metadata['payer_phone'])) {
-            throw new \Exception("payer phone not found in metadata and no user is associated with this payment");
+        $metadataKey = "payer_{$detail}";
+        $metadataValue = $this->metadata[$metadataKey] ?? null;
+
+        if (!empty($metadataValue)) {
+            return $metadataValue;
         }
 
-        return $this->metadata['payer_phone'];
+        $context = $this->user
+            ? "The user (ID: {$this->user_id}) has no value for the configured '{$detail}' property, and no 'payer_{$detail}' was found in the payment metadata."
+            : "No user is associated with this payment and no 'payer_{$detail}' was found in the payment metadata.";
+
+        throw new \Exception("Payer {$detail} could not be resolved. {$context}");
     }
 }
