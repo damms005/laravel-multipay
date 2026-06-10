@@ -164,6 +164,129 @@ The metadata should be a valid JSON string containing key-value pairs that modif
 - See [Paystack transaction initialization documentation](https://paystack.com/docs/api/transaction/#initialize) for all available parameters
 - This feature is only available when using Paystack as the payment handler
 
+## Subscriptions (Recurring Payments)
+
+This package provides built-in support for subscription-based recurring payments via the `SubscriptionService` class.
+
+### Supported Handlers
+
+| Handler | Plan Creation | Subscribe to Plan |
+|---------|:---:|:---:|
+| Flutterwave | Yes | Yes |
+| Paystack | Yes | Yes |
+
+### Creating a Payment Plan
+
+Before subscribing users, create a payment plan:
+
+```php
+use Damms005\LaravelMultipay\Services\SubscriptionService;
+use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
+
+$handler = app(PaymentHandlerInterface::class);
+
+$plan = SubscriptionService::createPaymentPlan(
+    handler: $handler,
+    name: 'Pro Monthly',
+    amount: '5000',        // in minor currency unit (e.g., kobo, cents)
+    interval: 'monthly',   // 'monthly', 'quarterly', 'biannually', or 'yearly'
+    description: 'Pro plan - billed monthly',
+    currency: 'NGN'
+);
+```
+
+This registers the plan with the payment provider and stores it locally in the `payment_plans` table.
+
+If a plan with the same amount, interval, and currency already exists for the handler, use `findOrCreatePaymentPlan` to avoid duplicates:
+
+```php
+$plan = SubscriptionService::findOrCreatePaymentPlan(
+    handler: $handler,
+    amount: '5000',
+    interval: 'monthly',
+    description: 'Pro plan - billed monthly',
+    currency: 'NGN'
+);
+```
+
+### Subscribing a User to a Plan
+
+```php
+use Damms005\LaravelMultipay\Services\SubscriptionService;
+use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
+
+$handler = app(PaymentHandlerInterface::class);
+
+return SubscriptionService::subscribeToPlan(
+    handler: $handler,
+    user: $user,
+    plan: $plan,
+    completionUrl: route('dashboard')
+);
+```
+
+This redirects the user to the payment gateway. Upon successful payment, a `Subscription` record is created automatically with the appropriate `next_payment_due_date`.
+
+You can optionally provide a custom transaction reference and additional metadata:
+
+```php
+return SubscriptionService::subscribeToPlan(
+    handler: $handler,
+    user: $user,
+    plan: $plan,
+    completionUrl: route('dashboard'),
+    transactionReference: 'MY-CUSTOM-REF-001',
+    metadata: ['order_id' => 123],
+    displayAmount: '50.00'  // human-readable amount (e.g., naira) — defaults to plan amount if omitted
+);
+```
+
+### Checking Active Subscriptions
+
+```php
+use Damms005\LaravelMultipay\Services\SubscriptionService;
+
+$subscription = SubscriptionService::getActiveSubscriptionFor($user, $plan);
+
+if ($subscription) {
+    // User has an active subscription
+    // $subscription->next_payment_due_date
+}
+```
+
+A subscription is considered active if its `next_payment_due_date` is in the future.
+
+### Models
+
+**`PaymentPlan`** — represents a recurring billing plan:
+
+| Column | Description |
+|--------|-------------|
+| `name` | Unique plan name |
+| `amount` | Billing amount |
+| `interval` | `monthly` or `yearly` |
+| `description` | Human-readable description |
+| `currency` | Currency code (e.g., NGN) |
+| `payment_handler_fqcn` | Payment handler class name |
+| `payment_handler_plan_id` | Plan ID from the payment provider |
+
+**`Subscription`** — represents a user's subscription to a plan:
+
+| Column | Description |
+|--------|-------------|
+| `user_id` | The subscribed user |
+| `payment_plan_id` | FK to `payment_plans` |
+| `next_payment_due_date` | When the next payment is due |
+| `metadata` | Optional JSON metadata |
+
+### How It Works
+
+1. Create a `PaymentPlan` via `SubscriptionService::createPaymentPlan()`
+2. Initiate a subscription with `SubscriptionService::subscribeToPlan()` — user is redirected to payment gateway
+3. User completes payment at the gateway
+4. On successful payment, the handler creates a `Subscription` record with `next_payment_due_date` calculated from the plan interval
+5. `SuccessfulLaravelMultipayPaymentEvent` is fired — listen for this to run any domain-specific logic
+
 ## Payment Conflict Resolution (PCR)
 
 If for any reason, your user/customer claims that the payment they made was successful but that your platform did not reflect such successful payment, this PCR feature enables you to resolve such claims by simply calling:

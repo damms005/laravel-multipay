@@ -14,7 +14,7 @@ class SubscriptionService
     {
         $planId = $handler->createPaymentPlan($name, $amount, $interval, $description, $currency);
 
-        $plan = PaymentPlan::create([
+        return PaymentPlan::create([
             'name' => $name,
             'amount' => $amount,
             'interval' => $interval,
@@ -23,15 +23,33 @@ class SubscriptionService
             'payment_handler_fqcn' => $handler->getUniquePaymentHandlerName(),
             'payment_handler_plan_id' => $planId,
         ]);
-
-        return $plan;
     }
 
-    public static function subscribeToPlan(PaymentHandlerInterface $handler, User $user, PaymentPlan $plan, string $completionUrl)
+    public static function findOrCreatePaymentPlan(PaymentHandlerInterface $handler, string $amount, string $interval, string $description, string $currency): PaymentPlan
     {
-        $transactionReference = strtoupper(str()->random());
+        $existing = PaymentPlan::query()
+            ->where('payment_handler_fqcn', $handler->getUniquePaymentHandlerName())
+            ->where('amount', $amount)
+            ->where('interval', $interval)
+            ->where('currency', $currency)
+            ->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        $name = strtolower(class_basename($handler)) . "-{$interval}-{$amount}-{$currency}";
+
+        return static::createPaymentPlan($handler, $name, $amount, $interval, $description, $currency);
+    }
+
+    public static function subscribeToPlan(PaymentHandlerInterface $handler, User $user, PaymentPlan $plan, string $completionUrl, ?string $transactionReference = null, ?array $metadata = null, ?string $displayAmount = null)
+    {
+        $transactionReference ??= strtoupper(str()->random());
 
         $url = $handler->subscribeToPlan($user, $plan, $transactionReference);
+
+        $paymentMetadata = array_merge($metadata ?? [], ['payment_plan_id' => $plan->id]);
 
         (new CreateNewPayment())->execute(
             $handler->getUniquePaymentHandlerName(),
@@ -40,8 +58,8 @@ class SubscriptionService
             $transactionReference,
             $plan->currency,
             $plan->description,
-            $plan->amount,
-            ['payment_plan_id' => $plan->id]
+            $displayAmount ?? $plan->amount,
+            $paymentMetadata
         );
 
         return redirect()->away($url);

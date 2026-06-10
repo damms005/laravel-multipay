@@ -6,8 +6,11 @@ use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use Yabacon\Paystack as PaystackHelper;
+use Illuminate\Foundation\Auth\User;
 use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\Models\Subscription;
 use Damms005\LaravelMultipay\ValueObjects\ReQuery;
+use Damms005\LaravelMultipay\Models\PaymentPlan;
 use Damms005\LaravelMultipay\Webhooks\Paystack\ChargeSuccess;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Webhooks\Contracts\WebhookHandler;
@@ -79,6 +82,8 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
             $this->giveValue($payment->transaction_reference, $verificationResponse);
 
             $payment->refresh();
+
+            $this->processPaymentMetadata($payment);
         } else {
             $payment->update([
                 'is_success' => 0,
@@ -258,7 +263,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
     {
         $paystack = app()->make(PaystackHelper::class, ['secret_key' => $this->secret_key]);
 
-        $paystack->plan->create([
+        $response = $paystack->plan->create([
             'name' => $name,
             'amount' => $amount, // in lowest denomination. e.g. kobo
             'interval' => $interval, // hourly, daily, weekly, monthly, quarterly, biannually (every 6 months) and annually
@@ -266,7 +271,54 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
             'currency' => $currency, // Allowed values are NGN, GHS, ZAR or USD
         ]);
 
-        return '';
+        return $response->data->plan_code;
+    }
+
+    public function subscribeToPlan(User $user, PaymentPlan $plan, string $transactionReference): string
+    {
+        $paystack = app()->make(PaystackHelper::class, ['secret_key' => $this->secret_key]);
+
+        $trx = $paystack->transaction->initialize([
+            'email' => $user->email,
+            'amount' => $this->convertAmountToValueRequiredByPaystack($plan->amount),
+            'plan' => $plan->payment_handler_plan_id,
+            'callback_url' => route('payment.finished.callback_url'),
+        ]);
+
+        if (!$trx->status) {
+            throw new \Exception($trx->message);
+        }
+
+        return $trx->data->authorization_url;
+    }
+
+    protected function processPaymentMetadata(Payment $payment): void
+    {
+        if (!is_iterable($payment->metadata)) {
+            return;
+        }
+
+        $isPaymentForSubscription = array_key_exists('payment_plan_id', (array)$payment->metadata);
+
+        if (!$isPaymentForSubscription) {
+            return;
+        }
+
+        $plan = PaymentPlan::findOrFail($payment->metadata['payment_plan_id']);
+
+        $nextPaymentDate = match ($plan->interval) {
+            'monthly' => Carbon::now()->addMonth(),
+            'quarterly' => Carbon::now()->addMonths(3),
+            'biannually' => Carbon::now()->addMonths(6),
+            'yearly', 'annually' => Carbon::now()->addYear(),
+            default => throw new \Exception("Unknown interval {$plan->interval}"),
+        };
+
+        Subscription::create([
+            'user_id' => $payment->user_id,
+            'payment_plan_id' => $payment->metadata['payment_plan_id'],
+            'next_payment_due_date' => $nextPaymentDate,
+        ]);
     }
 
     protected function resolveLocalPayment(string $paystackReferenceNumber, PaystackVerificationResponse $verificationResponse): Payment
