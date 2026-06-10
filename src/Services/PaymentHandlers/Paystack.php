@@ -282,6 +282,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
             'email' => $user->email,
             'amount' => $this->convertAmountToValueRequiredByPaystack($plan->amount),
             'plan' => $plan->payment_handler_plan_id,
+            'reference' => $transactionReference,
             'callback_url' => route('payment.finished.callback_url'),
         ]);
 
