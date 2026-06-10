@@ -290,6 +290,9 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
             throw new \Exception($trx->message);
         }
 
+        Payment::where('transaction_reference', $transactionReference)
+            ->update(['processor_transaction_reference' => $trx->data->reference]);
+
         return $trx->data->authorization_url;
     }
 

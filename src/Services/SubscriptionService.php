@@ -47,8 +47,6 @@ class SubscriptionService
     {
         $transactionReference ??= strtoupper(str()->random());
 
-        $url = $handler->subscribeToPlan($user, $plan, $transactionReference);
-
         $paymentMetadata = array_merge($metadata ?? [], ['payment_plan_id' => $plan->id]);
 
         (new CreateNewPayment())->execute(
@@ -61,6 +59,8 @@ class SubscriptionService
             $displayAmount ?? $plan->amount,
             $paymentMetadata
         );
+
+        $url = $handler->subscribeToPlan($user, $plan, $transactionReference);
 
         return redirect()->away($url);
     }

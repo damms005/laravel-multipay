@@ -93,6 +93,7 @@ it('sends plan code and converted amount when initializing subscription', functi
     $trxResponse->status = true;
     $trxResponse->data = new stdClass();
     $trxResponse->data->authorization_url = 'https://checkout.paystack.com/test';
+    $trxResponse->data->reference = 'PSK_REF_001';
 
     $transactionMock = Mockery::mock();
     $transactionMock->shouldReceive('initialize')
@@ -185,6 +186,7 @@ it('accepts custom transaction reference and metadata when subscribing', functio
     $trxResponse->status = true;
     $trxResponse->data = new stdClass();
     $trxResponse->data->authorization_url = 'https://checkout.paystack.com/test';
+    $trxResponse->data->reference = 'CUSTOM-REF-001';
 
     $capturedPayload = null;
     $transactionMock = Mockery::mock();
@@ -217,7 +219,8 @@ it('accepts custom transaction reference and metadata when subscribing', functio
     expect($capturedPayload['reference'])->toBe('CUSTOM-REF-001');
 
     $payment = \Damms005\LaravelMultipay\Models\Payment::where('transaction_reference', 'CUSTOM-REF-001')->first();
-    expect($payment)->not->toBeNull();
+    expect($payment)->not->toBeNull()
+        ->and($payment->processor_transaction_reference)->toBe('CUSTOM-REF-001');
 
     $metadata = (array) $payment->metadata;
     expect($metadata['payment_plan_id'])->toBe($plan->id);
@@ -291,6 +294,7 @@ it('uses displayAmount for original_amount_displayed_to_user when provided', fun
     $trxResponse->status = true;
     $trxResponse->data = new stdClass();
     $trxResponse->data->authorization_url = 'https://checkout.paystack.com/test';
+    $trxResponse->data->reference = 'DISPLAY-REF-001';
 
     $transactionMock = Mockery::mock();
     $transactionMock->shouldReceive('initialize')->once()->andReturn($trxResponse);
