@@ -170,11 +170,6 @@ This package provides built-in support for subscription-based recurring payments
 
 ### Supported Handlers
 
-| Handler | Plan Creation | Subscribe to Plan |
-|---------|:---:|:---:|
-| Flutterwave | Yes | Yes |
-| Paystack | Yes | Yes |
-
 ### Creating a Payment Plan
 
 Before subscribing users, create a payment plan:
@@ -260,32 +255,26 @@ A subscription is considered active if its `next_payment_due_date` is in the fut
 
 **`PaymentPlan`** — represents a recurring billing plan:
 
-| Column | Description |
-|--------|-------------|
-| `name` | Unique plan name |
-| `amount` | Billing amount |
-| `interval` | `monthly` or `yearly` |
-| `description` | Human-readable description |
-| `currency` | Currency code (e.g., NGN) |
-| `payment_handler_fqcn` | Payment handler class name |
+| Column                    | Description                       |
+| ------------------------- | --------------------------------- |
+| `name`                    | Unique plan name                  |
+| `amount`                  | Billing amount                    |
+| `interval`                | `monthly` or `yearly`             |
+| `description`             | Human-readable description        |
+| `currency`                | Currency code (e.g., NGN)         |
+| `payment_handler_fqcn`    | Payment handler class name        |
 | `payment_handler_plan_id` | Plan ID from the payment provider |
 
 **`Subscription`** — represents a user's subscription to a plan:
 
-| Column | Description |
-|--------|-------------|
-| `user_id` | The subscribed user |
-| `payment_plan_id` | FK to `payment_plans` |
+| Column                  | Description                  |
+| ----------------------- | ---------------------------- |
+| `user_id`               | The subscribed user          |
+| `payment_plan_id`       | FK to `payment_plans`        |
 | `next_payment_due_date` | When the next payment is due |
-| `metadata` | Optional JSON metadata |
+| `metadata`              | Optional JSON metadata       |
 
-### How It Works
-
-1. Create a `PaymentPlan` via `SubscriptionService::createPaymentPlan()`
-2. Initiate a subscription with `SubscriptionService::subscribeToPlan()` — user is redirected to payment gateway
-3. User completes payment at the gateway
-4. On successful payment, the handler creates a `Subscription` record with `next_payment_due_date` calculated from the plan interval
-5. `SuccessfulLaravelMultipayPaymentEvent` is fired — listen for this to run any domain-specific logic
+On successful payment, `SuccessfulLaravelMultipayPaymentEvent` is fired — listen for this to run any domain-specific logic.
 
 ## Payment Conflict Resolution (PCR)
 
