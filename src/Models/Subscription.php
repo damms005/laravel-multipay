@@ -10,6 +10,12 @@ class Subscription extends Model
 {
     use SoftDeletes;
 
+    public const STATUS_ACTIVE = 'active';
+
+    public const STATUS_PAUSED = 'paused';
+
+    public const STATUS_CANCELLED = 'cancelled';
+
     protected $guarded = ['id'];
 
     protected const TABLE_NAME = 'subscriptions';
@@ -33,5 +39,20 @@ class Subscription extends Model
     public function paymentPlan()
     {
         return $this->belongsTo(PaymentPlan::class);
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === self::STATUS_ACTIVE;
+    }
+
+    public function isPaused(): bool
+    {
+        return $this->status === self::STATUS_PAUSED;
+    }
+
+    public function isCancelled(): bool
+    {
+        return $this->status === self::STATUS_CANCELLED;
     }
 }

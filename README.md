@@ -170,6 +170,13 @@ This package provides built-in support for subscription-based recurring payments
 
 ### Supported Handlers
 
+| Handler     | Create plan | Subscribe | Pause / Cancel / Resume |
+| ----------- | :---------: | :-------: | :---------------------: |
+| Paystack    | ✅          | ✅        | ✅                      |
+| Flutterwave | ✅          | ✅        | —                       |
+
+Pause/cancel/resume requires the handler to implement the `ManagesSubscriptions` contract. Only Paystack does today; calling the management methods with an unsupported handler throws a `SubscriptionManagementException`.
+
 ### Creating a Payment Plan
 
 Before subscribing users, create a payment plan:
@@ -249,7 +256,61 @@ if ($subscription) {
 }
 ```
 
-A subscription is considered active if its `next_payment_due_date` is in the future.
+A subscription is considered active if its `status` is `active` **and** its `next_payment_due_date` is in the future. Paused and cancelled subscriptions are excluded.
+
+### Managing Subscriptions (Pause, Cancel, Resume)
+
+Subscriptions can be paused (temporarily suspended, intended to be resumed later), cancelled (permanently stopped), or resumed. Under the hood, both pause and cancel call the provider's "disable" endpoint so the subscription stops renewing; the difference between them is intent, tracked locally via the `status` column. Resume calls the provider's "enable" endpoint.
+
+> **Provider note (Paystack):** Paystack has no native "pause". Disabling a subscription stops it from renewing on its next payment date (you'll receive a `subscription.not_renew` event immediately, then `subscription.disable` on the would-be charge date). You **cannot** shift the next payment date by an arbitrary number of days — a pause effectively skips the upcoming renewal. Re-enabling before the next payment date keeps billing uninterrupted; re-enabling after the period lapses starts a fresh cycle.
+
+#### Capturing the provider's subscription code and token
+
+To manage a subscription you need the provider's **subscription code** and **email token**. For Paystack these are delivered on the `subscription.create` webhook (`data.subscription_code` and `data.email_token`) shortly after the first successful charge on a plan. Persist them onto the local `Subscription` with `recordProviderSubscriptionData()`:
+
+```php
+use Damms005\LaravelMultipay\Services\SubscriptionService;
+
+// inside your subscription.create webhook handling
+SubscriptionService::recordProviderSubscriptionData(
+    $subscription,
+    subscriptionCode: $request->input('data.subscription_code'),
+    emailToken: $request->input('data.email_token'),
+);
+```
+
+If you did not capture them at creation time, you can retrieve them from the provider (Paystack) via the handler:
+
+```php
+$details = $handler->getSubscriptionDetails('SUB_xxxxxxxx');
+// ['subscription_code' => ..., 'email_token' => ..., 'status' => ..., 'next_payment_date' => ...]
+```
+
+#### Pause, cancel, resume
+
+```php
+use Damms005\LaravelMultipay\Services\SubscriptionService;
+use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
+
+$handler = app(PaymentHandlerInterface::class); // must implement ManagesSubscriptions (Paystack does)
+
+// Pause — subscription stops renewing, status becomes "paused"
+SubscriptionService::pauseSubscription($handler, $subscription);
+
+// Resume — only valid for a paused subscription, status becomes "active"
+SubscriptionService::resumeSubscription($handler, $subscription);
+
+// Cancel — subscription stops renewing permanently, status becomes "cancelled"
+SubscriptionService::cancelSubscription($handler, $subscription);
+```
+
+Each method calls the provider, updates the local `status`, and returns the refreshed `Subscription`. They throw `SubscriptionManagementException` when:
+
+- the handler does not implement `ManagesSubscriptions`,
+- the subscription is missing its provider subscription code or email token, or
+- you attempt to resume a subscription that is not paused.
+
+Provider-side failures (e.g. an invalid subscription code) bubble up as an `Exception` carrying the provider's message.
 
 ### Models
 
@@ -267,12 +328,15 @@ A subscription is considered active if its `next_payment_due_date` is in the fut
 
 **`Subscription`** — represents a user's subscription to a plan:
 
-| Column                  | Description                  |
-| ----------------------- | ---------------------------- |
-| `user_id`               | The subscribed user          |
-| `payment_plan_id`       | FK to `payment_plans`        |
-| `next_payment_due_date` | When the next payment is due |
-| `metadata`              | Optional JSON metadata       |
+| Column                              | Description                                                  |
+| ----------------------------------- | ------------------------------------------------------------ |
+| `user_id`                           | The subscribed user                                          |
+| `payment_plan_id`                   | FK to `payment_plans`                                        |
+| `next_payment_due_date`             | When the next payment is due                                 |
+| `metadata`                          | Optional JSON metadata                                       |
+| `payment_handler_subscription_code` | Provider's subscription code (required to manage it)         |
+| `payment_handler_email_token`       | Provider's email token (required to manage it)               |
+| `status`                            | `active`, `paused`, or `cancelled`                           |
 
 On successful payment, `SuccessfulLaravelMultipayPaymentEvent` is fired — listen for this to run any domain-specific logic.
 

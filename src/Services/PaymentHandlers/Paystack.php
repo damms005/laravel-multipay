@@ -12,12 +12,13 @@ use Damms005\LaravelMultipay\Models\Subscription;
 use Damms005\LaravelMultipay\ValueObjects\ReQuery;
 use Damms005\LaravelMultipay\Models\PaymentPlan;
 use Damms005\LaravelMultipay\Webhooks\Paystack\ChargeSuccess;
+use Damms005\LaravelMultipay\Contracts\ManagesSubscriptions;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Webhooks\Contracts\WebhookHandler;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 use Damms005\LaravelMultipay\ValueObjects\PaystackVerificationResponse;
 
-class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
+class Paystack extends BasePaymentHandler implements PaymentHandlerInterface, ManagesSubscriptions
 {
     protected $secret_key;
 
@@ -294,6 +295,52 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface
             ->update(['processor_transaction_reference' => $trx->data->reference]);
 
         return $trx->data->authorization_url;
+    }
+
+    public function disableSubscription(string $subscriptionCode, string $emailToken): void
+    {
+        $paystack = app()->make(PaystackHelper::class, ['secret_key' => $this->secret_key]);
+
+        $response = $paystack->subscription->disable([
+            'code' => $subscriptionCode,
+            'token' => $emailToken,
+        ]);
+
+        if (!$response->status) {
+            throw new \Exception($response->message);
+        }
+    }
+
+    public function enableSubscription(string $subscriptionCode, string $emailToken): void
+    {
+        $paystack = app()->make(PaystackHelper::class, ['secret_key' => $this->secret_key]);
+
+        $response = $paystack->subscription->enable([
+            'code' => $subscriptionCode,
+            'token' => $emailToken,
+        ]);
+
+        if (!$response->status) {
+            throw new \Exception($response->message);
+        }
+    }
+
+    public function getSubscriptionDetails(string $subscriptionCode): array
+    {
+        $paystack = app()->make(PaystackHelper::class, ['secret_key' => $this->secret_key]);
+
+        $response = $paystack->subscription->fetch(['id' => $subscriptionCode]);
+
+        if (!$response->status) {
+            throw new \Exception($response->message);
+        }
+
+        return [
+            'subscription_code' => $response->data->subscription_code,
+            'email_token' => $response->data->email_token ?? null,
+            'status' => $response->data->status ?? null,
+            'next_payment_date' => $response->data->next_payment_date ?? null,
+        ];
     }
 
     protected function processPaymentMetadata(Payment $payment): void
