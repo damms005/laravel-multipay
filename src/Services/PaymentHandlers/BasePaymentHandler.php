@@ -28,6 +28,8 @@ abstract class BasePaymentHandler
         Paystack::class,
         Remita::class,
         Flutterwave::class,
+        Bachs::class,
+        Polar::class,
         // Interswitch::class,
         // UnifiedPayments::class,
     ];

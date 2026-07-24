@@ -72,6 +72,27 @@ return [
         'secretHash' => env('FLW_SECRET_HASH'),
     ],
 
+    'bachs' => [
+        'secret_key' => env('BACHS_SECRET_KEY'),
+        'base_url' => env('BACHS_BASE_URL', 'https://sandbox-api.bachs.io'),
+        'webhook_signing_secret' => env('BACHS_WEBHOOK_SIGNING_SECRET'),
+        'product_cache' => [
+            'enabled' => env('BACHS_PRODUCT_CACHE_ENABLED', true),
+            'ttl' => env('BACHS_PRODUCT_CACHE_TTL', 3600),
+        ],
+    ],
+
+    'polar' => [
+        'access_token' => env('POLAR_ACCESS_TOKEN'),
+        'server' => env('POLAR_SERVER', 'sandbox'),
+        'base_url' => env('POLAR_BASE_URL'),
+        'webhook_secret' => env('POLAR_WEBHOOK_SECRET'),
+        'product_cache' => [
+            'enabled' => env('POLAR_PRODUCT_CACHE_ENABLED', true),
+            'ttl' => env('POLAR_PRODUCT_CACHE_TTL', 3600),
+        ],
+    ],
+
     'middleware' => [
     ],
 
