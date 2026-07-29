@@ -21,6 +21,10 @@ class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
 {
     public function __construct()
     {
+        if (! class_exists(FlutterwaveRave::class)) {
+            throw new \RuntimeException('The Flutterwave payment handler requires the "damms005/laravel-flutterwave" and "flutterwavedev/flutterwave-v3" packages. Install them with: composer require damms005/laravel-flutterwave flutterwavedev/flutterwave-v3');
+        }
+
         parent::__construct();
 
         // Copy config values for use by Rave package
