@@ -113,23 +113,23 @@ REMITA_API_KEY=xxxxxxxxxxxxxxxxxxxxx
 - Bachs: Ensure to set the following environment variables:
 
 ```env
-BACHS_SECRET_KEY=sk_sandbox_xxxxxxxxxxxxxxxxxxxxx   # or sk_live_... in production
+BACHS_SECRET_KEY=sk_sandbox_xxxxxxxxxxxxxxxxxxxxx
 BACHS_BASE_URL=https://sandbox-api.bachs.io          # use https://api.bachs.io in production
 BACHS_WEBHOOK_SIGNING_SECRET=whsec_xxxxxxxxxxxxxxxxx # the signing secret of your Bachs webhook endpoint
 ```
 
-See the [Bachs](#bachs) section below for the required API-key scopes, the NGN org prerequisite, product-cache tuning, and capability notes.
+See the [Bachs](#bachs) section below for the required API-key scopes and product-cache options.
 
 - Polar: Ensure to set the following environment variables:
 
 ```env
-POLAR_ACCESS_TOKEN=polar_oat_xxxxxxxxxxxxxxxxx   # your Organization Access Token
+POLAR_ACCESS_TOKEN=polar_oat_xxxxxxxxxxxxxxxxx    # your Organization Access Token
 POLAR_SERVER=sandbox                              # use "production" for live
 POLAR_WEBHOOK_SECRET=polar_whs_xxxxxxxxxxxxxxxxx  # your Polar webhook endpoint secret
 # POLAR_BASE_URL=                                 # optional explicit override; derived from POLAR_SERVER otherwise
 ```
 
-See the [Polar](#polar) section below for auth, amount-format, webhook-verification, and capability notes.
+See the [Polar](#polar) section below for auth, amount format, and webhook verification.
 
 > For most of the above environment variables, you should rather use the (published) config file to set the corresponding values.
 
@@ -187,125 +187,6 @@ The metadata should be a valid JSON string containing key-value pairs that modif
 - See [Paystack transaction initialization documentation](https://paystack.com/docs/api/transaction/#initialize) for all available parameters
 - This feature is only available when using Paystack as the payment handler
 
-## Bachs
-
-[Bachs](https://bachs.io) is supported for one-off payments, subscriptions/recurring billing, subscription management, and webhooks. It has no PHP SDK; the handler talks to the Bachs REST API (`/v1/`) over Laravel's HTTP client.
-
-### Environment / config
-
-```env
-BACHS_SECRET_KEY=sk_sandbox_xxxxx            # sandbox, or sk_live_... in production
-BACHS_BASE_URL=https://sandbox-api.bachs.io  # https://api.bachs.io in production
-BACHS_WEBHOOK_SIGNING_SECRET=whsec_xxxxx     # your Bachs webhook endpoint's signing secret
-BACHS_PRODUCT_CACHE_ENABLED=true             # cache resolved product ids (default: true)
-BACHS_PRODUCT_CACHE_TTL=3600                 # product-cache TTL in seconds (default: 3600)
-```
-
-All of the above are also exposed under the `bachs` key of the published config file.
-
-### Required API-key scopes
-
-The secret key must have these scopes, or the corresponding calls will fail:
-
-- `payments:read`, `payments:write` — checkout sessions, charge requery
-- `products:read`, `products:write` — find-or-create the products a checkout/subscription bills against
-- `subscriptions:read`, `subscriptions:write` — subscription details and cancellation
-- `webhooks:read`, `webhooks:write` — webhook endpoint management
-
-### NGN org prerequisite (`BASE_CURRENCY_NOT_HELD_BY_ORG`)
-
-Before you can create **NGN** checkouts, your Bachs organization must actually **hold** NGN as a balance currency. Enable it once via the Bachs API:
-
-```
-PUT /v1/organizations/checkout/settings
-{ "balance_currencies": { "NGN": true, "USD": true } }
-```
-
-If NGN is not enabled on the org, Bachs rejects the checkout with `BASE_CURRENCY_NOT_HELD_BY_ORG`. Product currency on Bachs is **USD or NGN only**.
-
-### Amounts are decimal strings
-
-Unlike Paystack (kobo/minor units), Bachs money is **decimal strings** + an ISO currency (e.g. `"75000.00"` / `"USD"`). The handler sends amounts as decimal strings and never multiplies by 100. Do not pass minor units.
-
-### Merchant-of-Record / tax
-
-Bachs is **Merchant-of-Record capable** — tax is handled either in **MoR mode** or via **Tax Assist**, depending on your setup. This is an **org/account-level configuration on Bachs's side**, not something the handler toggles. In MoR/tax mode the amount the customer actually pays can **exceed** the product price (VAT/GST added at checkout), so the settled/collected amount is taken from the webhook `collection.succeeded` (and the charge `amount` on requery), **not** the local product price.
-
-### One-off payments and the `bachs_product_id` tradeoff
-
-Bachs bills a checkout against a **FIXED-price product**. The handler resolves the product two ways:
-
-- **Supply `bachs_product_id` in the payment metadata** → the handler uses it directly. Zero product management, and the checkout displays exactly that product. Recommended when you manage products yourself.
-- **Omit it** → the handler derives a product from the transaction (name = description, plus amount + currency), scans your Bachs products to find a matching FIXED product, and creates one if none exists (guarded by a cache lock + `Idempotency-Key`). This costs **extra API round-trips** on a cache miss, and the reused product's **display name shows on the hosted checkout page**.
-
-Resolved product ids are memoized in Laravel's cache (keyed by name+amount+currency) per `BACHS_PRODUCT_CACHE_*`. Only **FIXED** products are used — never pay-what-you-want products — because the Bachs hosted checkout renders an editable amount field for those, which would let a customer underpay.
-
-### Webhooks (source of truth for fulfilment)
-
-Point your Bachs webhook endpoint at `route('payment.external-webhook-endpoint')`. Each request is verified before handling:
-
-- Headers `X-Bachs-Timestamp` (unix seconds) and `X-Bachs-Signature` (HMAC-SHA256 hex of `"{timestamp}.{raw_body}"` using the endpoint signing secret) are validated against the raw request body with a 300s timestamp tolerance. Mismatched/stale requests are rejected.
-- Handled events: `collection.succeeded` (marks the payment successful — one-off and subscription first charge), `collection.failed` (marks it failed), and the subscription lifecycle events `customer.subscription.created` / `invoice.paid` (create/advance the local `Subscription`).
-
-### Capability gaps
-
-- **Subscriptions are USD-card only** today — `createPaymentPlan()` throws for any non-USD currency.
-- **No subscription resume** — cancellation is irreversible on Bachs, so `enableSubscription()` always throws; create a new subscription to reactivate a customer.
-
-## Polar
-
-[Polar](https://polar.sh) is supported for one-off payments, subscriptions/recurring billing, subscription management, and webhooks. The handler talks to the Polar REST API (`/v1/`) over Laravel's HTTP client — no SDK.
-
-### Environment / config
-
-```env
-POLAR_ACCESS_TOKEN=polar_oat_xxxxx   # Organization Access Token
-POLAR_SERVER=sandbox                 # or "production"
-POLAR_WEBHOOK_SECRET=polar_whs_xxxxx # your webhook endpoint secret
-# POLAR_BASE_URL=                    # optional; else derived from POLAR_SERVER
-```
-
-The base URL is derived from `POLAR_SERVER`: `sandbox` → `https://sandbox-api.polar.sh`, `production` → `https://api.polar.sh`. Set `POLAR_BASE_URL` to override.
-
-### Authentication (Organization Access Token)
-
-Auth is a Bearer **Organization Access Token** (`Authorization: Bearer polar_oat_…`). **Do not send `organization_id` in request bodies** — with an org token it is inferred, and including it triggers a `422 organization_token` error. The handler never sends it.
-
-### Amounts are integer cents
-
-Polar money is in **integer minor units (cents)** — like Paystack kobo (major × 100) — with a **lowercase** ISO currency (`"usd"`). The handler multiplies the displayed amount by 100 and lowercases the currency. This is the **opposite** of Bachs (decimal strings); do not pass decimal amounts.
-
-### Trailing-slash on collection endpoints
-
-Polar requires a **trailing slash** on collection endpoints (`/v1/products/`, `/v1/checkouts/`). Without it Polar 307-redirects and can drop the POST body. The handler already uses the correct paths.
-
-### Merchant-of-Record / tax
-
-Polar is **Merchant-of-Record by default** — tax is calculated and added at checkout, so the amount the customer pays (`total_amount`) can **exceed** the local product price. The settled/collected amount for reconciliation is taken from the webhook/order `total_amount` (falling back to `amount`), **not** the local product price.
-
-### One-off payments and the `polar_product_id` tradeoff
-
-Polar bills a checkout against a **FIXED-price product**. Passing an `amount` override to a checkout on a FIXED price is **silently ignored**, so an arbitrary amount requires a dedicated fixed product per amount. The handler resolves the product two ways:
-
-- **Provide `polar_product_id`** in the payment metadata → used directly, no product lookup/creation.
-- **Omit it** → the handler derives a product from the transaction (name = description, amount + currency), looks it up by a signature stored in the product `metadata` via `GET /v1/products/?metadata[...]` (no blind pagination scan), and creates one if none exists (guarded by `Cache::lock()`). Resolved product ids are memoized in Laravel's cache per `POLAR_PRODUCT_CACHE_*`.
-
-Only **FIXED** products are used — never custom/pay-what-you-want prices — because those render an editable amount on the hosted page, which would let a customer underpay.
-
-### Webhooks (Standard Webhooks, source of truth for fulfilment)
-
-Point your Polar webhook endpoint at `route('payment.external-webhook-endpoint')`. Requests are verified per the [Standard Webhooks](https://www.standardwebhooks.com) spec before handling:
-
-- Headers `webhook-id`, `webhook-timestamp`, `webhook-signature`.
-- The raw `POLAR_WEBHOOK_SECRET` (`polar_whs_…`) is **base64-encoded** and used as the HMAC-SHA256 key over `"{webhook-id}.{webhook-timestamp}.{raw_body}"`; the resulting signature is base64-encoded and compared (via `hash_equals`) against each space-separated `v1,<sig>` entry in the `webhook-signature` header, with a 300s timestamp tolerance.
-- A request with **no** `webhook-signature` header is passed to the next provider (throws `UnknownWebhookException`); a present-but-invalid signature or stale timestamp is rejected.
-
-Handled events: `order.paid` (one-off and subscription charges → mark payment successful), `order.refunded`, `subscription.created`/`subscription.active`/`subscription.uncanceled`/`subscription.resumed` (activate the local subscription), and `subscription.canceled`/`subscription.revoked`/`subscription.paused` (update the local subscription status).
-
-### Capability notes
-
-- **Subscription resume is supported** (unlike Bachs). `disableSubscription()` issues `PATCH /v1/subscriptions/{id}` with `cancel_at_period_end: true`, and `enableSubscription()` issues `cancel_at_period_end: false`. Resume only works while the subscription is still active and its current period has not ended; a hard revoke is terminal.
-
 ## Subscriptions (Recurring Payments)
 
 This package provides built-in support for subscription-based recurring payments via the `SubscriptionService` class.
@@ -315,15 +196,11 @@ This package provides built-in support for subscription-based recurring payments
 | Handler     | Create plan | Subscribe | Pause / Cancel / Resume  |
 | ----------- | :---------: | :-------: | :----------------------: |
 | Paystack    | ✅          | ✅        | ✅                       |
-| Bachs       | ✅ (USD)    | ✅        | Cancel only (no resume)  |
+| Bachs       | ✅          | ✅        | Cancel only (no resume)  |
 | Polar       | ✅          | ✅        | ✅                       |
 | Flutterwave | ✅          | ✅        | —                        |
 
 Pause/cancel/resume requires the handler to implement the `ManagesSubscriptions` contract. Paystack, Bachs, and Polar do; calling the management methods with an unsupported handler throws a `SubscriptionManagementException`.
-
-> **Provider note (Polar):** Cancellation issues `PATCH /v1/subscriptions/{id}` with `cancel_at_period_end: true`; Polar **supports resume** via `enableSubscription()` (`cancel_at_period_end: false`) while the subscription is still active and its period has not ended.
-
-> **Provider note (Bachs):** Bachs subscriptions are currently **USD-card only** — `createPaymentPlan()` throws if the currency is not `USD`. Cancellation on Bachs is **irreversible**: `disableSubscription()` issues `DELETE /v1/subscriptions/{id}` with `cancel_at_period_end: true`, and there is no way to resume a canceled subscription, so `enableSubscription()` always throws. To reactivate a customer, create a new subscription.
 
 ### Creating a Payment Plan
 
@@ -409,8 +286,6 @@ A subscription is considered active if its `status` is `active` **and** its `nex
 ### Managing Subscriptions (Pause, Cancel, Resume)
 
 Subscriptions can be paused (temporarily suspended, intended to be resumed later), cancelled (permanently stopped), or resumed. Under the hood, both pause and cancel call the provider's "disable" endpoint so the subscription stops renewing; the difference between them is intent, tracked locally via the `status` column. Resume calls the provider's "enable" endpoint.
-
-> **Provider note (Paystack):** Paystack has no native "pause". Disabling a subscription stops it from renewing on its next payment date (you'll receive a `subscription.not_renew` event immediately, then `subscription.disable` on the would-be charge date). You **cannot** shift the next payment date by an arbitrary number of days — a pause effectively skips the upcoming renewal. Re-enabling before the next payment date keeps billing uninterrupted; re-enabling after the period lapses starts a fresh cycle.
 
 #### Capturing the provider's subscription code and token
 
@@ -501,7 +376,7 @@ $outcome = LaravelMultipay::reQueryUnsuccessfulPayment($payment)
 
 The payment will be re-resolved and the payment will be updated in the database. If the payment is successful, the `SuccessfulLaravelMultipayPaymentEvent` event will be fired, so you can run any domain/application-specific procedures.
 
-## WebHooks Payment Notifications (optional)
+## Webhook Payment Notifications (optional)
 
 One of the benefits of this package is to remove the need for you to have to deal with payment webhooks. Depending on your needs, the event handling may suffice for your use case.
 
@@ -514,6 +389,156 @@ If you need webhook notifications from payment providers, use the webhook endpoi
 ### SuccessfulLaravelMultipayPaymentEvent
 
 If there are additional steps you want to take upon successful payment, listen for `SuccessfulLaravelMultipayPaymentEvent`. This event will be fired whenever a successful payment occurs, with its corresponding `Payment` model.
+
+## Webhook Push Notifications
+
+When a payment succeeds, this package can automatically send a webhook to an external system (e.g. a financial tracking service). This uses [spatie/laravel-webhook-server](https://github.com/spatie/laravel-webhook-server) under the hood.
+
+### Setup
+
+1. Install the webhook server package:
+
+```bash
+composer require spatie/laravel-webhook-server
+```
+
+2. Set the webhook URL and signing secret in your `.env`:
+
+```env
+LARAVEL_MULTIPAY_WEBHOOK_URL=https://your-receiving-app.com/api/webhooks/payments
+LARAVEL_MULTIPAY_WEBHOOK_SIGNING_SECRET=your-shared-secret
+```
+
+3. Create a class that implements `Damms005\LaravelMultipay\Contracts\WebhookPayloadPackager`:
+
+```php
+use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\Contracts\WebhookPayloadPackager;
+
+class MyWebhookPayloadPackager implements WebhookPayloadPackager
+{
+    public function getWebhookPayload(Payment $payment): array
+    {
+        return [
+            'transaction_reference' => $payment->transaction_reference,
+            'amount_paid' => $payment->original_amount_displayed_to_user,
+            'payment_processor_name' => $payment->payment_processor_name,
+            // ...add any app-specific data you need
+        ];
+    }
+}
+```
+
+4. Register your packager in a service provider:
+
+```php
+config()->set(
+    'laravel-multipay.webhook.payload_packager',
+    \App\Services\MyWebhookPayloadPackager::class,
+);
+```
+
+Once configured, every `SuccessfulLaravelMultipayPaymentEvent` will trigger a signed webhook POST to the configured URL with the payload returned by your packager.
+
+### Backfilling Existing Payments
+
+To send existing successful payments to the webhook endpoint:
+
+```bash
+php artisan multipay:send-payments-webhook
+```
+
+Options:
+
+- `--from=YYYY-MM-DD` — only payments created on or after this date
+- `--to=YYYY-MM-DD` — only payments created on or before this date
+- `--chunk=100` — number of payments per batch (default: 100)
+
+The command fail-fast aborts after 3 consecutive batch failures.
+
+## Provider-specific notes
+
+The sections below cover setup and behavior specific to individual providers. See the [Currently supported payment handlers](#currently-supported-payment-handlers) list for the full set.
+
+## Bachs
+
+[Bachs](https://bachs.io) supports one-off payments, subscriptions, subscription management, and webhooks.
+
+### Environment / config
+
+```env
+BACHS_SECRET_KEY=sk_sandbox_xxxxx
+BACHS_BASE_URL=https://sandbox-api.bachs.io  # https://api.bachs.io in production
+BACHS_WEBHOOK_SIGNING_SECRET=whsec_xxxxx     # your Bachs webhook endpoint's signing secret
+BACHS_PRODUCT_CACHE_ENABLED=true             # cache resolved product ids (default: true)
+BACHS_PRODUCT_CACHE_TTL=3600                 # product-cache TTL in seconds (default: 3600)
+```
+
+All of the above are also exposed under the `bachs` key of the published config file.
+
+### Required API-key scopes
+
+The secret key must have these scopes:
+
+- `payments:read`, `payments:write`
+- `products:read`, `products:write`
+- `subscriptions:read`, `subscriptions:write`
+- `webhooks:read`, `webhooks:write`
+
+### Amounts
+
+Bachs amounts are **decimal strings** with an ISO currency (e.g. `"75000.00"` / `"USD"`). Do not pass minor units.
+
+### Products
+
+Bachs bills a checkout against a fixed-price product. You can supply a `bachs_product_id` in the payment metadata to bill against a specific product, or omit it to have the handler find-or-create one from the transaction details. Resolved product ids are cached per `BACHS_PRODUCT_CACHE_*`.
+
+### Webhooks
+
+Point your Bachs webhook endpoint at `route('payment.external-webhook-endpoint')`. Requests are verified via the `X-Bachs-Timestamp` and `X-Bachs-Signature` (HMAC-SHA256) headers with a 300s timestamp tolerance. Handled events: `collection.succeeded`, `collection.failed`, `customer.subscription.created`, and `invoice.paid`.
+
+### Subscriptions
+
+Bachs supports create, subscribe, and cancel, but not resume. To reactivate a customer, create a new subscription. See [Managing Subscriptions](#managing-subscriptions-pause-cancel-resume).
+
+## Polar
+
+[Polar](https://polar.sh) supports one-off payments, subscriptions, subscription management, and webhooks.
+
+### Environment / config
+
+```env
+POLAR_ACCESS_TOKEN=polar_oat_xxxxx   # Organization Access Token
+POLAR_SERVER=sandbox                 # or "production"
+POLAR_WEBHOOK_SECRET=polar_whs_xxxxx # your webhook endpoint secret
+# POLAR_BASE_URL=                    # optional; else derived from POLAR_SERVER
+POLAR_PRODUCT_CACHE_ENABLED=true     # cache resolved product ids (default: true)
+POLAR_PRODUCT_CACHE_TTL=3600         # product-cache TTL in seconds (default: 3600)
+```
+
+All of the above are also exposed under the `polar` key of the published config file.
+
+The base URL is derived from `POLAR_SERVER`: `sandbox` → `https://sandbox-api.polar.sh`, `production` → `https://api.polar.sh`. Set `POLAR_BASE_URL` to override.
+
+### Authentication
+
+Auth uses a Bearer **Organization Access Token** (`Authorization: Bearer polar_oat_…`), set via `POLAR_ACCESS_TOKEN`.
+
+### Amounts
+
+Polar amounts are **integer minor units (cents)** with a **lowercase** ISO currency (`"usd"`). Do not pass decimal amounts.
+
+### Products
+
+Polar bills a checkout against a fixed-price product. You can supply a `polar_product_id` in the payment metadata to bill against a specific product, or omit it to have the handler find-or-create one from the transaction details. Resolved product ids are cached per `POLAR_PRODUCT_CACHE_*`.
+
+### Webhooks
+
+Point your Polar webhook endpoint at `route('payment.external-webhook-endpoint')`. Requests are verified per the [Standard Webhooks](https://www.standardwebhooks.com) spec using the `webhook-id`, `webhook-timestamp`, and `webhook-signature` headers with a 300s timestamp tolerance. Handled events: `order.paid`, `order.refunded`, `subscription.created`/`active`/`uncanceled`/`resumed`, and `subscription.canceled`/`revoked`/`paused`.
+
+### Subscriptions
+
+Polar supports create, subscribe, cancel, and resume. See [Managing Subscriptions](#managing-subscriptions-pause-cancel-resume).
 
 ## Paystack Terminal
 
@@ -613,72 +638,6 @@ The Terminal class throws `\Exception` on failures. Common scenarios include:
 - Network errors communicating with Paystack API
 
 Always wrap Terminal method calls in try-catch blocks for proper error handling.
-
-## Webhook Push Notifications
-
-When a payment succeeds, this package can automatically send a webhook to an external system (e.g. a financial tracking service). This uses [spatie/laravel-webhook-server](https://github.com/spatie/laravel-webhook-server) under the hood.
-
-### Setup
-
-1. Install the webhook server package:
-
-```bash
-composer require spatie/laravel-webhook-server
-```
-
-2. Set the webhook URL and signing secret in your `.env`:
-
-```env
-LARAVEL_MULTIPAY_WEBHOOK_URL=https://your-receiving-app.com/api/webhooks/payments
-LARAVEL_MULTIPAY_WEBHOOK_SIGNING_SECRET=your-shared-secret
-```
-
-3. Create a class that implements `Damms005\LaravelMultipay\Contracts\WebhookPayloadPackager`:
-
-```php
-use Damms005\LaravelMultipay\Models\Payment;
-use Damms005\LaravelMultipay\Contracts\WebhookPayloadPackager;
-
-class MyWebhookPayloadPackager implements WebhookPayloadPackager
-{
-    public function getWebhookPayload(Payment $payment): array
-    {
-        return [
-            'transaction_reference' => $payment->transaction_reference,
-            'amount_paid' => $payment->original_amount_displayed_to_user,
-            'payment_processor_name' => $payment->payment_processor_name,
-            // ...add any app-specific data you need
-        ];
-    }
-}
-```
-
-4. Register your packager in a service provider:
-
-```php
-config()->set(
-    'laravel-multipay.webhook.payload_packager',
-    \App\Services\MyWebhookPayloadPackager::class,
-);
-```
-
-Once configured, every `SuccessfulLaravelMultipayPaymentEvent` will trigger a signed webhook POST to the configured URL with the payload returned by your packager.
-
-### Backfilling Existing Payments
-
-To send existing successful payments to the webhook endpoint:
-
-```bash
-php artisan multipay:send-payments-webhook
-```
-
-Options:
-
-- `--from=YYYY-MM-DD` — only payments created on or after this date
-- `--to=YYYY-MM-DD` — only payments created on or before this date
-- `--chunk=100` — number of payments per batch (default: 100)
-
-The command fail-fast aborts after 3 consecutive batch failures.
 
 ## Testing
 
