@@ -30,6 +30,7 @@ abstract class BasePaymentHandler
         Flutterwave::class,
         Bachs::class,
         Polar::class,
+        Monnify::class,
         // Interswitch::class,
         // UnifiedPayments::class,
     ];

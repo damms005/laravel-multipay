@@ -82,6 +82,19 @@ return [
         ],
     ],
 
+    'monnify' => [
+        'api_key' => env('MONNIFY_API_KEY'),
+        'secret_key' => env('MONNIFY_SECRET_KEY'),
+        'contract_code' => env('MONNIFY_CONTRACT_CODE'),
+        'base_url' => env('MONNIFY_BASE_URL', 'https://sandbox.monnify.com'),
+        'wallet_account_number' => env('MONNIFY_WALLET_ACCOUNT_NUMBER'),
+
+        'token_cache' => [
+            'enabled' => env('MONNIFY_TOKEN_CACHE_ENABLED', true),
+            'safety_margin_seconds' => env('MONNIFY_TOKEN_CACHE_SAFETY_MARGIN', 60),
+        ],
+    ],
+
     'polar' => [
         'access_token' => env('POLAR_ACCESS_TOKEN'),
         'server' => env('POLAR_SERVER', 'sandbox'),
