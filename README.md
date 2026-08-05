@@ -29,6 +29,7 @@ Currently, this package supports the following online payment processors/handler
 - [Remita](http://remita.net)
 - [Bachs](https://bachs.io)
 - [Polar](https://polar.sh)
+- [Moniepoint (Monnify)](https://monnify.com)
 - [Flutterwave](https://flutterwave.com)\*\*
 - [Interswitch](https://www.interswitchgroup.com)\*\*
 - [UnifiedPayments](https://unifiedpayments.com)\*\*
@@ -131,6 +132,18 @@ POLAR_WEBHOOK_SECRET=polar_whs_xxxxxxxxxxxxxxxxx  # your Polar webhook endpoint 
 
 See the [Polar](#polar) section below for auth, amount format, and webhook verification.
 
+- Moniepoint (Monnify): Ensure to set the following environment variables:
+
+```env
+MONNIFY_API_KEY=MK_TEST_xxxxxxxxxxxxxxxxx
+MONNIFY_SECRET_KEY=xxxxxxxxxxxxxxxxxxxxxxx
+MONNIFY_CONTRACT_CODE=xxxxxxxxxxx
+MONNIFY_BASE_URL=https://sandbox.monnify.com  # use https://api.monnify.com in production
+MONNIFY_WALLET_ACCOUNT_NUMBER=xxxxxxxxxx     # required for direct debit settlement
+```
+
+See the [Moniepoint (Monnify)](#moniepoint-monnify) section below for recurring collection, mandates, and webhook verification.
+
 > For most of the above environment variables, you should rather use the (published) config file to set the corresponding values.
 
 ## Usage
@@ -199,8 +212,11 @@ This package provides built-in support for subscription-based recurring payments
 | Bachs       | ✅          | ✅        | Cancel only (no resume)  |
 | Polar       | ✅          | ✅        | ✅                       |
 | Flutterwave | ✅          | ✅        | —                        |
+| Monnify     | —           | —         | —                        |
 
 Pause/cancel/resume requires the handler to implement the `ManagesSubscriptions` contract. Paystack, Bachs, and Polar do; calling the management methods with an unsupported handler throws a `SubscriptionManagementException`.
+
+Monnify has no server-side plans or subscriptions, so `SubscriptionService` does not apply to it — `createPaymentPlan()` and `subscribeToPlan()` throw with a message pointing at the right API. Recurring collection on Monnify is **merchant-scheduled**: your application owns the renewal clock and charges a mandate or a stored card token when a period falls due. See [Moniepoint (Monnify)](#moniepoint-monnify).
 
 ### Creating a Payment Plan
 
@@ -539,6 +555,94 @@ Point your Polar webhook endpoint at `route('payment.external-webhook-endpoint')
 ### Subscriptions
 
 Polar supports create, subscribe, cancel, and resume. See [Managing Subscriptions](#managing-subscriptions-pause-cancel-resume).
+
+## Moniepoint (Monnify)
+
+[Moniepoint](https://moniepoint.com) collects online payments through its gateway, [Monnify](https://monnify.com). The handler supports one-off payments, direct debit mandates, stored card tokens, and webhooks. It does **not** support server-side payment plans or subscriptions — see [Recurring collection](#recurring-collection) below.
+
+### Environment / config
+
+```env
+MONNIFY_API_KEY=MK_TEST_xxxxx
+MONNIFY_SECRET_KEY=xxxxx
+MONNIFY_CONTRACT_CODE=xxxxx
+MONNIFY_BASE_URL=https://sandbox.monnify.com # https://api.monnify.com in production
+MONNIFY_WALLET_ACCOUNT_NUMBER=xxxxxxxxxx     # settlement wallet, required for direct debit
+MONNIFY_TOKEN_CACHE_ENABLED=true             # cache the OAuth access token (default: true)
+MONNIFY_TOKEN_CACHE_SAFETY_MARGIN=60         # seconds to expire the cached token early (default: 60)
+```
+
+All of the above are also exposed under the `monnify` key of the published config file.
+
+### Authentication
+
+Monnify uses OAuth2 client credentials: the API key and secret key are Basic-auth'd against `api/v1/auth/login` to obtain a bearer token, which is then sent on every request. The handler caches that token per `MONNIFY_TOKEN_CACHE_*` (keyed by base URL and API key, so sandbox and production tokens never collide) and re-authenticates once automatically if a call comes back unauthorised.
+
+Monnify replies `200 OK` on business failures, so the client checks the `requestSuccessful` flag in the body as well as the HTTP status.
+
+### Amounts
+
+Monnify amounts are **decimal strings** in the major unit (e.g. `"3900.00"` / `"NGN"`). Do not pass minor units (kobo).
+
+### Recurring collection
+
+Monnify does not own a renewal clock. Unlike Paystack, there is no provider-side plan that charges the customer every month — **your application decides when a period is due and initiates the charge**. Two rails are available:
+
+| Rail                | Contract                   | First charge | Notes                                             |
+| ------------------- | -------------------------- | :----------: | ------------------------------------------------- |
+| Stored card token   | `ChargesStoredInstruments` | ✅           | Tokenised from a completed card payment           |
+| Direct debit mandate| `ManagesMandates`          | ❌           | Renewals only; needs bank activation before use   |
+
+A mandate can **never** collect the first payment: after the payer authorises it, the bank takes anywhere from five minutes to 48 hours to activate it. Collect the first payment through an ordinary checkout (card or bank transfer) and use the mandate for subsequent periods.
+
+### Stored card tokens
+
+After a successful card payment, pull the reusable token off the transaction and charge it later:
+
+```php
+use Damms005\LaravelMultipay\Contracts\ChargesStoredInstruments;
+
+$handler = app(PaymentHandlerInterface::class); // must implement ChargesStoredInstruments
+
+$token = $handler->extractStoredInstrumentToken($transactionReference);
+
+$result = $handler->chargeStoredInstrument(
+    token: $token,
+    payerEmailAtTokenization: $user->email,
+    amount: '3900.00',
+    paymentReference: $newReference,
+    narration: 'Monthly subscription',
+);
+```
+
+The token and the email it was created with are a pair — Monnify rejects the charge if you send the token with a different email.
+
+### Direct debit mandates
+
+```php
+use Damms005\LaravelMultipay\Contracts\ManagesMandates;
+use Damms005\LaravelMultipay\ValueObjects\MandateRequest;
+
+$handler = app(PaymentHandlerInterface::class); // must implement ManagesMandates
+
+$mandate = $handler->createMandate(new MandateRequest(...));
+// send $mandate->authorizationUrl to the payer, then poll:
+$mandate = $handler->getMandateStatus($mandate->reference);
+
+if ($mandate->status->isDebitable()) {
+    $result = $handler->debitMandate($mandate->reference, '3900.00', $reference, 'Monthly subscription');
+}
+```
+
+Mandate authorisation is fully digital — the payer either follows an authorisation link and enters an OTP, or sends a small token transfer from the account being mandated, depending on their bank. Create the mandate as open-ended so it has no end date; the authorisation window is a **one-time setup deadline**, not a recurring re-approval.
+
+`MandateStatus` and `DebitOutcome` classify what came back. `DebitOutcome::isRetryable()`, `retryAfterHours()`, and `requiresNewInstrument()` let you drive dunning without pattern-matching provider strings yourself.
+
+### Webhooks
+
+Point your Monnify webhook endpoint at `route('payment.external-webhook-endpoint')`. Requests are verified with the `monnify-signature` header (HMAC-SHA512 of the raw body, keyed by `MONNIFY_SECRET_KEY`). Handled event: `SUCCESSFUL_TRANSACTION`.
+
+Monnify only sends webhooks for **successful** transactions. Failures are never pushed, so poll `getDebitStatus()` for any debit you initiated and did not hear back about.
 
 ## Paystack Terminal
 
