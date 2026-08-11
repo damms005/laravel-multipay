@@ -39,6 +39,13 @@ interface PaymentHandlerInterface
     public static function getUniquePaymentHandlerName(): string;
 
     /**
+     * Whether this handler can run in the current installation. Handlers whose optional
+     * dependencies (composer packages) are absent return false and are skipped during
+     * handler enumeration instead of failing the whole resolution.
+     */
+    public static function isAvailable(): bool;
+
+    /**
      * For some reason (e.g. no response from server after successful payment, payment was fulfilled by some other
      * non-automated means, etc.) an initiated transaction was completed but not marked as successful. Payment handlers should implement
      * this method so as to support re-querying such transaction. In such implementation, payment handler should ensure to set the

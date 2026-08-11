@@ -55,15 +55,18 @@ abstract class BasePaymentHandler
         return !collect(self::PAYMENT_PROVIDERS_FQCNs)->contains(static::class);
     }
 
+    public static function isAvailable(): bool
+    {
+        return true;
+    }
+
     public static function getNamesOfPaymentHandlers()
     {
         return collect(self::PAYMENT_PROVIDERS_FQCNs)
-            ->mapWithKeys(function (string $paymentHandlerFqcn) {
-                /** @var PaymentHandlerInterface */
-                $paymentHandler = new $paymentHandlerFqcn();
-
-                return [$paymentHandlerFqcn => $paymentHandler->getUniquePaymentHandlerName()];
-            });
+            ->filter(fn (string $paymentHandlerFqcn): bool => $paymentHandlerFqcn::isAvailable())
+            ->mapWithKeys(fn (string $paymentHandlerFqcn): array => [
+                $paymentHandlerFqcn => $paymentHandlerFqcn::getUniquePaymentHandlerName(),
+            ]);
     }
 
     public function getTransactionReferenceName(): string

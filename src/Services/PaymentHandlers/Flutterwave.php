@@ -19,6 +19,11 @@ use Damms005\LaravelMultipay\Models\PaymentPlan as PaymentPlanModel;
 
 class Flutterwave extends BasePaymentHandler implements PaymentHandlerInterface
 {
+    public static function isAvailable(): bool
+    {
+        return class_exists(FlutterwaveRave::class);
+    }
+
     public function __construct()
     {
         if (! class_exists(FlutterwaveRave::class)) {
