@@ -60,6 +60,11 @@ abstract class BasePaymentHandler
         return true;
     }
 
+    public function supports(string $capability): bool
+    {
+        return false;
+    }
+
     public static function getNamesOfPaymentHandlers()
     {
         return collect(self::PAYMENT_PROVIDERS_FQCNs)

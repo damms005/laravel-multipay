@@ -14,11 +14,14 @@ use Damms005\LaravelMultipay\Models\PaymentPlan;
 use Damms005\LaravelMultipay\Webhooks\Paystack\ChargeSuccess;
 use Damms005\LaravelMultipay\Contracts\ManagesSubscriptions;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
+use Damms005\LaravelMultipay\Contracts\SupportsSubscriptionQuantity;
+use Damms005\LaravelMultipay\Events\SubscriptionCodeReplaced;
 use Damms005\LaravelMultipay\Webhooks\Contracts\WebhookHandler;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 use Damms005\LaravelMultipay\ValueObjects\PaystackVerificationResponse;
+use Damms005\LaravelMultipay\ValueObjects\SubscriptionQuantityChange;
 
-class Paystack extends BasePaymentHandler implements PaymentHandlerInterface, ManagesSubscriptions
+class Paystack extends BasePaymentHandler implements PaymentHandlerInterface, ManagesSubscriptions, SupportsSubscriptionQuantity
 {
     protected $secret_key;
 
@@ -323,6 +326,115 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface, Ma
         if (!$response->status) {
             throw new \Exception($response->message);
         }
+    }
+
+    public function supports(string $capability): bool
+    {
+        return $capability === SupportsSubscriptionQuantity::CAPABILITY;
+    }
+
+    /**
+     * Paystack subscriptions have no native seat/quantity concept: the amount
+     * is fixed on the Plan. To change quantity we (1) fetch the current
+     * subscription to reuse its customer + authorization + amount, (2) disable
+     * the old subscription, (3) create a new Plan whose amount is
+     * (unit_amount * newQuantity), (4) create a fresh subscription on that
+     * new plan against the same authorization code, and (5) dispatch
+     * {@see SubscriptionCodeReplaced} so the consuming app can migrate its
+     * local FK.
+     *
+     * `$prorationBehavior` is accepted for interface compatibility but Paystack
+     * cannot prorate — the new subscription's first charge is a full period.
+     */
+    public function changeSubscriptionQuantity(
+        string $subscriptionCode,
+        int $newQuantity,
+        ?string $emailToken = null,
+        string $prorationBehavior = SupportsSubscriptionQuantity::PRORATION_CREATE,
+    ): SubscriptionQuantityChange {
+        if ($newQuantity < 1) {
+            throw new \InvalidArgumentException("New subscription quantity must be at least 1, got {$newQuantity}.");
+        }
+
+        $paystack = app()->make(PaystackHelper::class, ['secret_key' => $this->secret_key]);
+
+        $fetch = $paystack->subscription->fetch(['id' => $subscriptionCode]);
+
+        if (!$fetch->status) {
+            throw new \Exception($fetch->message);
+        }
+
+        $existing = $fetch->data;
+        $resolvedEmailToken = $emailToken ?? ($existing->email_token ?? null);
+
+        if (empty($resolvedEmailToken)) {
+            throw new \Exception("Paystack requires an email_token to disable subscription {$subscriptionCode}; none was provided or returned by fetch.");
+        }
+
+        $customerEmail = $existing->customer->email ?? null;
+        $authorizationCode = $existing->authorization->authorization_code ?? null;
+        $unitAmountKobo = (int) ($existing->plan->amount ?? 0);
+        $planInterval = $existing->plan->interval ?? null;
+        $planCurrency = $existing->plan->currency ?? 'NGN';
+        $planName = $existing->plan->name ?? 'plan';
+
+        if (empty($customerEmail) || empty($authorizationCode) || $unitAmountKobo <= 0 || empty($planInterval)) {
+            throw new \Exception("Paystack subscription {$subscriptionCode} is missing customer/authorization/plan details required to change quantity.");
+        }
+
+        $disable = $paystack->subscription->disable([
+            'code' => $subscriptionCode,
+            'token' => $resolvedEmailToken,
+        ]);
+
+        if (!$disable->status) {
+            throw new \Exception($disable->message);
+        }
+
+        $newPlanAmountKobo = $unitAmountKobo * $newQuantity;
+        $newPlanName = "{$planName} x{$newQuantity} " . strtolower(substr(bin2hex(random_bytes(4)), 0, 8));
+
+        $planCreate = $paystack->plan->create([
+            'name' => $newPlanName,
+            'amount' => $newPlanAmountKobo,
+            'interval' => $planInterval,
+            'description' => "Quantity-adjusted plan for {$customerEmail} (x{$newQuantity})",
+            'currency' => $planCurrency,
+        ]);
+
+        if (!$planCreate->status) {
+            throw new \Exception($planCreate->message);
+        }
+
+        $newPlanCode = $planCreate->data->plan_code;
+
+        $subscribe = $paystack->subscription->create([
+            'customer' => $customerEmail,
+            'plan' => $newPlanCode,
+            'authorization' => $authorizationCode,
+        ]);
+
+        if (!$subscribe->status) {
+            throw new \Exception($subscribe->message);
+        }
+
+        $newSubscriptionCode = $subscribe->data->subscription_code;
+
+        SubscriptionCodeReplaced::dispatch(
+            self::getUniquePaymentHandlerName(),
+            $subscriptionCode,
+            $newSubscriptionCode,
+            $newQuantity,
+        );
+
+        return new SubscriptionQuantityChange(
+            newSubscriptionCode: $newSubscriptionCode,
+            effectiveFrom: $subscribe->data->next_payment_date ?? null,
+            proratedChargeAmount: null,
+            replacedPreviousCode: true,
+            isAsync: false,
+            raw: (array) $subscribe->data,
+        );
     }
 
     public function getSubscriptionDetails(string $subscriptionCode): array

@@ -18,12 +18,15 @@ use Damms005\LaravelMultipay\Webhooks\Bachs\CollectionFailed;
 use Damms005\LaravelMultipay\Webhooks\Bachs\CollectionSucceeded;
 use Damms005\LaravelMultipay\Contracts\ManagesSubscriptions;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
+use Damms005\LaravelMultipay\Contracts\SupportsSubscriptionQuantity;
 use Damms005\LaravelMultipay\Webhooks\Contracts\WebhookHandler;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
+use Damms005\LaravelMultipay\Exceptions\UnsupportedOperationException;
 use Damms005\LaravelMultipay\ValueObjects\BachsVerificationResponse;
+use Damms005\LaravelMultipay\ValueObjects\SubscriptionQuantityChange;
 use Damms005\LaravelMultipay\Webhooks\Bachs\CustomerSubscriptionCreated;
 
-class Bachs extends BasePaymentHandler implements PaymentHandlerInterface, ManagesSubscriptions
+class Bachs extends BasePaymentHandler implements PaymentHandlerInterface, ManagesSubscriptions, SupportsSubscriptionQuantity
 {
     protected string $secret_key;
 
@@ -283,6 +286,36 @@ class Bachs extends BasePaymentHandler implements PaymentHandlerInterface, Manag
     public function enableSubscription(string $subscriptionCode, string $emailToken): void
     {
         throw new \Exception('Bachs does not support resuming a canceled subscription. Cancellation is irreversible on Bachs; create a new subscription instead.');
+    }
+
+    public function supports(string $capability): bool
+    {
+        return false;
+    }
+
+    /**
+     * Bachs has no public quantity-change endpoint (verified 2026-08 —
+     * docs.bachs.io returned 403 during audit; cancellation is documented as
+     * irreversible per {@see self::enableSubscription()}). Any in-place seat
+     * bump would require a fresh checkout redirect for card capture, which
+     * cannot be modelled by the synchronous
+     * {@see SupportsSubscriptionQuantity::changeSubscriptionQuantity()}
+     * contract. We therefore expose the capability marker so consumers can
+     * `instanceof`-check the whole family, but `supports()` returns false and
+     * this method throws {@see UnsupportedOperationException}. Consumers must
+     * fall back to a fresh one-off checkout for the extra seat.
+     */
+    public function changeSubscriptionQuantity(
+        string $subscriptionCode,
+        int $newQuantity,
+        ?string $emailToken = null,
+        string $prorationBehavior = SupportsSubscriptionQuantity::PRORATION_CREATE,
+    ): SubscriptionQuantityChange {
+        throw UnsupportedOperationException::forProviderReason(
+            $this,
+            SupportsSubscriptionQuantity::CAPABILITY,
+            'Bachs does not expose a subscription-quantity endpoint and cancellation is irreversible; use a fresh checkout for the additional seat.',
+        );
     }
 
     public function getSubscriptionDetails(string $subscriptionCode): array

@@ -46,6 +46,16 @@ interface PaymentHandlerInterface
     public static function isAvailable(): bool;
 
     /**
+     * Feature-check for an optional capability. Callers use this to gracefully
+     * degrade when a provider does not support an operation, rather than
+     * catching {@see \Damms005\LaravelMultipay\Exceptions\UnsupportedOperationException}.
+     *
+     * Known capability strings are exposed as constants on their capability
+     * interface (e.g. {@see \Damms005\LaravelMultipay\Contracts\SupportsSubscriptionQuantity::CAPABILITY}).
+     */
+    public function supports(string $capability): bool;
+
+    /**
      * For some reason (e.g. no response from server after successful payment, payment was fulfilled by some other
      * non-automated means, etc.) an initiated transaction was completed but not marked as successful. Payment handlers should implement
      * this method so as to support re-querying such transaction. In such implementation, payment handler should ensure to set the

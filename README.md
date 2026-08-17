@@ -351,6 +351,43 @@ Each method calls the provider, updates the local `status`, and returns the refr
 
 Provider-side failures (e.g. an invalid subscription code) bubble up as an `Exception` carrying the provider's message.
 
+### Changing Subscription Seat Count (Quantity)
+
+Handlers that can change the seat count (line-item quantity) on an active subscription implement the `SupportsSubscriptionQuantity` capability contract. Feature-check before you call, so unsupported providers degrade gracefully rather than throw:
+
+```php
+use Damms005\LaravelMultipay\Contracts\SupportsSubscriptionQuantity;
+
+if ($handler->supports(SupportsSubscriptionQuantity::CAPABILITY)) {
+    /** @var SupportsSubscriptionQuantity $handler */
+    $change = $handler->changeSubscriptionQuantity(
+        subscriptionCode: $subscription->payment_handler_subscription_code,
+        newQuantity: 3,
+        emailToken: $subscription->payment_handler_email_token,
+        prorationBehavior: SupportsSubscriptionQuantity::PRORATION_CREATE, // or ::PRORATION_NONE
+    );
+
+    if ($change->replacedPreviousCode) {
+        $subscription->update([
+            'payment_handler_subscription_code' => $change->newSubscriptionCode,
+            'quantity' => 3,
+        ]);
+    } else {
+        $subscription->update(['quantity' => 3]);
+    }
+}
+```
+
+Provider matrix:
+
+| Provider | `supports()` | Mechanism                                                                                                                                                                                                                             |
+| -------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Polar    | true         | Native. `PATCH /v1/subscriptions/{id}` with a `seats` field; the subscription code stays the same. Generic proration maps to Polar values (`create_prorations` → `prorate`, `none` → `next_period`).                                  |
+| Paystack | true         | Shim. Disables the current subscription, creates a new Plan at `unit_amount × newQuantity`, and creates a fresh subscription on the same customer authorization. Returns `replacedPreviousCode=true` and dispatches `SubscriptionCodeReplaced` — listen for it to migrate any local FK. Paystack cannot prorate; the new subscription's first charge is a full period. |
+| Bachs    | false        | Not supported. Bachs exposes no quantity-change endpoint and cancellation is irreversible. `changeSubscriptionQuantity()` throws `UnsupportedOperationException`; fall back to a fresh checkout for the additional seat.              |
+
+The local `Subscription` model has a nullable `quantity` column that consumers should keep in sync with the provider (Polar's `subscription.updated` webhook is wired to do this automatically when it carries a `seats` value).
+
 ### Models
 
 **`PaymentPlan`** — represents a recurring billing plan:

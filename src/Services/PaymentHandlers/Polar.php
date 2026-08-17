@@ -21,9 +21,12 @@ use Damms005\LaravelMultipay\Webhooks\Contracts\WebhookHandler;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 use Damms005\LaravelMultipay\Webhooks\Polar\SubscriptionActivated;
 use Damms005\LaravelMultipay\Webhooks\Polar\SubscriptionDeactivated;
+use Damms005\LaravelMultipay\Webhooks\Polar\SubscriptionUpdated;
 use Damms005\LaravelMultipay\ValueObjects\PolarVerificationResponse;
+use Damms005\LaravelMultipay\Contracts\SupportsSubscriptionQuantity;
+use Damms005\LaravelMultipay\ValueObjects\SubscriptionQuantityChange;
 
-class Polar extends BasePaymentHandler implements PaymentHandlerInterface, ManagesSubscriptions
+class Polar extends BasePaymentHandler implements PaymentHandlerInterface, ManagesSubscriptions, SupportsSubscriptionQuantity
 {
     protected string $access_token;
 
@@ -193,6 +196,7 @@ class Polar extends BasePaymentHandler implements PaymentHandlerInterface, Manag
             OrderRefunded::class,
             SubscriptionActivated::class,
             SubscriptionDeactivated::class,
+            SubscriptionUpdated::class,
         ];
 
         foreach ($webhookEvents as $webhookEvent) {
@@ -285,6 +289,55 @@ class Polar extends BasePaymentHandler implements PaymentHandlerInterface, Manag
         ]);
 
         $this->throwIfError($response, 'enabling a Polar subscription');
+    }
+
+    public function supports(string $capability): bool
+    {
+        return $capability === SupportsSubscriptionQuantity::CAPABILITY;
+    }
+
+    /**
+     * Polar has native seat-based billing: PATCH /subscriptions/{id} with a
+     * `seats` field updates the seat count in-place, and the subscription code
+     * stays the same. Proration values map to Polar's own vocabulary
+     * (`prorate` / `next_period`).
+     */
+    public function changeSubscriptionQuantity(
+        string $subscriptionCode,
+        int $newQuantity,
+        ?string $emailToken = null,
+        string $prorationBehavior = SupportsSubscriptionQuantity::PRORATION_CREATE,
+    ): SubscriptionQuantityChange {
+        if ($newQuantity < 1) {
+            throw new \InvalidArgumentException("New subscription quantity must be at least 1, got {$newQuantity}.");
+        }
+
+        $response = $this->client()->patch("subscriptions/{$subscriptionCode}", [
+            'seats' => $newQuantity,
+            'proration_behavior' => $this->mapProrationBehavior($prorationBehavior),
+        ]);
+
+        $this->throwIfError($response, 'changing a Polar subscription seat count');
+
+        $data = $response->json();
+
+        return new SubscriptionQuantityChange(
+            newSubscriptionCode: $data['id'] ?? $subscriptionCode,
+            effectiveFrom: $data['current_period_start'] ?? null,
+            proratedChargeAmount: isset($data['prorated_amount']) ? (string) $data['prorated_amount'] : null,
+            replacedPreviousCode: false,
+            isAsync: false,
+            raw: $data,
+        );
+    }
+
+    protected function mapProrationBehavior(string $behavior): string
+    {
+        return match ($behavior) {
+            SupportsSubscriptionQuantity::PRORATION_CREATE => 'prorate',
+            SupportsSubscriptionQuantity::PRORATION_NONE => 'next_period',
+            default => throw new \InvalidArgumentException("Unknown proration behavior '{$behavior}'. Use SupportsSubscriptionQuantity::PRORATION_CREATE or PRORATION_NONE."),
+        };
     }
 
     public function getSubscriptionDetails(string $subscriptionCode): array
