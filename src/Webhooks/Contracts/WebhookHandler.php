@@ -13,7 +13,9 @@ interface WebhookHandler
     public function isHandlerFor(Request $webhookRequest): bool;
 
     /**
-     * Handle the webhook request.
+     * Handle the webhook request. Return the related Payment when the event
+     * produced one, or null for lifecycle events that only affect a
+     * Subscription (e.g. subscription.disable, invoice.update).
      */
-    public function handle(Request $webhookRequest): Payment;
+    public function handle(Request $webhookRequest): ?Payment;
 }

@@ -3,6 +3,7 @@
 namespace Damms005\LaravelMultipay\Actions;
 
 use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\Services\PaymentResolver;
 
 class CreateNewPayment
 {
@@ -16,7 +17,9 @@ class CreateNewPayment
         ?string $original_amount_displayed_to_user,
         ?array $metadata = null,
     ): Payment {
-        return Payment::firstOrCreate([
+        $modelClass = PaymentResolver::model();
+
+        return $modelClass::firstOrCreate([
             "user_id" => $user_id,
             "completion_url" => $completion_url,
             "transaction_reference" => $transaction_reference,

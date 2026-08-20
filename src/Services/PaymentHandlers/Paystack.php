@@ -11,15 +11,21 @@ use Damms005\LaravelMultipay\Models\Payment;
 use Damms005\LaravelMultipay\Models\Subscription;
 use Damms005\LaravelMultipay\ValueObjects\ReQuery;
 use Damms005\LaravelMultipay\Models\PaymentPlan;
-use Damms005\LaravelMultipay\Webhooks\Paystack\ChargeSuccess;
 use Damms005\LaravelMultipay\Contracts\ManagesSubscriptions;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Contracts\SupportsSubscriptionQuantity;
+use Damms005\LaravelMultipay\Enums\ChargeKind;
 use Damms005\LaravelMultipay\Events\SubscriptionCodeReplaced;
-use Damms005\LaravelMultipay\Webhooks\Contracts\WebhookHandler;
 use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
+use Damms005\LaravelMultipay\Services\PaymentResolver;
 use Damms005\LaravelMultipay\ValueObjects\PaystackVerificationResponse;
 use Damms005\LaravelMultipay\ValueObjects\SubscriptionQuantityChange;
+use Damms005\LaravelMultipay\Webhooks\Contracts\WebhookHandler;
+use Damms005\LaravelMultipay\Webhooks\Paystack\ChargeSuccess;
+use Damms005\LaravelMultipay\Webhooks\Paystack\InvoicePaymentFailed;
+use Damms005\LaravelMultipay\Webhooks\Paystack\InvoiceUpdate;
+use Damms005\LaravelMultipay\Webhooks\Paystack\SubscriptionCreate;
+use Damms005\LaravelMultipay\Webhooks\Paystack\SubscriptionDisable;
 
 class Paystack extends BasePaymentHandler implements PaymentHandlerInterface, ManagesSubscriptions, SupportsSubscriptionQuantity
 {
@@ -132,16 +138,69 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface, Ma
         return new ReQuery(
             payment: $payment,
             responseDetails: (array)$verificationResponse,
+            rawPayload: (array)$verificationResponse,
         );
+    }
+
+    public function classifyCharge(array $rawPayload): ChargeKind
+    {
+        $planCode = data_get($rawPayload, 'data.plan.plan_code')
+            ?? data_get($rawPayload, 'data.plan_object.plan_code')
+            ?? data_get($rawPayload, 'data.plan');
+
+        if (empty($planCode)) {
+            return ChargeKind::OneOff;
+        }
+
+        $customerCode = data_get($rawPayload, 'data.customer.customer_code');
+
+        $plan = PaymentPlan::query()
+            ->where('payment_handler_plan_id', $planCode)
+            ->where('payment_handler_fqcn', static::getUniquePaymentHandlerName())
+            ->orWhere('payment_handler_fqcn', static::class)
+            ->first();
+
+        if (! $plan) {
+            return ChargeKind::Initial;
+        }
+
+        $subscription = Subscription::query()
+            ->where('payment_plan_id', $plan->id)
+            ->latest('id')
+            ->first();
+
+        if (! $subscription) {
+            return ChargeKind::Initial;
+        }
+
+        $priorSuccessfulPayment = PaymentResolver::newQuery()
+            ->where('user_id', $subscription->user_id)
+            ->where('is_success', 1)
+            ->where(function ($query) use ($plan) {
+                $query->where('metadata->payment_plan_id', $plan->id)
+                    ->orWhere('metadata->payment_plan_id', (string) $plan->id);
+            })
+            ->exists();
+
+        return $priorSuccessfulPayment ? ChargeKind::Renewal : ChargeKind::Initial;
+    }
+
+    public function toProviderAmount(Payment $payment): int
+    {
+        return (int) $payment->original_amount_displayed_to_user * 100;
     }
 
     /**
      * @see \Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface::handleExternalWebhookRequest
      */
-    public function handleExternalWebhookRequest(Request $request): Payment
+    public function handleExternalWebhookRequest(Request $request): ?Payment
     {
         $webhookEvents = [
             ChargeSuccess::class,
+            SubscriptionCreate::class,
+            SubscriptionDisable::class,
+            InvoicePaymentFailed::class,
+            InvoiceUpdate::class,
         ];
 
         foreach ($webhookEvents as $webhookEvent) {
@@ -186,18 +245,13 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface, Ma
         );
     }
 
-    protected function convertAmountToValueRequiredByPaystack($original_amount_displayed_to_user)
-    {
-        return $original_amount_displayed_to_user * 100; //paystack only accept amount in kobo/lowest denomination of target currency
-    }
-
     protected function sendUserToPaymentGateway(string $redirect_or_callback_url, Payment $payment)
     {
         $paystack = app()->make(PaystackHelper::class, ['secret_key' => $this->secret_key]);
 
         $payload = [
             'email' => $payment->getPayerEmail(),
-            'amount' => $this->convertAmountToValueRequiredByPaystack($payment->original_amount_displayed_to_user),
+            'amount' => $this->toProviderAmount($payment),
             'callback_url' => $redirect_or_callback_url,
         ];
 
@@ -220,7 +274,9 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface, Ma
             throw new \Exception($trx->message);
         }
 
-        $payment = Payment::withTrashed()->where('transaction_reference', $payment->transaction_reference)
+        $payment = PaymentResolver::newQuery()
+            ->withTrashed()
+            ->where('transaction_reference', $payment->transaction_reference)
             ->firstOrFail();
 
         $metadata = is_null($payment->metadata) ? [] : (array)$payment->metadata;
@@ -239,7 +295,9 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface, Ma
 
     protected function giveValue(string $transactionReference, PaystackVerificationResponse $paystackResponse)
     {
-        Payment::withTrashed()->where('transaction_reference', $transactionReference)
+        PaymentResolver::newQuery()
+            ->withTrashed()
+            ->where('transaction_reference', $transactionReference)
             ->firstOrFail()
             ->update([
                 "is_success" => 1,
@@ -284,7 +342,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface, Ma
 
         $trx = $paystack->transaction->initialize([
             'email' => $user->email,
-            'amount' => $this->convertAmountToValueRequiredByPaystack($plan->amount),
+            'amount' => (int) $plan->amount * 100,
             'plan' => $plan->payment_handler_plan_id,
             'reference' => $transactionReference,
             'callback_url' => route('payment.finished.callback_url'),
@@ -294,7 +352,8 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface, Ma
             throw new \Exception($trx->message);
         }
 
-        Payment::where('transaction_reference', $transactionReference)
+        PaymentResolver::newQuery()
+            ->where('transaction_reference', $transactionReference)
             ->update(['processor_transaction_reference' => $trx->data->reference]);
 
         return $trx->data->authorization_url;
@@ -489,7 +548,8 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface, Ma
         $isPosTerminalTransaction = is_object($verificationResponse->data['metadata']) &&
             ($verificationResponse->data['metadata']->reference ?? false);
 
-        return Payment::withTrashed()
+        return PaymentResolver::newQuery()
+            ->withTrashed()
             /**
              * normal transactions
              */

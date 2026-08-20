@@ -6,6 +6,7 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\Services\PaymentResolver;
 use Damms005\LaravelMultipay\Services\PaymentService;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Http\Requests\InitiatePaymentRequest;
@@ -51,7 +52,10 @@ class PaymentController extends Controller
         ]);
 
         /** @var Payment */
-        $payment = Payment::withTrashed()->where('transaction_reference', $request->transaction_reference)->firstOrFail();
+        $payment = PaymentResolver::newQuery()
+            ->withTrashed()
+            ->where('transaction_reference', $request->transaction_reference)
+            ->firstOrFail();
 
         // prevent duplicated transactions
         if ($payment->processor_returned_response_description) {

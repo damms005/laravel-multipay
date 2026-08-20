@@ -4,6 +4,7 @@ namespace Damms005\LaravelMultipay\Contracts;
 
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\User;
+use Damms005\LaravelMultipay\Enums\ChargeKind;
 use Damms005\LaravelMultipay\Models\Payment;
 use Damms005\LaravelMultipay\Models\PaymentPlan;
 use Damms005\LaravelMultipay\ValueObjects\ReQuery;
@@ -89,9 +90,23 @@ interface PaymentHandlerInterface
      * @throws NonActionableWebhookPaymentException
      * @throws MissingUserException
      */
-    public function handleExternalWebhookRequest(Request $paymentNotificationRequest): Payment;
+    public function handleExternalWebhookRequest(Request $paymentNotificationRequest): ?Payment;
 
     public function getTransactionReferenceName(): string;
+
+    /**
+     * Classify a webhook charge payload as a first-time subscription charge,
+     * a recurring renewal, or a plain one-off. Base handlers default to
+     * one-off; providers with subscription support (e.g. Paystack) override.
+     */
+    public function classifyCharge(array $rawPayload): ChargeKind;
+
+    /**
+     * Convert the local naira integer amount to the provider's required
+     * boundary format (e.g. kobo for Paystack). Providers override; the base
+     * default returns the naira value untouched.
+     */
+    public function toProviderAmount(Payment $payment): int|string;
 
     /**
      * @return string Plan id

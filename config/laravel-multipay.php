@@ -13,6 +13,13 @@ return [
     'user_model_fqcn' => App\Models\User::class,
 
     /**
+     * The Eloquent model used for payments. Downstream apps that subclass
+     * Damms005\LaravelMultipay\Models\Payment should set this to their subclass
+     * so events, queries and lookups always return the correct concrete type.
+     */
+    'payment_model' => Damms005\LaravelMultipay\Models\Payment::class,
+
+    /**
      * For 'user_model_fqcn' above, provide the name of the column
      * that corresponds to the user model's primary key
      */

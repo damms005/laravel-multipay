@@ -2,13 +2,16 @@
 
 namespace Damms005\LaravelMultipay\Services;
 
-use Illuminate\Foundation\Auth\User;
-use Damms005\LaravelMultipay\Models\PaymentPlan;
-use Damms005\LaravelMultipay\Models\Subscription;
 use Damms005\LaravelMultipay\Actions\CreateNewPayment;
 use Damms005\LaravelMultipay\Contracts\ManagesSubscriptions;
 use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
 use Damms005\LaravelMultipay\Exceptions\SubscriptionManagementException;
+use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\Models\PaymentPlan;
+use Damms005\LaravelMultipay\Models\Subscription;
+use Damms005\LaravelMultipay\Services\PaymentHandlers\Paystack;
+use Damms005\LaravelMultipay\Services\PaymentResolver;
+use Illuminate\Foundation\Auth\User;
 
 class SubscriptionService
 {
@@ -154,6 +157,76 @@ class SubscriptionService
         $subscription->update(['status' => Subscription::STATUS_ACTIVE]);
 
         return $subscription->refresh();
+    }
+
+    /**
+     * Materialize a Payment row for a subscription renewal charge that
+     * arrived via webhook. Subscription renewals carry a NEW reference each
+     * cycle, so we cannot look up the row by reference — we create it, keyed
+     * idempotently on the reference so repeated webhook deliveries do not
+     * insert duplicates.
+     */
+    public static function saveRenewalPayment(array $rawPayload): Payment
+    {
+        $data = (array) data_get($rawPayload, 'data', []);
+        $reference = data_get($data, 'reference');
+
+        if (empty($reference)) {
+            throw new \InvalidArgumentException('Renewal payload is missing data.reference.');
+        }
+
+        $planCode = data_get($data, 'plan.plan_code')
+            ?? data_get($data, 'plan_object.plan_code');
+        $customerCode = data_get($data, 'customer.customer_code');
+        $customerEmail = data_get($data, 'customer.email');
+        $amountKobo = (int) data_get($data, 'amount', 0);
+        $currency = data_get($data, 'currency', 'NGN');
+
+        $plan = null;
+        if (! empty($planCode)) {
+            $plan = PaymentPlan::query()
+                ->where('payment_handler_plan_id', $planCode)
+                ->first();
+        }
+
+        $subscription = null;
+        if ($plan) {
+            $subscription = Subscription::query()
+                ->where('payment_plan_id', $plan->id)
+                ->where(function ($query) use ($customerCode) {
+                    $query->where('metadata->customer_code', $customerCode)
+                        ->orWhereNotNull('payment_handler_subscription_code');
+                })
+                ->latest('id')
+                ->first();
+        }
+
+        $modelClass = PaymentResolver::model();
+
+        $planName = $plan->name ?? ($planCode ?? 'subscription');
+        $displayAmount = (int) ($amountKobo / 100);
+
+        return $modelClass::firstOrCreate(
+            ['transaction_reference' => $reference],
+            [
+                'user_id' => $subscription->user_id ?? null,
+                'payment_processor_name' => Paystack::getUniquePaymentHandlerName(),
+                'processor_transaction_reference' => $reference,
+                'payment_handler_subscription_code' => $subscription->payment_handler_subscription_code ?? null,
+                'transaction_currency' => $currency,
+                'transaction_description' => "Subscription renewal: {$planName}",
+                'original_amount_displayed_to_user' => $displayAmount,
+                'processor_returned_amount' => $amountKobo,
+                'is_success' => 1,
+                'processor_returned_response_description' => json_encode($rawPayload),
+                'metadata' => array_filter([
+                    'payment_plan_id' => $plan?->id,
+                    'customer_code' => $customerCode,
+                    'customer_email' => $customerEmail,
+                    'renewal' => true,
+                ]),
+            ],
+        );
     }
 
     protected static function guardManageable(PaymentHandlerInterface $handler, Subscription $subscription): void

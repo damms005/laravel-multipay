@@ -5,15 +5,17 @@ namespace Damms005\LaravelMultipay\Services\PaymentHandlers;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\User;
+use Damms005\LaravelMultipay\Actions\CreateNewPayment;
+use Damms005\LaravelMultipay\Actions\DispatchSuccessfulPayment;
+use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
+use Damms005\LaravelMultipay\Enums\ChargeKind;
+use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
 use Damms005\LaravelMultipay\Models\Payment;
 use Damms005\LaravelMultipay\Models\PaymentPlan;
+use Damms005\LaravelMultipay\Services\PaymentResolver;
+use Damms005\LaravelMultipay\Services\PaymentService;
 use Damms005\LaravelMultipay\ValueObjects\ReQuery;
 use Illuminate\Database\Eloquent\Casts\ArrayObject;
-use Damms005\LaravelMultipay\Services\PaymentService;
-use Damms005\LaravelMultipay\Actions\CreateNewPayment;
-use Damms005\LaravelMultipay\Contracts\PaymentHandlerInterface;
-use Damms005\LaravelMultipay\Exceptions\UnknownWebhookException;
-use Damms005\LaravelMultipay\Events\SuccessfulLaravelMultipayPaymentEvent;
 
 abstract class BasePaymentHandler
 {
@@ -63,6 +65,16 @@ abstract class BasePaymentHandler
     public function supports(string $capability): bool
     {
         return false;
+    }
+
+    public function classifyCharge(array $rawPayload): ChargeKind
+    {
+        return ChargeKind::OneOff;
+    }
+
+    public function toProviderAmount(Payment $payment): int|string
+    {
+        return (int) $payment->original_amount_displayed_to_user;
     }
 
     public static function getNamesOfPaymentHandlers()
@@ -198,7 +210,13 @@ abstract class BasePaymentHandler
 
                 if ($payment) {
                     if ($payment->is_success == 1) {
-                        event(new SuccessfulLaravelMultipayPaymentEvent($payment));
+                        $handler = $paymentService->getPaymentHandlerByName($paymentHandlerName);
+
+                        app(DispatchSuccessfulPayment::class)(
+                            payment: $payment,
+                            rawPayload: $paymentGatewayServerResponse->all(),
+                            handler: $handler,
+                        );
                     }
 
                     return false;
@@ -254,7 +272,11 @@ abstract class BasePaymentHandler
         $isSuccessful = boolval($reQueryResponse->payment->refresh()->is_success);
 
         if ($isSuccessful) {
-            event(new SuccessfulLaravelMultipayPaymentEvent($reQueryResponse->payment));
+            app(DispatchSuccessfulPayment::class)(
+                payment: $reQueryResponse->payment,
+                rawPayload: $reQueryResponse->rawPayload ?? [],
+                handler: $handler,
+            );
         }
 
         return $reQueryResponse;
@@ -280,8 +302,12 @@ abstract class BasePaymentHandler
                 try {
                     $payment = $paymentHandler->handleExternalWebhookRequest($request);
 
-                    if ($payment->is_success) {
-                        event(new SuccessfulLaravelMultipayPaymentEvent($payment));
+                    if ($payment && $payment->is_success) {
+                        app(DispatchSuccessfulPayment::class)(
+                            payment: $payment,
+                            rawPayload: $request->all(),
+                            handler: $paymentHandler,
+                        );
                     }
 
                     return $payment;
@@ -296,7 +322,10 @@ abstract class BasePaymentHandler
 
     public function getPayment(string $transaction_reference): Payment
     {
-        return Payment::withTrashed()->where('transaction_reference', $transaction_reference)->firstOrFail();
+        return PaymentResolver::newQuery()
+            ->withTrashed()
+            ->where('transaction_reference', $transaction_reference)
+            ->firstOrFail();
     }
 
     public function getTransactedUser(string $transaction_reference)

@@ -2,6 +2,24 @@
 
 All notable changes to `laravel-multipay` will be documented in this file.
 
+## 9.0.0 - 2026-08-20
+
+### Breaking
+- `SuccessfulLaravelMultipayPaymentEvent` constructor now takes `(Payment $payment, ChargeKind $kind, ?Subscription $subscription, array $rawPayload)`. Downstream listeners typed against the old single-arg signature must be updated.
+- `PaymentHandlerInterface::handleExternalWebhookRequest` and `WebhookHandler::handle` now return `?Payment` so lifecycle-only webhooks (subscription.disable, invoice.update, invoice.payment_failed) can return null.
+- `PaymentHandlerInterface` gains two required methods: `classifyCharge(array $rawPayload): ChargeKind` and `toProviderAmount(Payment $payment): int|string`. `BasePaymentHandler` provides sane defaults (`ChargeKind::OneOff`, naira integer).
+- Removed `Paystack::convertAmountToValueRequiredByPaystack()` — internal callers now use `toProviderAmount()`.
+
+### Added
+- Configurable `payment_model` + `PaymentResolver` service so downstream apps that subclass `Payment` always emit and query their concrete subclass. Base class remains the default; queried through `PaymentResolver::newQuery()` inside the package.
+- `ChargeKind` enum (`Initial`, `Renewal`, `OneOff`) classifying every Paystack charge.
+- `DispatchSuccessfulPayment` action with DB-level fire-once guard on a new `dispatched_at` column (indexed) — one event per real trigger, even under webhook retries.
+- Subscription renewals are now materialized as their own Payment row (new reference per cycle) via `SubscriptionService::saveRenewalPayment()`; `firstOrCreate` on `transaction_reference` for idempotency.
+- New Paystack webhook handlers: `SubscriptionCreate`, `SubscriptionDisable`, `InvoicePaymentFailed`, `InvoiceUpdate`.
+- New lifecycle events: `SubscriptionCancelled`, `SubscriptionRenewalFailed`, `SubscriptionSuspended`.
+- New nullable column `payment_handler_subscription_code` on `payments` (indexed) so renewal payments link back to their subscription.
+- `ReQuery` value object gains nullable `rawPayload` for downstream classification.
+
 ## 8.2.0 - 2026-08-17
 
 - Add `SupportsSubscriptionQuantity` capability interface for changing the seat count on an active subscription.

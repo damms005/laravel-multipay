@@ -4,6 +4,7 @@ namespace Damms005\LaravelMultipay\Commands;
 
 use Damms005\LaravelMultipay\Listeners\SendPaymentWebhookListener;
 use Damms005\LaravelMultipay\Models\Payment;
+use Damms005\LaravelMultipay\Services\PaymentResolver;
 use Illuminate\Console\Command;
 
 class SendExistingPaymentsToWebhook extends Command
@@ -44,7 +45,9 @@ class SendExistingPaymentsToWebhook extends Command
             return self::FAILURE;
         }
 
-        $query = Payment::successful()->whereNull('webhook_dispatched_at');
+        $query = PaymentResolver::newQuery()
+            ->successful()
+            ->whereNull('webhook_dispatched_at');
 
         if ($from = $this->option('from')) {
             $query->where('created_at', '>=', $from);
@@ -87,7 +90,9 @@ class SendExistingPaymentsToWebhook extends Command
                     ->useSecret($signingSecret)
                     ->dispatch();
 
-                Payment::whereIn('id', $payments->pluck('id'))->update(['webhook_dispatched_at' => now()]);
+                PaymentResolver::newQuery()
+                    ->whereIn('id', $payments->pluck('id'))
+                    ->update(['webhook_dispatched_at' => now()]);
                 $this->sentCount += $payments->count();
                 $this->consecutiveFailures = 0;
             } catch (\Exception $e) {

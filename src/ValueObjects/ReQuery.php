@@ -13,5 +13,11 @@ class ReQuery
          * An array of arbitrary shape based on the specific payment handler.
          */
         public array $responseDetails,
+
+        /**
+         * The raw payload received from the payment handler, kept so that
+         * downstream event handlers can classify or replay the charge.
+         */
+        public ?array $rawPayload = null,
     ) {}
 }
