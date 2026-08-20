@@ -16,6 +16,8 @@ class Subscription extends Model
 
     public const STATUS_CANCELLED = 'cancelled';
 
+    public const STATUS_NON_RENEWING = 'non_renewing';
+
     protected $guarded = ['id'];
 
     protected const TABLE_NAME = 'subscriptions';
@@ -55,5 +57,10 @@ class Subscription extends Model
     public function isCancelled(): bool
     {
         return $this->status === self::STATUS_CANCELLED;
+    }
+
+    public function isNonRenewing(): bool
+    {
+        return $this->status === self::STATUS_NON_RENEWING;
     }
 }

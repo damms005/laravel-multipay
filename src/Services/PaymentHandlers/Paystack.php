@@ -26,6 +26,7 @@ use Damms005\LaravelMultipay\Webhooks\Paystack\InvoicePaymentFailed;
 use Damms005\LaravelMultipay\Webhooks\Paystack\InvoiceUpdate;
 use Damms005\LaravelMultipay\Webhooks\Paystack\SubscriptionCreate;
 use Damms005\LaravelMultipay\Webhooks\Paystack\SubscriptionDisable;
+use Damms005\LaravelMultipay\Webhooks\Paystack\SubscriptionNotRenew;
 
 class Paystack extends BasePaymentHandler implements PaymentHandlerInterface, ManagesSubscriptions, SupportsSubscriptionQuantity
 {
@@ -199,6 +200,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface, Ma
             ChargeSuccess::class,
             SubscriptionCreate::class,
             SubscriptionDisable::class,
+            SubscriptionNotRenew::class,
             InvoicePaymentFailed::class,
             InvoiceUpdate::class,
         ];
