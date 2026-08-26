@@ -100,9 +100,12 @@ FLW_SECRET_HASH=hash-123xxxxxxxxxxxxxxxxxxx-X
 ```env
 PAYSTACK_SECRET_KEY=sk_test_xxxxxxxxxxxxxxxxxxxxx
 PAYSTACK_TERMINAL_ID=xxxxxxxxxxxxxxxxxxxxx
+PAYSTACK_RECURRING_CHANNELS=card,bank
 ```
 
 > The `PAYSTACK_TERMINAL_ID` is only required if you intend to use [Paystack Terminal](https://paystack.com/terminal/) for payment processing.
+
+> `PAYSTACK_RECURRING_CHANNELS` (default `card,bank`) sets the channels offered on checkouts that must stay chargeable. See [Channels that can be charged again](#channels-that-can-be-charged-again).
 
 - Remita: Ensure to set the following environment variables:
 
@@ -197,8 +200,20 @@ The metadata should be a valid JSON string containing key-value pairs that modif
 **`additional_payment_payload`** (Paystack only)
 
 - When using Paystack, you can use this key to specify additional parameters for transaction initialization. For example, you can set `channels` to restrict payment methods: `{ "channels": ["card", "bank", "ussd", "qr", "mobile_money"] }`
+- Keys given here are merged into the initialization payload last, so they override the payload the package built
 - See [Paystack transaction initialization documentation](https://paystack.com/docs/api/transaction/#initialize) for all available parameters
 - This feature is only available when using Paystack as the payment handler
+
+**`channels`** (Paystack only)
+
+- Shorthand for the `channels` key of `additional_payment_payload`
+
+**`requires_reusable_authorization`**
+
+- Set this key to `true` when the payment instrument must stay chargeable after the transaction: a first subscription charge, a card you intend to tokenise, or any later merchant-initiated debit
+- The handler then offers only the channels the provider can charge again. See [Channels that can be charged again](#channels-that-can-be-charged-again)
+- Use the `Payment::METADATA_REQUIRES_REUSABLE_AUTHORIZATION` constant instead of the literal string
+- Honoured by Paystack and Monnify; other handlers ignore it
 
 ## Subscriptions (Recurring Payments)
 
@@ -217,6 +232,45 @@ This package provides built-in support for subscription-based recurring payments
 Pause/cancel/resume requires the handler to implement the `ManagesSubscriptions` contract. Paystack, Bachs, and Polar do; calling the management methods with an unsupported handler throws a `SubscriptionManagementException`.
 
 Monnify has no server-side plans or subscriptions, so `SubscriptionService` does not apply to it — `createPaymentPlan()` and `subscribeToPlan()` throw with a message pointing at the right API. Recurring collection on Monnify is **merchant-scheduled**: your application owns the renewal clock and charges a mandate or a stored card token when a period falls due. See [Moniepoint (Monnify)](#moniepoint-monnify).
+
+### Channels that can be charged again
+
+A subscription is only as good as the instrument behind it. Paystack renews a subscription from a **card authorization** or a **Nigerian direct debit mandate** only; a first payment made by transfer, USSD or a wallet channel succeeds but leaves nothing the provider can charge when the next period falls due. Monnify can only charge again from a **stored card token**.
+
+The package applies that rule for you:
+
+| Situation                                                                 | Paystack channels offered            | Monnify methods offered |
+| ------------------------------------------------------------------------- | ------------------------------------ | ----------------------- |
+| `SubscriptionService::subscribeToPlan()` (a plan is always recurring)      | `card`, `bank` + direct debit filter | —                       |
+| Payment metadata carries `requires_reusable_authorization`                 | `card`, `bank` + direct debit filter | `CARD`                  |
+| Ordinary one-off payment                                                   | Every channel enabled on the account | Every method            |
+
+When `bank` is among the channels, Paystack is also sent `metadata.custom_filters.recurring = true`, so the payer only sees banks that support Direct Debit and the checkout creates a mandate rather than a one-off debit.
+
+Flag a non-plan payment like this:
+
+```php
+use Damms005\LaravelMultipay\Models\Payment;
+
+(new CreateNewPayment())->execute(
+    $handler->getUniquePaymentHandlerName(),
+    $user->id,
+    route('dashboard'),
+    $transactionReference,
+    'NGN',
+    'First month',
+    '1170',
+    [Payment::METADATA_REQUIRES_REUSABLE_AUTHORIZATION => true],
+);
+```
+
+Channels you request yourself are narrowed, never widened: asking for `['card', 'ussd']` on such a payment yields `['card']`. Change the allow-list with the `PAYSTACK_RECURRING_CHANNELS` environment variable, or the `paystack_recurring_channels` config key:
+
+```php
+'paystack_recurring_channels' => ['card'],
+```
+
+Direct debit is a Nigeria-only Paystack feature, so accounts outside Nigeria should set the list to `card`.
 
 ### Creating a Payment Plan
 
@@ -631,6 +685,8 @@ Monnify does not own a renewal clock. Unlike Paystack, there is no provider-side
 | Direct debit mandate| `ManagesMandates`          | ❌           | Renewals only; needs bank activation before use   |
 
 A mandate can **never** collect the first payment: after the payer authorises it, the bank takes anywhere from five minutes to 48 hours to activate it. Collect the first payment through an ordinary checkout (card or bank transfer) and use the mandate for subsequent periods.
+
+Because only a card can be tokenised, a checkout whose payment carries the `requires_reusable_authorization` metadata key is offered `CARD` alone — any `monnify_payment_methods` value on the same payment is ignored. See [Channels that can be charged again](#channels-that-can-be-charged-again).
 
 ### Stored card tokens
 

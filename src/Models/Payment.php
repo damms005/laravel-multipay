@@ -2,6 +2,7 @@
 
 namespace Damms005\LaravelMultipay\Models;
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Database\Eloquent\Model;
@@ -49,6 +50,19 @@ class Payment extends Model
 
     protected const TABLE_NAME = 'payments';
     public const KOBO_TO_NAIRA = 100;
+
+    /**
+     * Metadata key that marks a payment whose payment instrument must remain
+     * chargeable after this transaction (subscriptions, saved cards, mandates).
+     * Handlers that can tell such instruments apart restrict the checkout to
+     * the channels the provider is able to charge again.
+     */
+    public const METADATA_REQUIRES_REUSABLE_AUTHORIZATION = 'requires_reusable_authorization';
+
+    public function requiresReusableAuthorization(): bool
+    {
+        return (bool) Arr::get((array) $this->metadata, self::METADATA_REQUIRES_REUSABLE_AUTHORIZATION, false);
+    }
 
     public function getTable(): string
     {

@@ -59,6 +59,19 @@ return [
 
     'paystack_secret_key'     => env('PAYSTACK_SECRET_KEY'),
 
+    /**
+     * Channels offered on a Paystack checkout that has to leave behind an
+     * instrument the provider can charge again: every subscription checkout,
+     * and any payment whose metadata carries the
+     * `requires_reusable_authorization` key. Paystack can only charge again
+     * from a card authorization, or from a Nigerian direct debit mandate
+     * ("bank"), so no other channel belongs on such a checkout.
+     */
+    'paystack_recurring_channels' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', (string) env('PAYSTACK_RECURRING_CHANNELS', 'card,bank')),
+    ))),
+
     'default_payment_handler_fqcn' => Damms005\LaravelMultipay\Services\PaymentHandlers\Paystack::class,
 
     //https://remitademo.net/remita

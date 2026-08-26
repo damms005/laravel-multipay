@@ -2,6 +2,15 @@
 
 All notable changes to `laravel-multipay` will be documented in this file.
 
+## 9.1.0 - 2026-08-26
+
+### Added
+- Recurring-safe checkout channels. A checkout that has to leave behind a chargeable instrument now only offers the channels the provider can charge again: Paystack `card` + `bank` (with `metadata.custom_filters.recurring`, so the payer picks a Direct Debit bank and a mandate is created), Monnify `CARD`. Applied automatically to every `SubscriptionService::subscribeToPlan()` checkout, and to any payment whose metadata carries the new `Payment::METADATA_REQUIRES_REUSABLE_AUTHORIZATION` key. Without this, a first subscription payment made by transfer, USSD or a wallet channel succeeds and then has nothing to renew from.
+- `Payment::requiresReusableAuthorization()` and the `requires_reusable_authorization` metadata key.
+- `Paystack::recurringChannels()` plus the `paystack_recurring_channels` config key (env `PAYSTACK_RECURRING_CHANNELS`, default `card,bank`). Requested channels are narrowed to this list, never widened.
+- `additional_payment_payload` metadata is now merged into the Paystack initialization payload — the README documented it, the handler never read it.
+- `SubscriptionNonRenewing` event and the Paystack `subscription.not_renew` webhook handler, plus `Subscription::STATUS_NON_RENEWING` (landed after the 9.0.0 tag, released here).
+
 ## 9.0.0 - 2026-08-20
 
 ### Breaking

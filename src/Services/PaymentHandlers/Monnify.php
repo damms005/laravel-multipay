@@ -22,6 +22,8 @@ use Illuminate\Support\Arr;
 
 class Monnify extends BasePaymentHandler implements ChargesStoredInstruments, ManagesMandates, PaymentHandlerInterface
 {
+    public const CARD_PAYMENT_METHOD = 'CARD';
+
     protected MonnifyApiClient $client;
 
     public function __construct(?MonnifyApiClient $client = null)
@@ -46,7 +48,7 @@ class Monnify extends BasePaymentHandler implements ChargesStoredInstruments, Ma
             'currencyCode' => $payment->transaction_currency ?: 'NGN',
             'contractCode' => $this->client->contractCode(),
             'redirectUrl' => $redirect_or_callback_url,
-            'paymentMethods' => Arr::get((array) $payment->metadata, 'monnify_payment_methods'),
+            'paymentMethods' => $this->resolvePaymentMethods($payment),
         ], fn (mixed $value): bool => $value !== null && $value !== ''), 'initialising a Monnify transaction');
 
         $checkoutUrl = $body['responseBody']['checkoutUrl'] ?? null;
@@ -71,6 +73,23 @@ class Monnify extends BasePaymentHandler implements ChargesStoredInstruments, Ma
         ]);
 
         return redirect()->away($checkoutUrl);
+    }
+
+    /**
+     * Monnify can only charge again from a stored card token, so a payment that
+     * must stay chargeable is offered the card method alone.
+     *
+     * @return list<string>|null
+     */
+    protected function resolvePaymentMethods(Payment $payment): ?array
+    {
+        if ($payment->requiresReusableAuthorization()) {
+            return [self::CARD_PAYMENT_METHOD];
+        }
+
+        $paymentMethods = Arr::get((array) $payment->metadata, 'monnify_payment_methods');
+
+        return is_array($paymentMethods) && $paymentMethods !== [] ? array_values($paymentMethods) : null;
     }
 
     public function confirmResponseCanBeHandledAndUpdateDatabaseWithTransactionOutcome(Request $paymentGatewayServerResponse): ?Payment

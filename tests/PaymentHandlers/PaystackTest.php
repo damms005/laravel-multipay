@@ -88,7 +88,7 @@ it('uses split code specified in metadata', function () {
     (new Paystack())->proceedToPaymentGateway($this->payment, 'far-away-land');
 });
 
-it('uses channels specified in additional_payment_payload metadata', function () {
+it('uses channels specified in metadata', function () {
     /**
      * @var Mock<TObject>
      */

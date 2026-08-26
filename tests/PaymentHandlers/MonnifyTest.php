@@ -1,6 +1,7 @@
 <?php
 
 use Damms005\LaravelMultipay\Enums\DebitOutcome;
+use Damms005\LaravelMultipay\Models\Payment;
 use Damms005\LaravelMultipay\Enums\MandateStatus;
 use Damms005\LaravelMultipay\Services\Monnify\MonnifyApiClient;
 use Damms005\LaravelMultipay\Services\PaymentHandlers\Monnify;
@@ -121,6 +122,31 @@ it('initialises a transaction and redirects the payer to the monnify checkout', 
 
     expect($this->payment->processor_transaction_reference)->toBe('MNFY|63|20220126120647|000042')
         ->and($this->payment->metadata['monnify_checkout_url'])->toBe('https://sandbox.monnify.com/checkout/MNFY-123');
+});
+
+it('offers the card method alone when the payment must stay chargeable', function () {
+    Http::fake([
+        'sandbox.monnify.com/api/v1/auth/login' => Http::response(monnifyLoginResponse()),
+        'sandbox.monnify.com/api/v1/merchant/transactions/init-transaction' => Http::response(monnifyOk([
+            'checkoutUrl' => 'https://sandbox.monnify.com/checkout/MNFY-123',
+            'transactionReference' => 'MNFY|63|20220126120647|000042',
+            'paymentReference' => $this->payment->transaction_reference,
+        ])),
+    ]);
+
+    $this->payment->update([
+        'metadata' => [
+            'monnify_payment_methods' => ['CARD', 'ACCOUNT_TRANSFER', 'USSD'],
+            Payment::METADATA_REQUIRES_REUSABLE_AUTHORIZATION => true,
+        ],
+    ]);
+
+    (new Monnify())->proceedToPaymentGateway($this->payment, 'https://app.test/done');
+
+    $initialisation = collect(Http::recorded())
+        ->first(fn (array $pair): bool => str_contains($pair[0]->url(), '/init-transaction'));
+
+    expect($initialisation[0]['paymentMethods'])->toBe([Monnify::CARD_PAYMENT_METHOD]);
 });
 
 it('marks a paid transaction successful and stores the reusable card token', function () {

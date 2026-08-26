@@ -30,6 +30,13 @@ use Damms005\LaravelMultipay\Webhooks\Paystack\SubscriptionNotRenew;
 
 class Paystack extends BasePaymentHandler implements PaymentHandlerInterface, ManagesSubscriptions, SupportsSubscriptionQuantity
 {
+    public const DIRECT_DEBIT_CHANNEL = 'bank';
+
+    /**
+     * @var list<string>
+     */
+    public const DEFAULT_RECURRING_CHANNELS = ['card', self::DIRECT_DEBIT_CHANNEL];
+
     protected $secret_key;
 
     public function __construct()
@@ -247,6 +254,63 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface, Ma
         );
     }
 
+    /**
+     * Channels Paystack is able to charge again without the payer present. Only
+     * a card authorization and a Nigerian direct debit mandate ("bank") qualify;
+     * transfer, USSD and wallet channels leave nothing reusable behind.
+     *
+     * @return list<string>
+     */
+    public static function recurringChannels(): array
+    {
+        $configured = config('laravel-multipay.paystack_recurring_channels') ?? self::DEFAULT_RECURRING_CHANNELS;
+
+        $channels = array_values(array_filter(array_map(
+            fn (mixed $channel): string => trim((string) $channel),
+            is_array($configured) ? $configured : [$configured],
+        )));
+
+        return $channels === [] ? self::DEFAULT_RECURRING_CHANNELS : $channels;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    protected function withAdditionalPayload(array $payload, Payment $payment): array
+    {
+        $additionalPayload = Arr::get($payment->metadata, 'additional_payment_payload');
+
+        return is_array($additionalPayload)
+            ? array_merge($payload, $additionalPayload)
+            : $payload;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    protected function restrictToRecurringChannels(array $payload): array
+    {
+        $allowedChannels = self::recurringChannels();
+        $requestedChannels = $payload['channels'] ?? null;
+
+        $channels = is_array($requestedChannels) && $requestedChannels !== []
+            ? array_values(array_intersect($requestedChannels, $allowedChannels))
+            : $allowedChannels;
+
+        $payload['channels'] = $channels === [] ? $allowedChannels : $channels;
+
+        if (in_array(self::DIRECT_DEBIT_CHANNEL, $payload['channels'], true)) {
+            $payload['metadata'] = array_replace_recursive(
+                (array) ($payload['metadata'] ?? []),
+                ['custom_filters' => ['recurring' => true]],
+            );
+        }
+
+        return $payload;
+    }
+
     protected function sendUserToPaymentGateway(string $redirect_or_callback_url, Payment $payment)
     {
         $paystack = app()->make(PaystackHelper::class, ['secret_key' => $this->secret_key]);
@@ -265,6 +329,12 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface, Ma
         $channels = Arr::get($payment->metadata, 'channels');
         if ($channels) {
             $payload['channels'] = $channels;
+        }
+
+        $payload = $this->withAdditionalPayload($payload, $payment);
+
+        if ($payment->requiresReusableAuthorization()) {
+            $payload = $this->restrictToRecurringChannels($payload);
         }
 
         // the code below throws an exception if there was a problem completing the request,
@@ -342,13 +412,24 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface, Ma
     {
         $paystack = app()->make(PaystackHelper::class, ['secret_key' => $this->secret_key]);
 
-        $trx = $paystack->transaction->initialize([
+        $payload = [
             'email' => $user->email,
             'amount' => (int) $plan->amount * 100,
             'plan' => $plan->payment_handler_plan_id,
             'reference' => $transactionReference,
             'callback_url' => route('payment.finished.callback_url'),
-        ]);
+        ];
+
+        $payment = PaymentResolver::newQuery()
+            ->withTrashed()
+            ->where('transaction_reference', $transactionReference)
+            ->first();
+
+        if ($payment) {
+            $payload = $this->withAdditionalPayload($payload, $payment);
+        }
+
+        $trx = $paystack->transaction->initialize($this->restrictToRecurringChannels($payload));
 
         if (!$trx->status) {
             throw new \Exception($trx->message);
