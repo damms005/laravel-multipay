@@ -491,6 +491,28 @@ If you need webhook notifications from payment providers, use the webhook endpoi
 
 > If you use this payment notification URL feature, ensure that in the handler for `SuccessfulLaravelMultipayPaymentEvent`, you have not previously handled the event for that same payment.
 
+### Webhook origin verification
+
+The endpoint is public, so every handler that receives provider webhooks verifies that the payload really came from that provider before acting on it. Verification uses the credential you already configured for the provider — there is nothing extra to set up.
+
+| Provider | Header | Digest |
+| --- | --- | --- |
+| Paystack | `x-paystack-signature` | HMAC SHA512 of the raw body, keyed with `PAYSTACK_SECRET_KEY` |
+| Moniepoint (Monnify) | `monnify-signature` | HMAC SHA512 of the raw body, keyed with `MONNIFY_SECRET_KEY` |
+| Bachs | `X-Bachs-Signature` (with `X-Bachs-Timestamp`) | keyed with `BACHS_WEBHOOK_SIGNING_SECRET` |
+| Polar | `webhook-signature` (with `webhook-id`, `webhook-timestamp`) | keyed with `POLAR_WEBHOOK_SECRET` |
+
+Bachs and Polar also send a timestamp and are rejected outside a five-minute window. Paystack and Monnify sign the body only, so their signatures carry no replay window.
+
+A single endpoint serves every provider, so the handlers distinguish two failure modes:
+
+- **No signature header** raises `UnknownWebhookException`, which the dispatch loop swallows so the next handler gets a turn. This is how a Monnify webhook passes harmlessly through the Paystack handler.
+- **A signature header that does not match** raises a plain exception and fails the request loudly. The payload claims to be from that provider but is not signed with your key, so it is either forged or signed by a different integration.
+
+That second case is what catches a stale or swapped key: after you move to a new provider account, webhooks still in flight from the old one no longer verify and are refused rather than silently applied.
+
+Because the digest is taken over the **raw request body**, any middleware that re-encodes the body before the handler sees it will break verification.
+
 ## Events
 
 ### SuccessfulLaravelMultipayPaymentEvent

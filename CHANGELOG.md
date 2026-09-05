@@ -2,6 +2,17 @@
 
 All notable changes to `laravel-multipay` will be documented in this file.
 
+## 9.2.0 - 2026-09-05
+
+### Behaviour change
+- Paystack webhooks are now verified before they are acted on. `Paystack::handleExternalWebhookRequest()` checks the `x-paystack-signature` header — an HMAC SHA512 digest of the raw request body keyed with `PAYSTACK_SECRET_KEY` — using `hash_equals`. Previously the handler acted on any payload that merely carried a matching `event` name, so the public webhook endpoint accepted forged Paystack events. The renewal branch was the exposed one: it materializes a Payment straight from the payload, whereas the initial-charge branch re-verifies against the Paystack API before granting value.
+- A **missing** signature header raises `UnknownWebhookException`, so the dispatch loop hands the request to the next provider's handler. A **mismatched** signature raises a plain exception and fails loudly, because the payload claims to be Paystack's but is not signed with your key — forged, or signed by a different integration. That second case is what catches webhooks still in flight from an old Paystack account after a key swap.
+- Anything that posted unsigned payloads to `route('payment.external-webhook-endpoint')` and relied on them being processed as Paystack events will stop working. Real Paystack traffic is unaffected: Paystack signs every webhook it sends.
+
+### Added
+- `tests/PaymentHandlers/PaystackWebhookSignatureTest.php` covering forged signatures, a signature from a different integration's key, unsigned payloads, an unconfigured secret, and a correctly signed webhook running through to its event handler. `handleExternalWebhookRequest()` previously had no test coverage at all — the lifecycle tests instantiate the webhook handler classes directly.
+- README section documenting webhook origin verification for every provider that supports it.
+
 ## 9.1.0 - 2026-08-26
 
 ### Added

@@ -203,6 +203,8 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface, Ma
      */
     public function handleExternalWebhookRequest(Request $request): ?Payment
     {
+        $this->verifyWebhookSignature($request);
+
         $webhookEvents = [
             ChargeSuccess::class,
             SubscriptionCreate::class,
@@ -227,6 +229,37 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface, Ma
     protected function canHandleWebhook(WebhookHandler $handler, Request $request): bool
     {
         return $handler->isHandlerFor($request);
+    }
+
+    /**
+     * Paystack signs every webhook with an HMAC SHA512 digest of the raw request
+     * body, keyed with the integration's secret key, sent as `x-paystack-signature`.
+     *
+     * A missing header means the payload was not addressed to this handler, so it
+     * raises UnknownWebhookException and lets the next handler try. A present but
+     * incorrect signature means the payload is forged and raises loudly instead.
+     *
+     * @see https://paystack.com/docs/payments/webhooks/#verify-event-origin
+     */
+    protected function verifyWebhookSignature(Request $request): void
+    {
+        $signature = $request->header('x-paystack-signature');
+
+        if (blank($signature)) {
+            throw new UnknownWebhookException($this);
+        }
+
+        $secretKey = (string) config('laravel-multipay.paystack_secret_key');
+
+        if ($secretKey === '') {
+            throw new \Exception('Paystack secret key is not configured. Set PAYSTACK_SECRET_KEY.');
+        }
+
+        $expectedSignature = hash_hmac('sha512', $request->getContent(), $secretKey);
+
+        if (! hash_equals($expectedSignature, (string) $signature)) {
+            throw new \Exception('Paystack webhook signature verification failed.');
+        }
     }
 
     public function getHumanReadableTransactionResponse(Payment $payment): string
