@@ -287,6 +287,38 @@ it('finds existing plan instead of creating duplicate via findOrCreatePaymentPla
     $this->assertDatabaseCount('payment_plans', 1);
 });
 
+it('recreates a plan whose name is still held by a soft-deleted plan via findOrCreatePaymentPlan', function () {
+    $trashedPlan = PaymentPlan::create([
+        'name' => 'paystack-monthly-400000-NGN',
+        'amount' => '400000',
+        'interval' => 'monthly',
+        'description' => 'Retired plan',
+        'currency' => 'NGN',
+        'payment_handler_fqcn' => 'Paystack',
+        'payment_handler_plan_id' => 'PLN_retired001',
+    ]);
+    $trashedPlan->delete();
+
+    $planResponse = new stdClass();
+    $planResponse->data = new stdClass();
+    $planResponse->data->plan_code = 'PLN_fresh001';
+
+    $planMock = Mockery::mock();
+    $planMock->shouldReceive('create')->once()->andReturn($planResponse);
+
+    $paystackMock = Mockery::mock(PaystackHelper::class);
+    $paystackMock->plan = $planMock;
+
+    app()->bind(PaystackHelper::class, fn () => $paystackMock);
+
+    $plan = SubscriptionService::findOrCreatePaymentPlan(new Paystack(), '400000', 'monthly', 'Monthly plan', 'NGN');
+
+    expect($plan->name)->toBe('paystack-monthly-400000-NGN')
+        ->and($plan->payment_handler_plan_id)->toBe('PLN_fresh001')
+        ->and($trashedPlan->fresh()->name)->toBe("paystack-monthly-400000-NGN-trashed-{$trashedPlan->id}")
+        ->and($trashedPlan->fresh()->trashed())->toBeTrue();
+});
+
 it('uses displayAmount for original_amount_displayed_to_user when provided', function () {
     $plan = createPaystackPlan();
 

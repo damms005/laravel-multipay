@@ -17,6 +17,8 @@ class SubscriptionService
 {
     public static function createPaymentPlan(PaymentHandlerInterface $handler, string $name, string $amount, string $interval, string $description, string $currency): PaymentPlan
     {
+        static::releaseNameHeldByTrashedPlan($name);
+
         $planId = $handler->createPaymentPlan($name, $amount, $interval, $description, $currency);
 
         return PaymentPlan::create([
@@ -28,6 +30,21 @@ class SubscriptionService
             'payment_handler_fqcn' => $handler->getUniquePaymentHandlerName(),
             'payment_handler_plan_id' => $planId,
         ]);
+    }
+
+    /**
+     * The unique index on `name` still counts soft-deleted rows, so a trashed plan would block
+     * re-creating a plan with the same name. Rename it instead of deleting it: subscriptions and
+     * payments keep pointing at it by id.
+     */
+    protected static function releaseNameHeldByTrashedPlan(string $name): void
+    {
+        PaymentPlan::onlyTrashed()
+            ->where('name', $name)
+            ->get()
+            ->each(fn (PaymentPlan $trashedPlan) => $trashedPlan->forceFill([
+                'name' => "{$name}-trashed-{$trashedPlan->id}",
+            ])->saveQuietly());
     }
 
     public static function findOrCreatePaymentPlan(PaymentHandlerInterface $handler, string $amount, string $interval, string $description, string $currency): PaymentPlan

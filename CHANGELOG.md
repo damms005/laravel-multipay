@@ -2,6 +2,11 @@
 
 All notable changes to `laravel-multipay` will be documented in this file.
 
+## 9.2.1 - 2026-09-24
+
+### Fixed
+- `SubscriptionService::findOrCreatePaymentPlan()` / `createPaymentPlan()` no longer throw `UniqueConstraintViolationException` when a soft-deleted plan still holds the requested name. The lookup skips trashed plans but the unique index on `name` does not, so every attempt failed, and each one also left an orphan plan on the provider. The trashed plan is now renamed to `{name}-trashed-{id}` before the provider is called; it is kept, so subscriptions and payments that reference it by id are unaffected.
+
 ## 9.2.0 - 2026-09-05
 
 ### Behaviour change
