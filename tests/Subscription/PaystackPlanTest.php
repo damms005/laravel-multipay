@@ -144,6 +144,34 @@ it('creates subscription with correct next_payment_due_date per interval', funct
     'yearly' => ['yearly', fn () => now()->addYear()],
 ]);
 
+it('creates one subscription when the callback and the webhook both verify the same payment', function () {
+    $plan = createPaystackPlan();
+    createPaystackPaymentForPlan($plan);
+
+    $verifyResponse = new stdClass();
+    $verifyResponse->status = true;
+    $verifyResponse->data = (object)[
+        'status' => 'success',
+        'amount' => 100000,
+        'created_at' => now()->toIso8601String(),
+        'gateway_response' => 'Successful',
+        'metadata' => null,
+    ];
+
+    $transactionMock = Mockery::mock();
+    $transactionMock->shouldReceive('verify')->twice()->andReturn($verifyResponse);
+
+    $paystackMock = Mockery::mock(PaystackHelper::class);
+    $paystackMock->transaction = $transactionMock;
+
+    app()->bind(PaystackHelper::class, fn () => $paystackMock);
+
+    (new Paystack())->processValueForTransaction('ref_test123');
+    (new Paystack())->processValueForTransaction('ref_test123');
+
+    $this->assertDatabaseCount('subscriptions', 1);
+});
+
 it('does not create subscription when payment fails', function () {
     $plan = createPaystackPlan();
     createPaystackPaymentForPlan($plan);

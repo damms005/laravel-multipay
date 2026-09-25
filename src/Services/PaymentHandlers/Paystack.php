@@ -97,11 +97,15 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface, Ma
                 return null;
             }
 
+            $valueWasAlreadyGiven = (bool) $payment->is_success;
+
             $this->giveValue($payment->transaction_reference, $verificationResponse);
 
             $payment->refresh();
 
-            $this->processPaymentMetadata($payment);
+            if (!$valueWasAlreadyGiven) {
+                $this->processPaymentMetadata($payment);
+            }
         } else {
             $payment->update([
                 'is_success' => 0,
