@@ -84,7 +84,7 @@ it('handles a correctly signed webhook through to its event handler', function (
             'subscription_code' => 'SUB_signed',
             'email_token' => 'tok_signed',
             'plan' => ['plan_code' => 'PLN_signature'],
-            'customer' => ['customer_code' => 'CUS_x', 'email' => 'a@b.com'],
+            'customer' => ['customer_code' => 'CUS_x', 'email' => 'user@gmail.com'],
         ],
     ]);
 

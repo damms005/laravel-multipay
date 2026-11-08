@@ -210,10 +210,7 @@ class SubscriptionService
         if ($plan) {
             $subscription = Subscription::query()
                 ->where('payment_plan_id', $plan->id)
-                ->where(function ($query) use ($customerCode) {
-                    $query->where('metadata->customer_code', $customerCode)
-                        ->orWhereNotNull('payment_handler_subscription_code');
-                })
+                ->forCustomer($customerCode, $customerEmail)
                 ->latest('id')
                 ->first();
         }

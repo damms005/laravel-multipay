@@ -11,6 +11,7 @@ use Damms005\LaravelMultipay\Webhooks\Paystack\InvoiceUpdate;
 use Damms005\LaravelMultipay\Webhooks\Paystack\SubscriptionCreate;
 use Damms005\LaravelMultipay\Webhooks\Paystack\SubscriptionDisable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 
 function lifecyclePlan(): PaymentPlan
@@ -42,7 +43,7 @@ it('reconciles the subscription code on a subscription.create webhook without em
             'subscription_code' => 'SUB_new',
             'email_token' => 'tok_new',
             'plan' => ['plan_code' => 'PLN_lifecycle'],
-            'customer' => ['customer_code' => 'CUS_x', 'email' => 'a@b.com'],
+            'customer' => ['customer_code' => 'CUS_x', 'email' => 'user@gmail.com'],
         ],
     ]);
 
@@ -57,6 +58,36 @@ it('reconciles the subscription code on a subscription.create webhook without em
         ->and($subscription->status)->toBe(Subscription::STATUS_ACTIVE);
 
     Event::assertNotDispatched(\Damms005\LaravelMultipay\Events\SuccessfulLaravelMultipayPaymentEvent::class);
+});
+
+it('links subscription.create to the payer row, not the newest empty row on the plan', function () {
+    DB::table('users')->insert(['id' => 2, 'email' => 'second@example.com']);
+
+    $plan = lifecyclePlan();
+    $payerSubscription = Subscription::create([
+        'user_id' => 1,
+        'payment_plan_id' => $plan->id,
+        'next_payment_due_date' => now()->addMonth(),
+    ]);
+    $newerSubscription = Subscription::create([
+        'user_id' => 2,
+        'payment_plan_id' => $plan->id,
+        'next_payment_due_date' => now()->addMonth(),
+    ]);
+
+    (new SubscriptionCreate())->handle(Request::create('/webhook', 'POST', [
+        'event' => 'subscription.create',
+        'data' => [
+            'subscription_code' => 'SUB_payer',
+            'email_token' => 'tok_payer',
+            'plan' => ['plan_code' => 'PLN_lifecycle'],
+            'customer' => ['customer_code' => 'CUS_payer', 'email' => 'USER@gmail.com'],
+        ],
+    ]));
+
+    expect($payerSubscription->refresh()->payment_handler_subscription_code)->toBe('SUB_payer')
+        ->and($payerSubscription->metadata['customer_code'])->toBe('CUS_payer')
+        ->and($newerSubscription->refresh()->payment_handler_subscription_code)->toBeNull();
 });
 
 it('marks a subscription cancelled and emits SubscriptionCancelled on subscription.disable', function () {

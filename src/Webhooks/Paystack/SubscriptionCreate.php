@@ -48,6 +48,7 @@ class SubscriptionCreate implements WebhookHandler
                 $subscription = Subscription::query()
                     ->where('payment_plan_id', $plan->id)
                     ->whereNull('payment_handler_subscription_code')
+                    ->forCustomer($customerCode, $customerEmail)
                     ->latest('id')
                     ->first();
             }

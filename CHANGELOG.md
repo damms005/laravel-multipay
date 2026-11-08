@@ -2,6 +2,16 @@
 
 All notable changes to `laravel-multipay` will be documented in this file.
 
+## Unreleased
+
+### Fixed
+- Paystack renewals are credited to the customer who paid. `SubscriptionService::saveRenewalPayment()` matched the newest subscription on the plan that had any subscription code (`orWhereNotNull`), so on a plan with 2 or more subscribers every renewal went to the same user. It now matches the charge's `customer_code`, or else the email of the subscription's user. When nothing matches, the payment is saved with no `user_id`, and no other user gets the value.
+- `subscription.create` links the subscription code to the paying customer's subscription. It took the newest subscription on the plan with no code, so a second subscriber on the same plan could receive the first subscriber's code and customer.
+- `Paystack::classifyCharge()` matches the subscription by customer, and leaves the charge it classifies out of the prior-payment check. Before, a first charge whose payment was already marked successful was classified as a renewal. The `orWhere` on `payment_handler_fqcn` is now grouped, so it can no longer match a plan with another plan code.
+
+### Behaviour change
+- The email match uses the `email` entry of `user_model_properties` as a column, without regard to case. If that entry is an accessor and not a column, only `customer_code` is used.
+
 ## 9.2.1 - 2026-09-24
 
 ### Fixed

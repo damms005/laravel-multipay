@@ -2,9 +2,11 @@
 
 namespace Damms005\LaravelMultipay\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Casts\AsArrayObject;
+use Illuminate\Support\Facades\Schema;
 
 class Subscription extends Model
 {
@@ -42,6 +44,53 @@ class Subscription extends Model
     public function paymentPlan()
     {
         return $this->belongsTo(PaymentPlan::class);
+    }
+
+    /**
+     * Rows of one provider customer: by the customer code that subscription.create
+     * stores, else by the email of the row's user. Matches no row when the charge
+     * names no customer, so a charge is never credited to another user.
+     */
+    public function scopeForCustomer(Builder $query, ?string $customerCode, ?string $customerEmail): Builder
+    {
+        $userIds = self::userIdsWithEmail($customerEmail);
+
+        return $query->where(function (Builder $query) use ($customerCode, $userIds) {
+            $query->whereRaw('1 = 0');
+
+            if (filled($customerCode)) {
+                $query->orWhere('metadata->customer_code', $customerCode);
+            }
+
+            if ($userIds !== []) {
+                $query->orWhereIn('user_id', $userIds);
+            }
+        });
+    }
+
+    /**
+     * @return array<int, mixed>
+     */
+    protected static function userIdsWithEmail(?string $email): array
+    {
+        $userModelClass = config('laravel-multipay.user_model_fqcn');
+        $emailColumn = config('laravel-multipay.user_model_properties.email', 'email');
+
+        if (blank($email) || ! is_string($userModelClass) || ! class_exists($userModelClass)) {
+            return [];
+        }
+
+        $userModel = new $userModelClass();
+
+        // The email property can be an accessor. Only a real column can be queried.
+        if (! Schema::connection($userModel->getConnectionName())->hasColumn($userModel->getTable(), $emailColumn)) {
+            return [];
+        }
+
+        return $userModelClass::query()
+            ->whereRaw('lower(' . $userModel->getConnection()->getQueryGrammar()->wrap($emailColumn) . ') = ?', [strtolower($email)])
+            ->pluck(config('laravel-multipay.user_model_owner_key', 'id'))
+            ->all();
     }
 
     public function isActive(): bool

@@ -165,11 +165,15 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface, Ma
         }
 
         $customerCode = data_get($rawPayload, 'data.customer.customer_code');
+        $customerEmail = data_get($rawPayload, 'data.customer.email');
+        $reference = data_get($rawPayload, 'data.reference');
 
         $plan = PaymentPlan::query()
             ->where('payment_handler_plan_id', $planCode)
-            ->where('payment_handler_fqcn', static::getUniquePaymentHandlerName())
-            ->orWhere('payment_handler_fqcn', static::class)
+            ->where(function ($query) {
+                $query->where('payment_handler_fqcn', static::getUniquePaymentHandlerName())
+                    ->orWhere('payment_handler_fqcn', static::class);
+            })
             ->first();
 
         if (! $plan) {
@@ -178,6 +182,7 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface, Ma
 
         $subscription = Subscription::query()
             ->where('payment_plan_id', $plan->id)
+            ->forCustomer($customerCode, $customerEmail)
             ->latest('id')
             ->first();
 
@@ -191,6 +196,14 @@ class Paystack extends BasePaymentHandler implements PaymentHandlerInterface, Ma
             ->where(function ($query) use ($plan) {
                 $query->where('metadata->payment_plan_id', $plan->id)
                     ->orWhere('metadata->payment_plan_id', (string) $plan->id);
+            })
+            ->when(filled($reference), function ($query) use ($reference) {
+                // The charge being classified is not a prior payment.
+                $query->where('transaction_reference', '!=', $reference)
+                    ->where(function ($query) use ($reference) {
+                        $query->whereNull('processor_transaction_reference')
+                            ->orWhere('processor_transaction_reference', '!=', $reference);
+                    });
             })
             ->exists();
 

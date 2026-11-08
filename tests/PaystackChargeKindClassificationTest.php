@@ -69,6 +69,7 @@ it('classifies a repeat charge on a plan as a renewal once a prior successful pa
         'payment_plan_id' => $plan->id,
         'next_payment_due_date' => now()->addMonth(),
         'payment_handler_subscription_code' => 'SUB_renew',
+        'metadata' => ['customer_code' => 'CUS_a'],
     ]);
 
     Payment::create([
@@ -92,4 +93,87 @@ it('classifies a repeat charge on a plan as a renewal once a prior successful pa
     ];
 
     expect((new Paystack())->classifyCharge($payload))->toBe(ChargeKind::Renewal);
+});
+
+it('classifies a first charge as initial when its own payment is already stored as successful', function () {
+    $plan = PaymentPlan::create([
+        'name' => 'first-charge-plan',
+        'amount' => '5000',
+        'interval' => 'monthly',
+        'description' => 'test',
+        'currency' => 'NGN',
+        'payment_handler_fqcn' => Paystack::getUniquePaymentHandlerName(),
+        'payment_handler_plan_id' => 'PLN_first',
+    ]);
+
+    Subscription::create([
+        'user_id' => 1,
+        'payment_plan_id' => $plan->id,
+        'next_payment_due_date' => now()->addMonth(),
+    ]);
+
+    Payment::create([
+        'user_id' => 1,
+        'transaction_reference' => 'ref_first',
+        'processor_transaction_reference' => 'ref_first',
+        'payment_processor_name' => Paystack::getUniquePaymentHandlerName(),
+        'transaction_currency' => 'NGN',
+        'transaction_description' => 'first cycle',
+        'original_amount_displayed_to_user' => 5000,
+        'is_success' => 1,
+        'metadata' => ['payment_plan_id' => $plan->id],
+    ]);
+
+    $payload = [
+        'event' => 'charge.success',
+        'data' => [
+            'reference' => 'ref_first',
+            'plan' => ['plan_code' => 'PLN_first'],
+            'customer' => ['customer_code' => 'CUS_first', 'email' => 'user@gmail.com'],
+        ],
+    ];
+
+    expect((new Paystack())->classifyCharge($payload))->toBe(ChargeKind::Initial);
+});
+
+it('classifies a new customer on a plan as initial when another customer already renews on it', function () {
+    $plan = PaymentPlan::create([
+        'name' => 'shared-plan',
+        'amount' => '5000',
+        'interval' => 'monthly',
+        'description' => 'test',
+        'currency' => 'NGN',
+        'payment_handler_fqcn' => Paystack::getUniquePaymentHandlerName(),
+        'payment_handler_plan_id' => 'PLN_shared',
+    ]);
+
+    Subscription::create([
+        'user_id' => 1,
+        'payment_plan_id' => $plan->id,
+        'next_payment_due_date' => now()->addMonth(),
+        'payment_handler_subscription_code' => 'SUB_existing',
+        'metadata' => ['customer_code' => 'CUS_existing'],
+    ]);
+
+    Payment::create([
+        'user_id' => 1,
+        'transaction_reference' => 'ref_existing',
+        'payment_processor_name' => Paystack::getUniquePaymentHandlerName(),
+        'transaction_currency' => 'NGN',
+        'transaction_description' => 'first cycle',
+        'original_amount_displayed_to_user' => 5000,
+        'is_success' => 1,
+        'metadata' => ['payment_plan_id' => $plan->id],
+    ]);
+
+    $payload = [
+        'event' => 'charge.success',
+        'data' => [
+            'reference' => 'ref_newcomer',
+            'plan' => ['plan_code' => 'PLN_shared'],
+            'customer' => ['customer_code' => 'CUS_newcomer', 'email' => 'newcomer@example.com'],
+        ],
+    ];
+
+    expect((new Paystack())->classifyCharge($payload))->toBe(ChargeKind::Initial);
 });
