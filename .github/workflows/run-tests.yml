@@ -49,6 +49,12 @@ jobs:
       - name: Composer version
         run: echo composer --version
 
+      # Every Laravel 11 release has an open security advisory, so Composer blocks them all.
+      # This changes composer.json on the CI runner only. Package users keep the advisory block.
+      - name: Allow Laravel 11 advisories in CI
+        if: matrix.laravel == '11.*'
+        run: composer config audit.block-insecure false
+
       - name: Install composer packages
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" pestphp/pest:${{matrix.pest}} pestphp/pest-plugin-laravel:${{matrix.pest-plugin-laravel}} --no-interaction --no-update --dev
